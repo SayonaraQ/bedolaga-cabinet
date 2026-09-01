@@ -388,12 +388,19 @@
        используют 500+ и не затрагиваются. */
     --color-accent-300: var(--color-accent-700) !important;
     --color-accent-400: var(--color-accent-700) !important;
-    --color-success-300: var(--color-success-700) !important;
-    --color-success-400: var(--color-success-700) !important;
-    --color-warning-300: var(--color-warning-700) !important;
-    --color-warning-400: var(--color-warning-700) !important;
     --color-error-300: var(--color-error-700) !important;
     --color-error-400: var(--color-error-700) !important;
+
+    /* Зелёный и жёлтый на 700 до порога НЕ дотягивают: прогон настоящего
+       applyThemeColors на четырёх кандидатах светлой палитры даёт
+       success 3.56–3.91 и warning 4.00–4.40 на поверхности карточки при
+       норме 4.5. Синий и красный проходят с запасом (7.4–10.5), поэтому
+       им 700 оставлен — на 800 они уже читаются как почти чёрные.
+       На 800 зелёный даёт 5.5–6.1, жёлтый 6.0–6.7. */
+    --color-success-300: var(--color-success-800) !important;
+    --color-success-400: var(--color-success-800) !important;
+    --color-warning-300: var(--color-warning-800) !important;
+    --color-warning-400: var(--color-warning-800) !important;
   }
 
   /* Custom scrollbar - Dark */

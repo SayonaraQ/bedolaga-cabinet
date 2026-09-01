@@ -152,10 +152,14 @@ export function RevokeSubscriptionSheet({
       </label>
 
       <div className="flex gap-2">
+        {/* text-on-warning, а не text-dark-950: в светлой теме dark-950
+            становится фоном страницы, и подпись на жёлтой кнопке уходит в
+            контраст 1.77. --color-on-warning считается из самого цвета
+            кнопки (useThemeColors.onColorFor) и даёт 8.37. */}
         <button
           onClick={onConfirm}
           disabled={!acknowledged || isPending}
-          className="flex-1 rounded-xl bg-warning-500 py-2.5 text-sm font-semibold text-dark-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex-1 rounded-xl bg-warning-500 py-2.5 text-sm font-semibold text-on-warning transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isPending ? t('subscription.revoke.processing') : t('subscription.revoke.confirmBtn')}
         </button>

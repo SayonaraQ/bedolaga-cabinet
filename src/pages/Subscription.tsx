@@ -55,6 +55,7 @@ import { DeviceReductionSheet } from '../components/subscription/sheets/DeviceRe
 import { TrafficTopupSheet } from '../components/subscription/sheets/TrafficTopupSheet';
 import { ServerManagementSheet } from '../components/subscription/sheets/ServerManagementSheet';
 import { DeleteSubscriptionSheet } from '../components/subscription/sheets/DeleteSubscriptionSheet';
+import { RevokeSubscriptionSheet } from '../components/subscription/sheets/RevokeSubscriptionSheet';
 import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { safeLocal } from '../utils/safeStorage';
 
@@ -213,7 +214,14 @@ export default function Subscription() {
   const { openLink, platform } = usePlatform();
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
+  // Ссылку подписки не находят: 11-й кегль на 30% контраста прямо под
+  // вращающейся рамкой «Подключить устройство», которая забирает весь взгляд.
+  // Пока человек ни разу её не копировал, кнопка копирования держит акцентный
+  // цвет и пульсирующий ореол; после первого копирования гаснет навсегда —
+  // подсказка нужна один раз, дальше это шум на каждом заходе.
+  const [linkNeverCopied, setLinkNeverCopied] = useState(false);
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
+  const [showRevokeSheet, setShowRevokeSheet] = useState(false);
   const destructiveConfirm = useDestructiveConfirm();
 
   // Helper to format price from kopeks
@@ -638,22 +646,20 @@ export default function Subscription() {
     refreshTrafficMutation.mutate();
   }, [subscription, refreshTrafficMutation, subscriptionId]);
 
+  useEffect(() => {
+    setLinkNeverCopied(
+      safeLocal.getItem(`sub_link_copied_${subscriptionId ?? 'default'}`) === null,
+    );
+  }, [subscriptionId]);
+
   const copyUrl = () => {
     if (displayedConnectionUrl) {
       void copyToClipboard(displayedConnectionUrl);
       setCopied(true);
+      safeLocal.setItem(`sub_link_copied_${subscriptionId ?? 'default'}`, '1');
+      setLinkNeverCopied(false);
       setTimeout(() => setCopied(false), 2000);
     }
-  };
-
-  const handleRevoke = async () => {
-    const confirmed = await destructiveConfirm(
-      t('subscription.revoke.warning'),
-      t('subscription.revoke.confirmBtn'),
-      t('subscription.revoke.title'),
-    );
-    if (!confirmed) return;
-    revokeMutation.mutate();
   };
 
   // In multi-tariff mode without a specific subscription ID, redirect to list
@@ -1070,13 +1076,20 @@ export default function Subscription() {
                   </code>
                   <button
                     onClick={copyUrl}
-                    className="flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300"
+                    className={`flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300${
+                      linkNeverCopied && !copied ? ' copy-link-attention' : ''
+                    }`}
                     style={{
-                      background: copied ? 'rgba(var(--color-accent-400), 0.12)' : g.innerBorder,
-                      border: copied
-                        ? '1px solid rgba(var(--color-accent-400), 0.2)'
-                        : `1px solid ${g.trackBg}`,
-                      color: copied ? 'rgb(var(--color-accent-400))' : g.textMuted,
+                      background:
+                        copied || linkNeverCopied
+                          ? 'rgba(var(--color-accent-400), 0.12)'
+                          : g.innerBorder,
+                      border:
+                        copied || linkNeverCopied
+                          ? '1px solid rgba(var(--color-accent-400), 0.28)'
+                          : `1px solid ${g.trackBg}`,
+                      color:
+                        copied || linkNeverCopied ? 'rgb(var(--color-accent-400))' : g.textMuted,
                     }}
                     aria-label={t('subscription.copyLink')}
                     title={t('subscription.copyLink')}
@@ -1790,46 +1803,19 @@ export default function Subscription() {
               padding: '16px 20px',
             }}
           >
-            <button
-              onClick={handleRevoke}
-              disabled={revokeMutation.isPending || revokeCooldown > 0}
-              className="w-full rounded-xl border border-warning-500/30 bg-warning-500/10 p-4 text-left transition-colors hover:bg-warning-500/20 disabled:opacity-50"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-warning-400">
-                    {t('subscription.revoke.button')}
-                  </div>
-                  <div className="mt-1 text-sm text-dark-400">
-                    {revokeCooldown > 0
-                      ? t('subscription.revoke.cooldown', {
-                          minutes: Math.floor(revokeCooldown / 60),
-                          seconds: revokeCooldown % 60,
-                        })
-                      : t('subscription.revoke.description')}
-                  </div>
-                </div>
-                <div className="text-warning-400">
-                  {revokeMutation.isPending ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-warning-400/30 border-t-amber-400" />
-                  ) : (
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </div>
-            </button>
+            <RevokeSubscriptionSheet
+              open={showRevokeSheet}
+              onOpen={() => setShowRevokeSheet(true)}
+              onClose={() => setShowRevokeSheet(false)}
+              onConfirm={() => {
+                setShowRevokeSheet(false);
+                revokeMutation.mutate();
+              }}
+              isPending={revokeMutation.isPending}
+              cooldownSeconds={revokeCooldown}
+              connectedDevices={devicesData?.total ?? 0}
+              textSecondary={g.textSecondary}
+            />
             {revokeMutation.error && (
               <p className="mt-2 text-sm text-error-400">{getErrorMessage(revokeMutation.error)}</p>
             )}

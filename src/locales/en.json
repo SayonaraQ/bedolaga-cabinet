@@ -643,7 +643,15 @@
       "description": "New link, device reset",
       "warning": "This will generate a new connection link, reset all connected devices, and invalidate the old link. Continue?",
       "confirmBtn": "Reissue",
-      "cooldown": "Available in {{minutes}} min {{seconds}} sec"
+      "cooldown": "Available in {{minutes}} min {{seconds}} sec",
+      "confirmTitle": "Reissue subscription?",
+      "consequenceLink": "The old link stops working immediately",
+      "consequenceDevices_one": "{{count}} connected device will be disconnected",
+      "consequenceDevices_other": "All {{count}} connected devices will be disconnected",
+      "consequenceDevicesAny": "Every connected device will be disconnected",
+      "consequenceReconnect": "You will have to add the link again on every device by hand",
+      "acknowledge": "I understand that every device will be disconnected and has to be reconnected",
+      "processing": "Reissuing…"
     },
     "legacy": {
       "selectTariffTitle": "Select a tariff to renew",

@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePlatform } from '../../../platform';
-import { useDestructiveConfirm } from '../../../platform/hooks/useNativeDialog';
 
 // ──────────────────────────────────────────────────────────────────
 // Перевыпуск подписки: кнопка + подтверждение.
@@ -12,13 +10,16 @@ import { useDestructiveConfirm } from '../../../platform/hooks/useNativeDialog';
 // window.confirm: системная плашка браузера, неотличимая от «разрешить
 // уведомления», и её жали рефлексом, не читая.
 //
-// Поэтому веб-ветка идёт по домашнему образцу DeleteSubscriptionSheet —
-// подтверждение рисуется внутри страницы, — и добавляет к нему явный
-// чекбокс: осознанное «понимаю» нельзя проскочить мышечной памятью
-// «Enter по кнопке по умолчанию», как проскакивали OK.
+// Поэтому подтверждение рисуется внутри страницы по домашнему образцу
+// DeleteSubscriptionSheet, и к нему добавлен явный чекбокс: осознанное
+// «понимаю» нельзя проскочить мышечной памятью «Enter по кнопке по
+// умолчанию», как проскакивали OK.
 //
-// Telegram оставлен на нативном диалоге: там popup рисует клиент, он не
-// сливается с браузерным хромом и рефлекса на него нет.
+// Платформа здесь НЕ разветвляется, в отличие от DeleteSubscriptionSheet.
+// Нативный popup Telegram выглядит иначе, чем браузерная плашка, но ведёт
+// себя так же: одно касание по красной кнопке — и устройства сброшены.
+// Проблема была не в чужом хроме, а в отсутствии барьера, поэтому барьер
+// стоит на всех платформах одинаково.
 //
 // Мутацию компонент не владеет: перевыпуск инвалидирует полстраницы и
 // заводит 15-минутный кулдаун, это дело родителя. Сюда приходят готовые
@@ -51,25 +52,9 @@ export function RevokeSubscriptionSheet({
   textSecondary,
 }: RevokeSubscriptionSheetProps) {
   const { t } = useTranslation();
-  const { platform } = usePlatform();
-  const destructiveConfirm = useDestructiveConfirm();
   const [acknowledged, setAcknowledged] = useState(false);
 
   const onCooldown = cooldownSeconds > 0;
-
-  const handleTriggerClick = async () => {
-    if (platform === 'telegram') {
-      const confirmed = await destructiveConfirm(
-        t('subscription.revoke.warning'),
-        t('subscription.revoke.confirmBtn'),
-        t('subscription.revoke.title'),
-      );
-      if (!confirmed) return;
-      onConfirm();
-      return;
-    }
-    onOpen();
-  };
 
   const handleClose = () => {
     // Согласие живёт ровно одну сессию панели: закрыл — подтверждай заново.
@@ -80,7 +65,7 @@ export function RevokeSubscriptionSheet({
   if (!open) {
     return (
       <button
-        onClick={handleTriggerClick}
+        onClick={onOpen}
         disabled={isPending || onCooldown}
         className="w-full rounded-xl border border-warning-500/30 bg-warning-500/10 p-4 text-left transition-colors hover:bg-warning-500/20 disabled:opacity-50"
       >

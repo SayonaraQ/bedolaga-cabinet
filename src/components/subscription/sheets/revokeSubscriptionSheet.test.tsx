@@ -8,8 +8,12 @@ import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
  * useDestructiveConfirm падает на не-Telegram платформах, и пользователи жали OK
  * рефлексом, не читая текст.
  *
- * Тесты держат ровно тот контракт, который это чинит: в вебе нажатие на кнопку
- * НЕ запускает перевыпуск, а открывает панель; панель не даёт подтвердить, пока
+ * В Telegram то же самое делал нативный popup: одно касание по красной кнопке.
+ * Барьер поэтому стоит на всех платформах одинаково, и моки платформы здесь
+ * живут ровно затем, чтобы поймать попытку вернуть ветвление обратно.
+ *
+ * Тесты держат ровно тот контракт, который это чинит: нажатие на кнопку НЕ
+ * запускает перевыпуск, а открывает панель; панель не даёт подтвердить, пока
  * человек явно не отметит, что понимает последствия. Разметку не проверяем.
  */
 
@@ -87,7 +91,7 @@ afterEach(() => {
 });
 
 describe('RevokeSubscriptionSheet', () => {
-  it('в вебе нажатие на кнопку открывает панель, а не перевыпускает', () => {
+  it('нажатие на кнопку открывает панель, а не перевыпускает', () => {
     const harness = renderSheet(false);
 
     fireEvent.click(screen.getByRole('button', { name: /Перевыпустить подписку/ }));
@@ -125,25 +129,29 @@ describe('RevokeSubscriptionSheet', () => {
     expect(confirmButton().disabled).toBe(true);
   });
 
-  it('в Telegram остаётся нативный диалог, панель не открывается', async () => {
+  it('в Telegram открывается та же панель, нативный диалог не зовётся', () => {
     platformMock.current = 'telegram';
     const harness = renderSheet(false);
 
     fireEvent.click(screen.getByRole('button', { name: /Перевыпустить подписку/ }));
-    await vi.waitFor(() => expect(harness.onConfirm).toHaveBeenCalledTimes(1));
 
-    expect(nativeConfirmMock.fn).toHaveBeenCalledTimes(1);
-    expect(harness.onOpen).not.toHaveBeenCalled();
+    expect(harness.onOpen).toHaveBeenCalledTimes(1);
+    expect(harness.onConfirm).not.toHaveBeenCalled();
+    // Нативный popup Telegram — тот же рефлекс одного касания, ради которого
+    // всё и затевалось. Вернуть ветвление сюда значит вернуть проблему.
+    expect(nativeConfirmMock.fn).not.toHaveBeenCalled();
   });
 
-  it('отказ в нативном диалоге ничего не перевыпускает', async () => {
+  it('в Telegram чекбокс так же гейтит подтверждение', () => {
     platformMock.current = 'telegram';
-    nativeConfirmMock.fn.mockResolvedValue(false);
-    const harness = renderSheet(false);
+    const harness = renderSheet(true);
 
-    fireEvent.click(screen.getByRole('button', { name: /Перевыпустить подписку/ }));
-    await vi.waitFor(() => expect(nativeConfirmMock.fn).toHaveBeenCalledTimes(1));
+    expect(confirmButton().disabled).toBe(true);
 
-    expect(harness.onConfirm).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(confirmButton());
+
+    expect(harness.onConfirm).toHaveBeenCalledTimes(1);
+    expect(nativeConfirmMock.fn).not.toHaveBeenCalled();
   });
 });

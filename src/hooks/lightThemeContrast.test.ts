@@ -128,6 +128,27 @@ describe('контраст светлой темы', () => {
     },
   );
 
+  it.each(Object.entries(LIGHT_PALETTES))(
+    'на палитре «%s» приглушённая шкала текста читается',
+    (_label, light) => {
+      applyLight(light);
+      const surface = triplet('--color-champagne-50');
+
+      // Сюда уводятся приглушённые тексты светлой темы: glassTheme отдаёт
+      // 700/600/500 вместо полупрозрачного чёрного, а .light подменяет ими же
+      // альфа-классы text-dark-50/NN. Полупрозрачный чёрный, который тут был
+      // раньше, давал 2.0–2.6.
+      expect(contrast(triplet('--color-champagne-700'), surface)).toBeGreaterThanOrEqual(
+        WCAG_BODY_TEXT,
+      );
+      expect(contrast(triplet('--color-champagne-600'), surface)).toBeGreaterThanOrEqual(
+        WCAG_BODY_TEXT,
+      );
+      // 500 — декоративное (иконки, разделители), к нему порог для крупного.
+      expect(contrast(triplet('--color-champagne-500'), surface)).toBeGreaterThanOrEqual(3);
+    },
+  );
+
   it('подпись на залитой кнопке берётся из on-* и читается', () => {
     applyLight(LIGHT_PALETTES['фиолетовый уклон']);
 

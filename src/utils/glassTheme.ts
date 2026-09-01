@@ -19,11 +19,20 @@ export function getGlassColors(isDark: boolean) {
     hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     hoverBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
 
-    // Text
-    text: isDark ? '#fff' : '#1a1a2e',
-    textSecondary: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.5)',
-    textMuted: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)',
-    textFaint: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)',
+    // Text.
+    //
+    // В светлой теме полупрозрачный чёрный не годится: rgba(0,0,0,0.35) на
+    // белой карточке даёт контраст 2.6, а 0.25 — 2.0. Берём шкалу champagne,
+    // которую applyThemeColors строит из цветов оператора и где на 500 и 600
+    // стоят пороги ensureReadable (3.8 и 5.0). Заодно цвета едут за палитрой,
+    // если её поменяют в админке.
+    //
+    // Тёмная ветка не тронута: там белый с альфой ложится на тёмный фон и
+    // читается, а замена шкалой заметно осветлила бы весь мелкий текст.
+    text: isDark ? '#fff' : 'rgb(var(--color-champagne-950))',
+    textSecondary: isDark ? 'rgba(255,255,255,0.4)' : 'rgb(var(--color-champagne-700))',
+    textMuted: isDark ? 'rgba(255,255,255,0.3)' : 'rgb(var(--color-champagne-600))',
+    textFaint: isDark ? 'rgba(255,255,255,0.25)' : 'rgb(var(--color-champagne-500))',
     textGhost: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
 
     // Progress bar track

@@ -14,6 +14,7 @@ import PromoOffersSection from '../components/PromoOffersSection';
 import NewsSection from '../components/news/NewsSection';
 import SubscriptionCardActive from '../components/dashboard/SubscriptionCardActive';
 import SubscriptionCardExpired from '../components/dashboard/SubscriptionCardExpired';
+import { hasLegacySubscription } from '../utils/legacySubscription';
 import TrialOfferCard from '../components/dashboard/TrialOfferCard';
 import StatsGrid from '../components/dashboard/StatsGrid';
 import { giftApi } from '../api/gift';
@@ -25,6 +26,7 @@ import { API } from '../config/constants';
 import { ChevronRightIcon, StarIcon } from '@/components/icons';
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { safeLocal } from '../utils/safeStorage';
+import { getApiErrorMessage } from '../utils/api-error';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -148,8 +150,8 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
       refreshUser();
     },
-    onError: (error: { response?: { data?: { detail?: string } } }) => {
-      setTrialError(error.response?.data?.detail || t('common.error'));
+    onError: (error: unknown) => {
+      setTrialError(getApiErrorMessage(error, t('common.error')));
     },
   });
 
@@ -235,6 +237,9 @@ export default function Dashboard() {
   const hasActivePaid = (multiSubData?.subscriptions ?? []).some(
     (s) => !s.is_trial && (s.status === 'active' || s.status === 'limited'),
   );
+  // Старая подписка (без тарифа при включённых тарифах) в списке: «купить ещё»
+  // не предлагаем, её карточка ведёт на переход на тариф.
+  const hasLegacy = hasLegacySubscription(multiSubData?.subscriptions);
 
   // Show onboarding for new users after data loads
   useEffect(() => {
@@ -319,7 +324,7 @@ export default function Dashboard() {
       {isMultiTariff && multiSubData?.subscriptions && multiSubData.subscriptions.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <span className="text-sm font-medium opacity-60">
+            <span className="text-sm font-medium text-dark-400">
               {t('dashboard.subscriptions', 'Подписки')}
             </span>
             <Link to="/subscriptions" className="text-xs text-accent-400 hover:underline">
@@ -346,7 +351,7 @@ export default function Dashboard() {
               {t('dashboard.showAll', 'Показать все')} ({multiSubData.subscriptions.length})
             </Link>
           )}
-          {hasActivePaid ? (
+          {hasLegacy ? null : hasActivePaid ? (
             <Link
               to="/subscription/purchase"
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent-500/15 p-3.5 text-sm font-medium text-accent-400 transition-all hover:bg-accent-500/25"

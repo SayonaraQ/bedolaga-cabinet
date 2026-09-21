@@ -7,11 +7,11 @@ import { DEFAULT_THEME_COLORS } from '../types/theme';
  * Контраст светлой темы. Держит два решения, которые иначе выглядят
  * произвольными и однажды будут «упрощены» обратно.
  *
- * 1. `.light` подменяет текстовые оттенки статусов 300/400 → 700 для синего
- *    и красного, но → 800 для зелёного и жёлтого. Причина здесь и проверяется:
- *    на 700 зелёный и жёлтый не добирают до 4.5 ни на одной разумной светлой
- *    палитре, а синий и красный проходят с запасом и на 800 читались бы уже
- *    почти чёрными.
+ * 1. `.light` подменяет текстовые оттенки статусов 300/400 → 800 (решение
+ *    апстрима 1.71, `textContrast.test.ts` держит сам ремап). Здесь
+ *    проверяется, что 800 читается на наших светлых палитрах: статусная
+ *    шкала с 1.68 строится от выбранного цвета, и прежний расклад
+ *    «зелёный и жёлтый не добирают на 700» больше не верен.
  *
  * 2. Подпись на залитой кнопке берётся из `--color-on-*`, а не из шкалы
  *    dark-*. В светлой теме `dark-950` — это фон страницы, и на жёлтой
@@ -99,29 +99,13 @@ describe('контраст светлой темы', () => {
   );
 
   it.each(Object.entries(LIGHT_PALETTES))(
-    'на палитре «%s» зелёный и жёлтый читаются только на 800',
+    'на палитре «%s» статусный текст на 800 читается',
     (_label, light) => {
       applyLight(light);
       const surface = triplet('--color-champagne-50');
 
-      for (const status of ['success', 'warning'] as const) {
-        // Ровно причина ремапа: 700 не добирает, 800 добирает.
-        expect(contrast(triplet(`--color-${status}-700`), surface)).toBeLessThan(WCAG_BODY_TEXT);
+      for (const status of ['accent', 'success', 'warning', 'error'] as const) {
         expect(contrast(triplet(`--color-${status}-800`), surface)).toBeGreaterThanOrEqual(
-          WCAG_BODY_TEXT,
-        );
-      }
-    },
-  );
-
-  it.each(Object.entries(LIGHT_PALETTES))(
-    'на палитре «%s» синий и красный проходят уже на 700',
-    (_label, light) => {
-      applyLight(light);
-      const surface = triplet('--color-champagne-50');
-
-      for (const status of ['accent', 'error'] as const) {
-        expect(contrast(triplet(`--color-${status}-700`), surface)).toBeGreaterThanOrEqual(
           WCAG_BODY_TEXT,
         );
       }

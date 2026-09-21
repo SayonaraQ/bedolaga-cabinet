@@ -3,6 +3,9 @@
  * Provides consistent colors for the glassmorphic card components
  * that work on both dark and light backgrounds.
  */
+// Цвет текста темы: darkText в тёмной, через ремап .light — lightText в светлой.
+const TEXT_VAR = '--color-dark-50';
+
 export function getGlassColors(isDark: boolean) {
   return {
     // Card container
@@ -19,21 +22,20 @@ export function getGlassColors(isDark: boolean) {
     hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     hoverBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
 
-    // Text.
-    //
-    // В светлой теме полупрозрачный чёрный не годится: rgba(0,0,0,0.35) на
-    // белой карточке даёт контраст 2.6, а 0.25 — 2.0. Берём шкалу champagne,
-    // которую applyThemeColors строит из цветов оператора и где на 500 и 600
-    // стоят пороги ensureReadable (3.8 и 5.0). Заодно цвета едут за палитрой,
-    // если её поменяют в админке.
-    //
-    // Тёмная ветка не тронута: там белый с альфой ложится на тёмный фон и
-    // читается, а замена шкалой заметно осветлила бы весь мелкий текст.
-    text: isDark ? '#fff' : 'rgb(var(--color-champagne-950))',
-    textSecondary: isDark ? 'rgba(255,255,255,0.4)' : 'rgb(var(--color-champagne-700))',
-    textMuted: isDark ? 'rgba(255,255,255,0.3)' : 'rgb(var(--color-champagne-600))',
-    textFaint: isDark ? 'rgba(255,255,255,0.25)' : 'rgb(var(--color-champagne-500))',
-    textGhost: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    // Text — из палитры оператора, а не зашитые белый/чёрный: иначе кастомный
+    // цвет текста не доходил до дашборда и карточек подписок. Годится только
+    // для CSS-свойств: в SVG-атрибутах var() не раскрывается — там передавать
+    // через style={{ stroke }}.
+    text: `rgb(var(${TEXT_VAR}))`,
+    // Вторичный текст — готовые токены палитры, а не доля основного цвета.
+    // Доля (0.4 / 0.3 / 0.25) давала контраст 3.4 и ниже: подписи «Трафик»,
+    // «104.0 / 1500 ГБ» и дата в карточке подписки читались с трудом. Токены
+    // dark-400/500 клампятся по контрасту в applyThemeColors, поэтому остаются
+    // читаемыми на любой палитре оператора.
+    textSecondary: 'rgb(var(--color-dark-400))',
+    textMuted: 'rgb(var(--color-dark-500))',
+    textFaint: 'rgb(var(--color-dark-500))',
+    textGhost: `rgba(var(${TEXT_VAR}), ${isDark ? 0.08 : 0.06})`,
 
     // Progress bar track
     trackBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',

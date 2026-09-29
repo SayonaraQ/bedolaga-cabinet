@@ -2,6 +2,9 @@ import { Suspense, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { brandingApi } from '@/api/branding';
+import { themeColorsApi } from '@/api/themeColors';
+import { DEFAULT_THEME_COLORS } from '@/types/theme';
+import { useTheme } from '@/hooks/useTheme';
 import type { AnimationConfig, BackgroundType } from '@/components/ui/backgrounds/types';
 import { DEFAULT_ANIMATION_CONFIG } from '@/components/ui/backgrounds/types';
 import { backgroundComponents, prefetchBackground } from '@/components/ui/backgrounds/registry';
@@ -37,11 +40,54 @@ function reduceMobileSettings(settings: Record<string, unknown>): Record<string,
   return reduced;
 }
 
+/**
+ * Фон анимации — ОДНА настройка на обе темы, и оператор задаёт её под тёмную.
+ * Слой лежит на весь вьюпорт под контентом, а холст заливает его непрозрачным
+ * цветом каждый кадр (без этого не выходит след частиц). В светлой теме это
+ * давало чёрную страницу со светлыми карточками поверх.
+ *
+ * Поэтому в светлой теме ground подменяется фоном страницы из брендинга: тот же
+ * цвет стоит на body, так что шва не видно, и он следует за палитрой, которую
+ * оператор поменяет в админке.
+ *
+ * Цвет приходит параметром, а не читается из getComputedStyle(document.body):
+ * класс .light вешается эффектом, и чтение DOM в момент переключения темы
+ * вернуло бы фон предыдущей.
+ */
+export function applyThemeGround(
+  settings: Record<string, unknown>,
+  isLight: boolean,
+  lightBackground: string,
+): Record<string, unknown> {
+  if (!isLight) return settings;
+  if (!('backgroundColor' in settings)) return settings;
+  return { ...settings, backgroundColor: lightBackground };
+}
+
 function RenderBackground({ config }: { config: AnimationConfig }) {
   const prefersReducedMotion = useMemo(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     [],
   );
+
+  const { isLight } = useTheme();
+
+  // Тот же ключ, что у ThemeColorsProvider — берём из кэша, лишнего запроса нет.
+  const { data: themeColors } = useQuery({
+    queryKey: ['theme-colors'],
+    queryFn: themeColorsApi.getColors,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  const settings = useMemo(() => {
+    const isMobile = window.innerWidth < 768;
+    const base =
+      config.reducedOnMobile && isMobile ? reduceMobileSettings(config.settings) : config.settings;
+
+    return applyThemeGround(base, isLight, (themeColors ?? DEFAULT_THEME_COLORS).lightBackground);
+  }, [config.reducedOnMobile, config.settings, isLight, themeColors]);
 
   if (!config.enabled || config.type === 'none' || prefersReducedMotion) {
     return null;
@@ -53,8 +99,6 @@ function RenderBackground({ config }: { config: AnimationConfig }) {
   if (!Component) return null;
 
   const isMobile = window.innerWidth < 768;
-  const settings =
-    config.reducedOnMobile && isMobile ? reduceMobileSettings(config.settings) : config.settings;
 
   // On mobile, cap blur to 4px max — full blur is extremely GPU-heavy
   const effectiveBlur = isMobile ? Math.min(config.blur, 4) : config.blur;

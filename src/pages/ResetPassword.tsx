@@ -5,6 +5,7 @@ import { authApi } from '../api/auth';
 import { getApiErrorMessage } from '../utils/api-error';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { CheckIcon } from '@/components/icons';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -122,13 +123,11 @@ export default function ResetPassword() {
                   <label htmlFor="password" className="label">
                     {t('auth.password', 'Password')}
                   </label>
-                  <input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="input"
                     autoComplete="new-password"
                     disabled={status === 'loading'}
                   />
@@ -138,13 +137,11 @@ export default function ResetPassword() {
                   <label htmlFor="confirmPassword" className="label">
                     {t('auth.confirmPassword', 'Confirm Password')}
                   </label>
-                  <input
+                  <PasswordInput
                     id="confirmPassword"
-                    type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="input"
                     autoComplete="new-password"
                     disabled={status === 'loading'}
                   />

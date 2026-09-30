@@ -10,6 +10,7 @@ import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import ProviderIcon from '../components/ProviderIcon';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { getErrorDetail, saveLinkOAuthState } from '../utils/oauth';
 import { getApiErrorMessage } from '../utils/api-error';
 import { getTelegramInitData } from '../hooks/useTelegramSDK';
@@ -814,13 +815,11 @@ export default function ConnectedAccounts() {
                             <label htmlFor="email-link-password" className="label">
                               {t('auth.password')}
                             </label>
-                            <input
+                            <PasswordInput
                               id="email-link-password"
-                              type="password"
                               value={emailPassword}
                               onChange={(e) => setEmailPassword(e.target.value)}
                               placeholder={t('profile.passwordPlaceholder')}
-                              className="input"
                               autoComplete="new-password"
                             />
                             <p className="mt-1 text-xs text-dark-500">
@@ -831,13 +830,11 @@ export default function ConnectedAccounts() {
                             <label htmlFor="email-link-confirm" className="label">
                               {t('auth.confirmPassword')}
                             </label>
-                            <input
+                            <PasswordInput
                               id="email-link-confirm"
-                              type="password"
                               value={emailConfirmPassword}
                               onChange={(e) => setEmailConfirmPassword(e.target.value)}
                               placeholder={t('profile.confirmPasswordPlaceholder')}
-                              className="input"
                               autoComplete="new-password"
                             />
                           </div>

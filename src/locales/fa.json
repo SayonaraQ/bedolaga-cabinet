@@ -205,6 +205,8 @@
     "email": "ایمیل",
     "password": "رمز عبور",
     "confirmPassword": "تایید رمز عبور",
+    "showPassword": "نمایش رمز عبور",
+    "hidePassword": "پنهان کردن رمز عبور",
     "forgotPassword": "رمز عبور را فراموش کردید؟",
     "resetPassword": "بازنشانی رمز عبور",
     "loginWithTelegram": "ورود با تلگرام",

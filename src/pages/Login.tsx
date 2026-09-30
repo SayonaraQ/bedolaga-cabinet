@@ -26,6 +26,7 @@ import { saveOAuthState } from '../utils/oauth';
 import { getPendingReferralCode } from '../utils/referral';
 import { UsersIcon, EmailIcon, RefreshIcon, ChevronDownIcon } from '@/components/icons';
 import { CheckEmailCard } from '@/components/auth/CheckEmailCard';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import LegalFooter from '../components/LegalFooter';
 import LegalConsent from '../components/LegalConsent';
 import LegalConsentGate from '../components/LegalConsentGate';
@@ -694,15 +695,13 @@ export default function Login() {
                               <label htmlFor="password" className="label">
                                 {t('auth.password')}
                               </label>
-                              <input
+                              <PasswordInput
                                 id="password"
                                 name="password"
-                                type="password"
                                 autoComplete={
                                   authMode === 'login' ? 'current-password' : 'new-password'
                                 }
                                 required
-                                className="input"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -724,13 +723,11 @@ export default function Login() {
                                 <label htmlFor="confirmPassword" className="label">
                                   {t('auth.confirmPassword', 'Confirm Password')}
                                 </label>
-                                <input
+                                <PasswordInput
                                   id="confirmPassword"
                                   name="confirmPassword"
-                                  type="password"
                                   autoComplete="new-password"
                                   required
-                                  className="input"
                                   placeholder="••••••••"
                                   value={confirmPassword}
                                   onChange={(e) => setConfirmPassword(e.target.value)}

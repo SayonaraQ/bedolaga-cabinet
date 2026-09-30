@@ -200,6 +200,8 @@
     "email": "邮箱",
     "password": "密码",
     "confirmPassword": "确认密码",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
     "forgotPassword": "忘记密码？",
     "resetPassword": "重置密码",
     "loginWithTelegram": "通过Telegram登录",

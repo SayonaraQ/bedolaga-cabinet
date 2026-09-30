@@ -50,6 +50,7 @@ import {
   PiWarning,
   PiArrowSquareOut,
   PiEye,
+  PiEyeSlash,
   PiFunnel,
   PiDotsSix,
   PiDotsThree,
@@ -312,6 +313,10 @@ export const NetworkIcon = ({ className }: IconProps) => (
 );
 
 export const EyeIcon = ({ className }: IconProps) => <PiEye className={cn('h-5 w-5', className)} />;
+
+export const EyeSlashIcon = ({ className }: IconProps) => (
+  <PiEyeSlash className={cn('h-5 w-5', className)} />
+);
 
 export const FileTextIcon = ({ className }: IconProps) => (
   <PiFileText className={cn('h-5 w-5', className)} />

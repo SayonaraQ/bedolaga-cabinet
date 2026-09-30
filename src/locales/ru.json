@@ -219,6 +219,8 @@
     "email": "Email",
     "password": "Пароль",
     "confirmPassword": "Подтвердите пароль",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль",
     "firstName": "Имя",
     "firstNamePlaceholder": "Ваше имя (необязательно)",
     "forgotPassword": "Забыли пароль?",

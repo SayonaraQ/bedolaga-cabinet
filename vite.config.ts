@@ -79,6 +79,13 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: false,
+      // Дефолт Vite 8 — Safari/iOS 16.4: с ним в бандле остаётся class static
+      // block из @radix-ui, и Safari 16.0–16.3 падает на нём SyntaxError — кабинет
+      // и мини-приложение в Telegram на таких iPhone показывают пустой фон.
+      // Это прежний дефолт Vite 7. Ниже не опускать без полифилов: Radix зовёт
+      // Array.prototype.toSorted (Safari 16.0+), а цель переписывает только синтаксис.
+      // Сторож — src/buildTarget.test.ts.
+      target: ['chrome107', 'edge107', 'firefox104', 'safari16', 'ios16'],
       chunkSizeWarningLimit: 550,
       rolldownOptions: {
         // Barrel-файлы src/**/index.ts(x) — чистые реэкспорты без побочных эффектов.

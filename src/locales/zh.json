@@ -2145,7 +2145,8 @@
       "auth": {
         "single_method": "仅单一登录方式",
         "telegram_only": "仅Telegram登录",
-        "email_only": "仅邮箱登录"
+        "email_only": "仅邮箱登录",
+        "no_telegram": "未绑定Telegram（邮箱或社交账号登录）"
       },
       "segment": {
         "active": "有效订阅",
@@ -2174,7 +2175,7 @@
         "registeredDays": "注册后至少N天",
         "inactiveDays": "不活跃N天",
         "audience": "当前符合条件",
-        "repeatEvery": "机器人内每N天重复一次",
+        "repeatEvery": "每N天重复（机器人；在个人中心关闭的卡片N天后重新显示）",
         "maxSends": "机器人内最大发送次数",
         "title": "标题",
         "body": "正文",

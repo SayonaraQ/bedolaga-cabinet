@@ -3053,7 +3053,8 @@
       "auth": {
         "single_method": "Single sign-in method only",
         "telegram_only": "Telegram sign-in only",
-        "email_only": "Email sign-in only"
+        "email_only": "Email sign-in only",
+        "no_telegram": "No Telegram linked (email or social login)"
       },
       "segment": {
         "active": "Active subscription",
@@ -3082,7 +3083,7 @@
         "registeredDays": "No earlier than N days after registration",
         "inactiveDays": "Inactive for N days",
         "audience": "Currently match",
-        "repeatEvery": "Repeat in bot every N days",
+        "repeatEvery": "Repeat every N days (bot; a dismissed cabinet card comes back after N days)",
         "maxSends": "Max sends in bot",
         "title": "Title",
         "body": "Text",

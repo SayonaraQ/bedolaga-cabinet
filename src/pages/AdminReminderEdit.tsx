@@ -290,6 +290,7 @@ export default function AdminReminderEdit() {
             <option value="single_method">{t('admin.reminders.auth.single_method')}</option>
             <option value="telegram_only">{t('admin.reminders.auth.telegram_only')}</option>
             <option value="email_only">{t('admin.reminders.auth.email_only')}</option>
+            <option value="no_telegram">{t('admin.reminders.auth.no_telegram')}</option>
           </select>
         </label>
         <label className="block text-sm text-dark-300">

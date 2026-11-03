@@ -2,7 +2,7 @@ import apiClient from './client';
 
 export type ReminderChannels = 'bot' | 'cabinet' | 'both';
 export type ReminderButtonKind = 'none' | 'cabinet' | 'url';
-export type AuthCondition = 'telegram_only' | 'email_only' | 'single_method';
+export type AuthCondition = 'telegram_only' | 'email_only' | 'single_method' | 'no_telegram';
 export type SubscriptionSegment =
   | 'active'
   | 'trial'

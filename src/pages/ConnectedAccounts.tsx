@@ -1,3 +1,4 @@
+import { getLocalizedApiErrorMessage } from '../utils/api-error-display';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -101,7 +102,11 @@ export function TelegramLinkWidget() {
       if (mountedRef.current) {
         showToast({
           type: 'error',
-          message: getErrorDetail(err) || t('profile.accounts.linkError'),
+          message: getLocalizedApiErrorMessage(
+            err,
+            getErrorDetail(err) || t('profile.accounts.linkError'),
+            t,
+          ),
         });
       }
     } finally {
@@ -183,7 +188,11 @@ export function TelegramLinkWidget() {
       if (mountedRef.current) {
         showToast({
           type: 'error',
-          message: getErrorDetail(err) || t('profile.accounts.linkError'),
+          message: getLocalizedApiErrorMessage(
+            err,
+            getErrorDetail(err) || t('profile.accounts.linkError'),
+            t,
+          ),
         });
       }
     }
@@ -441,7 +450,7 @@ export default function ConnectedAccounts() {
       } else if (detail.includes('already have a verified email')) {
         setEmailError(t('profile.alreadyHaveEmail'));
       } else {
-        setEmailError(detail || t('common.error'));
+        setEmailError(getLocalizedApiErrorMessage(err, t('common.error'), t));
       }
       setEmailSuccess(null);
     },
@@ -473,7 +482,7 @@ export default function ConnectedAccounts() {
       }
     },
     onError: (err: unknown) => {
-      setEmailError(getApiErrorMessage(err, t('profile.emailMergeCodeInvalid')));
+      setEmailError(getLocalizedApiErrorMessage(err, t('profile.emailMergeCodeInvalid'), t));
     },
   });
 
@@ -566,7 +575,11 @@ export default function ConnectedAccounts() {
     } catch (err: unknown) {
       showToast({
         type: 'error',
-        message: getErrorDetail(err) || t('profile.accounts.linkError'),
+        message: getLocalizedApiErrorMessage(
+          err,
+          getErrorDetail(err) || t('profile.accounts.linkError'),
+          t,
+        ),
       });
       setLinkingProvider(null);
     }
@@ -587,7 +600,14 @@ export default function ConnectedAccounts() {
         showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
       }
     } catch (err: unknown) {
-      showToast({ type: 'error', message: getErrorDetail(err) || t('profile.accounts.linkError') });
+      showToast({
+        type: 'error',
+        message: getLocalizedApiErrorMessage(
+          err,
+          getErrorDetail(err) || t('profile.accounts.linkError'),
+          t,
+        ),
+      });
     } finally {
       setLinkingProvider(null);
     }
@@ -817,7 +837,7 @@ export default function ConnectedAccounts() {
                         <form onSubmit={handleEmailSubmit} className="space-y-3">
                           <div>
                             <label htmlFor="email-link-input" className="label">
-                              Email
+                              {t('auth.email')}
                             </label>
                             <input
                               id="email-link-input"

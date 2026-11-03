@@ -73,6 +73,7 @@ const SESSION_FILTERS: GraceSessionFilter[] = [
 const NUMERIC_FIELDS = [
   'duration_hours',
   'traffic_gb',
+  'limited_strip_buffer_mb',
   'reconcile_interval_seconds',
   'reconcile_batch_size',
   'candidate_lookback_minutes',
@@ -107,6 +108,18 @@ export function externalChoiceOf(value: string): ExternalChoice {
   return 'custom';
 }
 
+/** Список сквадов «без белых списков»: через запятую, пробел или с новой строки, без повторов. */
+export function parseStripSquads(raw: string): string[] {
+  return Array.from(
+    new Set(
+      raw
+        .split(/[\s,;]+/)
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
 export function toForm(config: GraceAccessConfig): GraceForm {
   return { ...config };
 }
@@ -127,6 +140,19 @@ export function graceFormIssues(form: GraceForm): GraceAccessIssue[] {
       issues.push({ field, code: 'squad_required', severity: 'error' });
     } else if (!UUID_PATTERN.test(value)) {
       issues.push({ field, code: 'squad_invalid', severity: 'error' });
+    }
+  }
+
+  if (form.limited_strategy === 'strip_squads') {
+    const stripSquads = parseStripSquads(form.limited_strip_squad_uuids);
+    if (stripSquads.length === 0) {
+      issues.push({
+        field: 'limited_strip_squad_uuids',
+        code: 'squad_required',
+        severity: 'error',
+      });
+    } else if (!stripSquads.every((value) => UUID_PATTERN.test(value))) {
+      issues.push({ field: 'limited_strip_squad_uuids', code: 'squad_invalid', severity: 'error' });
     }
   }
 
@@ -1023,6 +1049,97 @@ export default function AdminGraceAccess() {
             />
             {lockNote('limited_squad_uuid')}
           </div>
+        </div>
+        <div className="mt-5 space-y-3 border-t border-dark-700/40 pt-4">
+          <div>
+            <FieldLabel htmlFor="grace-limited-strategy">
+              {t('admin.graceAccess.fields.limited_strategy')}
+            </FieldLabel>
+            <select
+              id="grace-limited-strategy"
+              className="input"
+              value={form.limited_strategy}
+              disabled={isLocked('limited_strategy')}
+              onChange={(event) =>
+                update(
+                  'limited_strategy',
+                  event.target.value as GraceAccessConfig['limited_strategy'],
+                )
+              }
+            >
+              <option value="squad">{t('admin.graceAccess.strategy.squad')}</option>
+              <option value="strip_squads">{t('admin.graceAccess.strategy.strip_squads')}</option>
+            </select>
+            <FieldHint>
+              {form.limited_strategy === 'strip_squads'
+                ? t('admin.graceAccess.strategy.stripDesc')
+                : t('admin.graceAccess.strategy.squadDesc')}
+            </FieldHint>
+            {lockNote('limited_strategy')}
+          </div>
+          {form.limited_strategy === 'strip_squads' && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel htmlFor="grace-strip-squads">
+                  {t('admin.graceAccess.fields.limited_strip_squad_uuids')}
+                </FieldLabel>
+                {squads?.items?.length ? (
+                  <div
+                    id="grace-strip-squads"
+                    className={cn(
+                      'space-y-1.5 rounded-xl border border-dark-700/50 p-3',
+                      invalidFields.has('limited_strip_squad_uuids') && 'border-error-500/50',
+                    )}
+                  >
+                    {squads.items.map((squad) => {
+                      const selected = parseStripSquads(form.limited_strip_squad_uuids);
+                      const checked = selected.includes(squad.uuid);
+                      return (
+                        <label
+                          key={squad.uuid}
+                          className="flex items-center gap-2 text-sm text-dark-100"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={isLocked('limited_strip_squad_uuids')}
+                            onChange={() =>
+                              update(
+                                'limited_strip_squad_uuids',
+                                (checked
+                                  ? selected.filter((value) => value !== squad.uuid)
+                                  : [...selected, squad.uuid]
+                                ).join(', '),
+                              )
+                            }
+                          />
+                          <span className="min-w-0 truncate">{squad.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <input
+                    id="grace-strip-squads"
+                    className={cn(
+                      'input',
+                      invalidFields.has('limited_strip_squad_uuids') && 'border-error-500/50',
+                    )}
+                    value={form.limited_strip_squad_uuids}
+                    disabled={isLocked('limited_strip_squad_uuids')}
+                    onChange={(event) => update('limited_strip_squad_uuids', event.target.value)}
+                  />
+                )}
+                <FieldHint>{t('admin.graceAccess.strategy.stripSquadsDesc')}</FieldHint>
+                {lockNote('limited_strip_squad_uuids')}
+              </div>
+              {numberField('limited_strip_buffer_mb', {
+                min: 1,
+                max: 102400,
+                description: t('admin.graceAccess.strategy.bufferDesc'),
+              })}
+            </div>
+          )}
         </div>
       </SectionCard>
 

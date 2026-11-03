@@ -54,6 +54,9 @@ const config = (overrides: Partial<GraceAccessConfig> = {}): GraceAccessConfig =
   duration_hours: 72,
   expired_squad_uuid: EXPIRED_UUID,
   limited_squad_uuid: LIMITED_UUID,
+  limited_strategy: 'squad',
+  limited_strip_squad_uuids: '',
+  limited_strip_buffer_mb: 100,
   external_squad_uuid: '',
   traffic_gb: 1,
   reset_traffic_on_start: false,
@@ -674,5 +677,65 @@ describe('уведомления и «что доступно»', () => {
 
     expect(saveButton().disabled).toBe(true);
     expect(screen.getAllByText(/Не заполнено, что остаётся доступным/).length).toBeGreaterThan(0);
+  });
+});
+
+describe('strip_squads: снимать только белые списки', () => {
+  it('без списка сквадов форма не даёт сохранить, с валидным — даёт', async () => {
+    const { graceFormIssues, parseStripSquads, toForm } = await import('./AdminGraceAccess');
+    const strip = toForm(config({ limited_strategy: 'strip_squads' }));
+
+    expect(graceFormIssues(strip)).toContainEqual({
+      field: 'limited_strip_squad_uuids',
+      code: 'squad_required',
+      severity: 'error',
+    });
+    expect(
+      graceFormIssues({ ...strip, limited_strip_squad_uuids: `${LIMITED_UUID}, не-uuid` }),
+    ).toContainEqual({
+      field: 'limited_strip_squad_uuids',
+      code: 'squad_invalid',
+      severity: 'error',
+    });
+    expect(
+      graceFormIssues({ ...strip, limited_strip_squad_uuids: LIMITED_UUID }).filter(
+        (issue) => issue.field === 'limited_strip_squad_uuids',
+      ),
+    ).toEqual([]);
+    // Стратегия squad список не требует.
+    expect(
+      graceFormIssues(toForm(config())).filter(
+        (issue) => issue.field === 'limited_strip_squad_uuids',
+      ),
+    ).toEqual([]);
+    expect(parseStripSquads(` ${LIMITED_UUID}\n${EXPIRED_UUID} ,${LIMITED_UUID}`)).toEqual([
+      LIMITED_UUID,
+      EXPIRED_UUID,
+    ]);
+  });
+
+  it('у каждой новой подписи есть перевод во всех языках', () => {
+    for (const locale of [ruLocale, enLocale, zhLocale, faLocale]) {
+      const grace = (
+        locale as unknown as { admin: { graceAccess: Record<string, Record<string, string>> } }
+      ).admin.graceAccess;
+      for (const key of [
+        'limited_strategy',
+        'limited_strip_squad_uuids',
+        'limited_strip_buffer_mb',
+      ]) {
+        expect(grace.fields[key]).toBeTruthy();
+      }
+      for (const key of [
+        'squad',
+        'strip_squads',
+        'squadDesc',
+        'stripDesc',
+        'stripSquadsDesc',
+        'bufferDesc',
+      ]) {
+        expect(grace.strategy[key]).toBeTruthy();
+      }
+    }
   });
 });

@@ -3428,7 +3428,10 @@
         "candidate_lookback_minutes": "Lookback window, min",
         "allowed_services": "What stays reachable",
         "notify_admins": "Notify admins",
-        "notify_user": "Tell the user"
+        "notify_user": "Tell the user",
+        "limited_strategy": "When traffic runs out",
+        "limited_strip_squad_uuids": "Squads to remove",
+        "limited_strip_buffer_mb": "Limit buffer, MB"
       },
       "squads": {
         "title": "Squads",
@@ -3543,6 +3546,14 @@
         "notify_adminsDesc": "Who got it, why, until when and how it ended — in the “Renewals” category",
         "notify_user": "The user in the bot and by email",
         "notify_userDesc": "The subscription ended but access to what is named above is kept for a while, with a renew button; and when that access closes"
+      },
+      "strategy": {
+        "squad": "Move to the grace squad for the grace period",
+        "strip_squads": "Remove only the selected squads (whitelists)",
+        "squadDesc": "Previous behaviour: only the traffic-exhausted squad stays for the grace period.",
+        "stripDesc": "Only the selected squads are removed, everything else keeps working. They come back on a traffic purchase or reset; when the subscription ends, the usual expiry grace applies. Fits when traffic is counted only on the removed squads.",
+        "stripSquadsDesc": "Usually the whitelist squad — the only one where traffic is counted.",
+        "bufferDesc": "The panel limit becomes \"usage + buffer\": the app shows exhausted traffic, and if the squad is returned bypassing the bot, the user hits the buffer."
       }
     },
     "bulkActions": {

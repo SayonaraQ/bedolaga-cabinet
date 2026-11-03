@@ -12,11 +12,22 @@ import apiClient from './client';
 
 export type GraceAccessMode = 'false' | 'observe' | 'true' | 'drain';
 
+export type GraceLimitedStrategy = 'squad' | 'strip_squads';
+
 export interface GraceAccessConfig {
   mode: GraceAccessMode;
   duration_hours: number;
   expired_squad_uuid: string;
   limited_squad_uuid: string;
+  /**
+   * Исчерпан трафик: `squad` — перевести в сквад grace на срок grace; `strip_squads` —
+   * снять только сквады из списка (белые списки) до докупки трафика, сброса или конца подписки.
+   */
+  limited_strategy: GraceLimitedStrategy;
+  /** UUID снимаемых сквадов через запятую. */
+  limited_strip_squad_uuids: string;
+  /** Запас лимита на время режима: в панели лимит = расход + запас. */
+  limited_strip_buffer_mb: number;
   external_squad_uuid: string;
   traffic_gb: number;
   /** Zero the panel usage counter on grant — expired unlimited subscriptions only. */

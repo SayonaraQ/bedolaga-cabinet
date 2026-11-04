@@ -26,6 +26,7 @@ import { PromptDialogHost } from '@/components/PromptDialogHost';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import TicketNotificationBell from '@/components/TicketNotificationBell';
 import { NavUnreadDot } from './NavUnreadDot';
+import { RenewBarHost } from './RenewBar';
 import {
   SubscriptionIcon,
   GiftIcon,
@@ -295,6 +296,8 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Mobile Bottom Navigation — только на экранах её кнопок */}
       {showMobileNav && <MobileBottomNav items={navItems} isMenuOpen={mobileMenuOpen} />}
+      {/* «Продлить» за 3 дня до конца — только там, где есть нижнее меню (решение 05.11.2026). */}
+      {showMobileNav && !mobileMenuOpen && <RenewBarHost />}
     </div>
   );
 }

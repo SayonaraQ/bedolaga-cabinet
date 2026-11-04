@@ -939,6 +939,21 @@
       "newPackage": "新流量包",
       "switch": "更改",
       "switched": "流量已更改"
+    },
+    "nextTrafficReset": {
+      "line1": "下次流量",
+      "line2": "重置："
+    },
+    "buyTrafficButton": "＋ 购买流量",
+    "devicesSection": {
+      "title": "设备",
+      "hint": "点击设备可重命名或断开连接",
+      "addSlot": "＋ 增加名额",
+      "reduce": "− 减少",
+      "rename": "重命名",
+      "disconnect": "断开",
+      "disconnectAll": "断开所有设备",
+      "addedOn": "{{platform}} · 添加于 {{date}}"
     }
   },
   "balance": {
@@ -9960,5 +9975,14 @@
     "testUntil": "试用访问已激活，有效期至 {{until}}",
     "discount": "{{percent}}% 折扣已激活！",
     "discountUntil": "{{percent}}% 折扣已激活！有效期至 {{until}}"
+  },
+  "renewBar": {
+    "label": "订阅即将到期",
+    "daysLeft_other": "剩余 {{count}} 天",
+    "lastDay": "订阅最后一天",
+    "until": "至 {{date}}",
+    "renew": "续订",
+    "subscribe": "订阅",
+    "hideUntilTomorrow": "明天前不再显示"
   }
 }

@@ -4,7 +4,7 @@ import { uiLocale } from '@/utils/uiLocale';
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
 import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
@@ -16,8 +16,14 @@ import { copyToClipboard } from '../utils/clipboard';
 import { useTheme } from '../hooks/useTheme';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
-import { planTitle, showsAddonOptions } from '../utils/legacySubscription';
 import {
+  canOpenTariffSwitch,
+  planTitle,
+  showsAddonOptions,
+  tariffSelectionPath,
+} from '../utils/legacySubscription';
+import {
+  ArrowsLeftRightIcon,
   CalendarIcon,
   CheckIcon,
   ClockIcon,
@@ -38,7 +44,7 @@ import {
   canReissueLink,
   ReissueLinkButton,
 } from '../components/subscription/manage/ReissueLinkButton';
-import { DevicesPanel } from '../components/subscription/manage/DevicesPanel';
+import { DeviceSlotsPanel } from '../components/subscription/manage/DeviceSlotsPanel';
 import { useScrollToSection } from '../hooks/useScrollToSection';
 import { RecurringPanels } from '../components/subscription/manage/RecurringPanels';
 import { DeviceTopupSheet } from '../components/subscription/sheets/DeviceTopupSheet';
@@ -54,10 +60,13 @@ const CountdownTimer = memo(function CountdownTimer({
   endDate,
   isActive,
   glassColors: g,
+  footer,
 }: {
   endDate: string;
   isActive: boolean;
   glassColors: ReturnType<typeof getGlassColors>;
+  /** «Продлить подписку» прямо под сроком (макет 05.11.2026). */
+  footer?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -89,6 +98,7 @@ const CountdownTimer = memo(function CountdownTimer({
 
   return (
     <div
+      data-testid="countdown-card"
       className="min-w-0 overflow-hidden rounded-[14px] p-3.5"
       style={{
         background: isExpired
@@ -188,6 +198,7 @@ const CountdownTimer = memo(function CountdownTimer({
           </div>
         </div>
       )}
+      {footer && <div className="mt-3.5">{footer}</div>}
     </div>
   );
 });
@@ -299,6 +310,14 @@ export default function Subscription() {
   const purchaseOptions = purchaseOptionsQuery.data;
 
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
+  // Макет 05.11.2026: у активной тарифной подписки «Продлить» и «Сменить тариф»
+  // стоят у срока и у названия, а не общим блоком внизу. Остальные состояния
+  // (истекла, триал, старая без тарифа) — по-прежнему через PurchaseCTAButton.
+  const inlineCtas = isTariffsMode && !!subscription && canOpenTariffSwitch(subscription);
+  const canManageAddons = isTariffsMode && !!subscription && showsAddonOptions(subscription);
+  const canBuyTraffic = canManageAddons && (subscription?.traffic_limit_gb ?? 0) > 0;
+  const nextTrafficReset =
+    trafficData?.next_traffic_refresh_at ?? subscription?.next_traffic_refresh_at ?? null;
 
   // Devices query
   // Счётчик подключённых устройств в шапке. Сам список живёт в <DevicesPanel>
@@ -518,6 +537,15 @@ export default function Subscription() {
                   <h2 className="text-lg font-bold tracking-tight text-dark-50">
                     {planTitle(subscription, t)}
                   </h2>
+                  {inlineCtas && (
+                    <Link
+                      to={tariffSelectionPath(subscription.id)}
+                      className="cta-shine mt-2.5 inline-flex h-[34px] items-center gap-1.5 rounded-full border border-accent-500/35 bg-accent-500/10 px-3.5 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                    >
+                      <ArrowsLeftRightIcon className="h-3.5 w-3.5" />
+                      {t('subscription.switchTariff.title')}
+                    </Link>
+                  )}
                 </div>
 
                 {/* Status badge */}
@@ -704,7 +732,58 @@ export default function Subscription() {
                     compact
                   />
                 )}
-                <ManagedTrafficSummary subscription={subscription} refreshed={trafficData} />
+                {/* Строки текста не переносятся: на 320–360 px («Увеличенный» вид iPhone,
+                    маленькие Android) колонка сжималась и рвала «Следующи-й». Если рядом
+                    места нет, кнопка уходит под текст, прижатая вправо. */}
+                {(nextTrafficReset || canBuyTraffic) && (
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                    {nextTrafficReset ? (
+                      <div className="whitespace-nowrap text-xs leading-snug text-dark-400">
+                        <div>{t('subscription.nextTrafficReset.line1')}</div>
+                        <div>
+                          {t('subscription.nextTrafficReset.line2')}{' '}
+                          <span className="font-bold text-dark-50">
+                            {new Date(nextTrafficReset).toLocaleDateString(uiLocale(), {
+                              day: 'numeric',
+                              month: 'long',
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <span />
+                    )}
+                    {canBuyTraffic && (
+                      <button
+                        type="button"
+                        onClick={() => setShowTrafficTopup((open) => !open)}
+                        className="cta-shine cta-shine-late ml-auto inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-3 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                      >
+                        {t('subscription.buyTrafficButton')}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {canBuyTraffic && showTrafficTopup && (
+                  <div className="mt-3">
+                    <TrafficTopupSheet
+                      open
+                      onOpen={() => setShowTrafficTopup(true)}
+                      onClose={() => setShowTrafficTopup(false)}
+                      subscription={subscription}
+                      subscriptionId={subscriptionId}
+                      selectedTrafficPackage={selectedTrafficPackage}
+                      onSelectedTrafficPackageChange={setSelectedTrafficPackage}
+                      purchaseOptions={purchaseOptions}
+                      isDark={isDark}
+                    />
+                  </div>
+                )}
+                <ManagedTrafficSummary
+                  subscription={subscription}
+                  refreshed={trafficData}
+                  hideNextRefresh={Boolean(nextTrafficReset)}
+                />
               </div>
 
               {/* ─── Connect Device Button ─── */}
@@ -849,6 +928,17 @@ export default function Subscription() {
                   endDate={subscription.end_date}
                   isActive={subscription.is_active || subscription.is_limited}
                   glassColors={g}
+                  footer={
+                    inlineCtas && !subscription.is_daily ? (
+                      <Link
+                        to={`/subscriptions/${subscription.id}/renew`}
+                        className="cta-pulse flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-accent-500 text-base font-bold text-on-accent transition-colors hover:bg-accent-600"
+                      >
+                        <RefreshIcon className="h-[18px] w-[18px]" />
+                        {t('subscription.extend')}
+                      </Link>
+                    ) : undefined
+                  }
                 />
               </div>
 
@@ -999,6 +1089,72 @@ export default function Subscription() {
         </div>
       )}
 
+      {/* Устройства: слоты «приложение · устройство», докупка и уменьшение лимита.
+          Заменил «Дополнительные опции» (для тарифов) и нижний список «Мои устройства». */}
+      {subscription && (
+        <div
+          id="devices"
+          className="relative scroll-mt-24 overflow-hidden rounded-3xl"
+          style={{
+            background: g.cardBg,
+            border: `1px solid ${g.cardBorder}`,
+            boxShadow: g.shadow,
+            padding: '22px 20px',
+          }}
+        >
+          <DeviceSlotsPanel
+            subscriptionId={subscriptionId}
+            deviceLimit={subscription.device_limit}
+            onConnect={() => navigate(`/connection?sub=${subscription.id}`)}
+            onAddSlot={
+              canManageAddons
+                ? () => {
+                    setShowDeviceReduction(false);
+                    setShowDeviceTopup((open) => !open);
+                  }
+                : undefined
+            }
+            onReduce={
+              canManageAddons
+                ? () => {
+                    setShowDeviceTopup(false);
+                    setShowDeviceReduction((open) => !open);
+                  }
+                : undefined
+            }
+          />
+          {canManageAddons && showDeviceTopup && (
+            <div className="mt-4">
+              <DeviceTopupSheet
+                open
+                onOpen={() => setShowDeviceTopup(true)}
+                onClose={() => setShowDeviceTopup(false)}
+                subscription={subscription}
+                subscriptionId={subscriptionId}
+                devicesToAdd={devicesToAdd}
+                onDevicesToAddChange={setDevicesToAdd}
+                purchaseOptions={purchaseOptions}
+                isDark={isDark}
+              />
+            </div>
+          )}
+          {canManageAddons && showDeviceReduction && (
+            <div className="mt-4">
+              <DeviceReductionSheet
+                open
+                onOpen={() => setShowDeviceReduction(true)}
+                onClose={() => setShowDeviceReduction(false)}
+                subscriptionPresent
+                subscriptionId={subscriptionId}
+                targetDeviceLimit={targetDeviceLimit}
+                onTargetDeviceLimitChange={setTargetDeviceLimit}
+                isDark={isDark}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Daily Subscription Pause */}
       {subscription && subscription.is_daily && !subscription.is_trial && (
         <div
@@ -1014,12 +1170,14 @@ export default function Subscription() {
         </div>
       )}
 
-      {/* Purchase / Renewal CTA */}
-      <PurchaseCTAButton
-        subscription={subscription}
-        isMultiTariff={isMultiTariff}
-        isTariffsMode={isTariffsMode}
-      />
+      {/* Purchase / Renewal CTA — у активной тарифной подписки кнопки уже в карточке */}
+      {!inlineCtas && (
+        <PurchaseCTAButton
+          subscription={subscription}
+          isMultiTariff={isMultiTariff}
+          isTariffsMode={isTariffsMode}
+        />
+      )}
 
       {/* Delete expired subscription */}
       {isMultiTariff &&
@@ -1042,8 +1200,9 @@ export default function Subscription() {
           </div>
         )}
 
-      {/* Additional Options (Buy Devices) */}
-      {subscription && showsAddonOptions(subscription) && (
+      {/* Additional Options — только классический режим: на тарифах докупка трафика
+          стоит у полосы трафика, устройства — в разделе «Устройства». */}
+      {subscription && !isTariffsMode && showsAddonOptions(subscription) && (
         <div
           className="relative overflow-hidden rounded-3xl"
           style={{
@@ -1136,22 +1295,6 @@ export default function Subscription() {
             subscriptionId={subscriptionId}
             connectedDevices={devicesData?.total ?? 0}
           />
-        </div>
-      )}
-
-      {/* My Devices Section */}
-      {subscription && (
-        <div
-          id="devices"
-          className="relative scroll-mt-24 overflow-hidden rounded-3xl"
-          style={{
-            background: g.cardBg,
-            border: `1px solid ${g.cardBorder}`,
-            boxShadow: g.shadow,
-            padding: '24px 28px',
-          }}
-        >
-          <DevicesPanel subscription={subscription} subscriptionId={subscriptionId} />
         </div>
       )}
     </div>

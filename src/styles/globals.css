@@ -102,6 +102,47 @@
   animation: copy-link-halo 2.2s ease-out infinite;
 }
 
+/* Кнопки действий на странице подписки (макет 05.11.2026): «Продлить» пульсирует
+   тем же ореолом, что и копирование ссылки, «Сменить тариф» / «Докупить трафик»
+   — с бликом раз в несколько секунд. Глобальное правило reduced-motion ниже
+   гасит обе анимации. */
+.cta-pulse {
+  animation: copy-link-halo 2.2s ease-out infinite;
+}
+
+.cta-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 38%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-20deg);
+  animation: cta-shine-sweep 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Второй блик на экране — со сдвигом, чтобы кнопки не вспыхивали одновременно. */
+.cta-shine-late::after {
+  animation-delay: 1.1s;
+}
+
+@keyframes cta-shine-sweep {
+  0% {
+    left: -60%;
+  }
+  55%,
+  100% {
+    left: 130%;
+  }
+}
+
 @keyframes copy-link-halo {
   0% {
     box-shadow: 0 0 0 0 rgba(var(--color-accent-400), 0.45);
@@ -134,12 +175,24 @@
     --mobile-nav-height: 76px;
     --mobile-nav-offset: max(16px, env(safe-area-inset-bottom, 0px));
     --mobile-nav-clearance: calc(var(--mobile-nav-height) + var(--mobile-nav-offset) + 12px);
+    --renew-bar-height: 72px;
   }
 
   /* Экраны без панели (вложенные страницы, админка): AppShell ставит
      data-mobile-nav="off", и прижатым к низу элементам остаётся только отступ от края. */
   [data-mobile-nav="off"] {
     --mobile-nav-clearance: var(--mobile-nav-offset);
+  }
+
+  /* Панель «Продлить» (RenewBar) висит над нижним меню: всё прижатое к низу и
+     низ контента поднимается ещё на её высоту. */
+  [data-renew-bar="on"] {
+    --mobile-nav-clearance: calc(
+      var(--mobile-nav-height) +
+      var(--mobile-nav-offset) +
+      12px +
+      var(--renew-bar-height)
+    );
   }
 
   :root {

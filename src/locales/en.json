@@ -991,6 +991,21 @@
         "missingSubscription": "Subscription not found. Refresh and select it again.",
         "selectSubscription": "Select the subscription you want to set up automatic payments for first."
       }
+    },
+    "nextTrafficReset": {
+      "line1": "Next traffic",
+      "line2": "reset:"
+    },
+    "buyTrafficButton": "＋ Buy traffic",
+    "devicesSection": {
+      "title": "Devices",
+      "hint": "Tap a device to rename or disconnect it",
+      "addSlot": "＋ Add a slot",
+      "reduce": "− Reduce",
+      "rename": "Rename",
+      "disconnect": "Disconnect",
+      "disconnectAll": "Disconnect all devices",
+      "addedOn": "{{platform}} · added {{date}}"
     }
   },
   "balance": {
@@ -10092,5 +10107,15 @@
     "testUntil": "Test access activated until {{until}}",
     "discount": "Discount of {{percent}}% activated!",
     "discountUntil": "Discount of {{percent}}% activated! Valid until {{until}}"
+  },
+  "renewBar": {
+    "label": "Subscription is ending",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "lastDay": "Last day of your subscription",
+    "until": "until {{date}}",
+    "renew": "Renew",
+    "subscribe": "Subscribe",
+    "hideUntilTomorrow": "Hide until tomorrow"
   }
 }

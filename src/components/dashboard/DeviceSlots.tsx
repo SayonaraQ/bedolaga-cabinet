@@ -2,35 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useHaptic } from '@/platform';
 import { Button } from '@/components/primitives/Button';
-import {
-  ExclamationIcon,
-  MonitorIcon,
-  PhoneIcon,
-  PlusIcon,
-  TabletIcon,
-  TvIcon,
-} from '@/components/icons';
+import { PlusIcon } from '@/components/icons';
 import { useTheme } from '../../hooks/useTheme';
 import { getGlassColors } from '../../utils/glassTheme';
-import {
-  appLabel,
-  deviceKind,
-  slotDeviceNames,
-  findMultiAppDevices,
-  slotGridColumns,
-  type DeviceKind,
-  type SlotDevice,
-} from '../../utils/deviceSlots';
-
-/** Больше слотов рисовать ячейками нет смысла: свободные сворачиваются в одну. */
-const MAX_DRAWN_SLOTS = 12;
-
-const KIND_ICON: Record<DeviceKind, (props: { className?: string }) => React.ReactElement> = {
-  phone: PhoneIcon,
-  tablet: TabletIcon,
-  pc: MonitorIcon,
-  tv: TvIcon,
-};
+import { appLabel, slotDeviceNames, type SlotDevice } from '../../utils/deviceSlots';
+import { MultiAppNotes, SlotGrid, SlotIcon, useSlotStatus } from './SlotGrid';
 
 interface DeviceSlotsProps {
   subscription: {
@@ -42,12 +18,6 @@ interface DeviceSlotsProps {
   devices: SlotDevice[];
 }
 
-/** «INCY и Happ», «INCY, Happ и v2RayTun» — без Intl.ListFormat: библиотека типов проекта старше ES2021. */
-function listFormat(items: string[], and: string): string {
-  if (items.length <= 1) return items.join('');
-  return `${items.slice(0, -1).join(', ')} ${and} ${items[items.length - 1]}`;
-}
-
 /**
  * Слоты устройств на главной: ячейка = приложение на устройстве.
  *
@@ -55,6 +25,7 @@ function listFormat(items: string[], and: string): string {
  * но не что занимает слоты, и человек с подпиской в INCY и Happ на одном
  * телефоне не понимал, куда делся слот. А при полном лимите плитка становилась
  * серой и некликабельной — теперь вместо неё путь к управлению устройствами.
+ * Сетка общая со страницей подписки (SlotGrid).
  */
 export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps) {
   const { t } = useTranslation();
@@ -62,23 +33,18 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
   const haptic = useHaptic();
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
+  const limit = subscription.device_limit;
+  const used = devices.length;
+  const status = useSlotStatus(limit, used);
 
   if (!subscription.subscription_url) return null;
 
-  const limit = subscription.device_limit;
-  const used = devices.length;
-  const unlimited = limit === 0;
-  const isFull = !unlimited && used >= limit;
-  const free = unlimited ? 0 : Math.max(limit - used, 0);
-  const multiApp = findMultiAppDevices(devices);
-  const multiAppHwids = new Set(multiApp.flatMap((m) => m.hwids));
-  // У всех HWID одного телефона — одно имя: INCY пишет «Xiaomi 25102PCBEG», Happ — «25102PCBEG».
   const names = slotDeviceNames(devices);
   const nameOf = (device: SlotDevice) => names.get(device.hwid) ?? device.platform;
 
   const manage = () => {
     haptic.impact('light');
-    // Сразу к списку «Мои устройства» внизу страницы подписки: там отключают и переименовывают.
+    // Сразу к разделу «Устройства» на странице подписки: там отключают и переименовывают.
     navigate(`/subscriptions/${subscription.id}#devices`);
   };
   const connect = () => {
@@ -86,23 +52,7 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
     navigate(`/connection?sub=${subscription.id}`);
   };
 
-  const status = unlimited
-    ? t('dashboard.devicesConnectedUnlimited', { used })
-    : isFull
-      ? limit === 1
-        ? t('dashboard.slots.oneTaken')
-        : t('dashboard.slots.allTaken', { used, max: limit })
-      : t('dashboard.slots.usedFree', { used, max: limit, count: free });
-
   const single = limit === 1 && used <= 1;
-  const drawnFree = unlimited ? (used === 0 ? 1 : 0) : free;
-  const collapseFree = !unlimited && used + free > MAX_DRAWN_SLOTS;
-  const columns = slotGridColumns(unlimited ? Math.max(used, 1) : Math.max(limit, used));
-
-  const renderIcon = (device: SlotDevice, className: string) => {
-    const Icon = KIND_ICON[deviceKind(device.platform)];
-    return <Icon className={className} />;
-  };
 
   return (
     <section className="mb-5 flex flex-col gap-3" data-onboarding="connect-devices">
@@ -110,8 +60,10 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
         <h3 className="text-sm font-semibold tracking-tight text-dark-50">
           {t('dashboard.slots.title')}
         </h3>
-        <span className={`text-xs font-semibold ${isFull ? 'text-warning-400' : 'text-dark-400'}`}>
-          {status}
+        <span
+          className={`text-xs font-semibold ${status.isFull ? 'text-warning-400' : 'text-dark-400'}`}
+        >
+          {status.text}
         </span>
       </div>
       {single ? (
@@ -120,7 +72,11 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
           style={{ background: g.innerBg, border: `1px solid ${g.innerBorder}` }}
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
-            {devices[0] ? renderIcon(devices[0], 'h-5 w-5') : <PlusIcon className="h-5 w-5" />}
+            {devices[0] ? (
+              <SlotIcon device={devices[0]} className="h-5 w-5" />
+            ) : (
+              <PlusIcon className="h-5 w-5" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-bold text-accent-400">
@@ -145,85 +101,12 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
           )}
         </div>
       ) : (
-        <div
-          className="grid gap-2"
-          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-        >
-          {devices.map((device) => {
-            const app = appLabel(device.app);
-            const name = nameOf(device);
-            const twin = multiAppHwids.has(device.hwid);
-            return (
-              <button
-                key={device.hwid}
-                type="button"
-                onClick={manage}
-                className="flex min-h-[86px] min-w-0 flex-col items-center justify-center gap-1 rounded-[14px] px-1 py-2 text-center transition-colors"
-                style={{
-                  background: g.innerBg,
-                  border: twin
-                    ? '1.5px solid rgba(var(--color-warning-500), 0.55)'
-                    : `1px solid ${g.innerBorder}`,
-                }}
-              >
-                {renderIcon(device, 'h-[18px] w-[18px] text-dark-400')}
-                <span className="max-w-full break-words text-xs font-extrabold leading-tight text-accent-400 [overflow-wrap:anywhere]">
-                  {app ?? name}
-                </span>
-                {app && (
-                  <span className="max-w-full break-words text-[10px] font-semibold leading-tight text-dark-400 [overflow-wrap:anywhere]">
-                    {name}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-          {collapseFree ? (
-            <button
-              type="button"
-              onClick={connect}
-              className="flex min-h-[86px] flex-col items-center justify-center gap-1.5 rounded-[14px] text-accent-400"
-              style={{ border: '1.5px dashed rgba(var(--color-accent-500), 0.4)' }}
-            >
-              <PlusIcon className="h-5 w-5" />
-              <span className="text-[10px] font-semibold">
-                {t('dashboard.slots.moreFree', { count: free })}
-              </span>
-            </button>
-          ) : (
-            Array.from({ length: drawnFree }, (_, i) => (
-              <button
-                key={`free-${i}`}
-                type="button"
-                onClick={connect}
-                className="flex min-h-[86px] flex-col items-center justify-center gap-1.5 rounded-[14px] text-accent-400"
-                style={{ border: '1.5px dashed rgba(var(--color-accent-500), 0.4)' }}
-              >
-                <PlusIcon className="h-5 w-5" />
-                <span className="text-[10px] font-semibold">{t('dashboard.slots.free')}</span>
-              </button>
-            ))
-          )}
-        </div>
+        <SlotGrid devices={devices} limit={limit} onDeviceClick={manage} onFreeClick={connect} />
       )}
 
-      {multiApp.map((group) => (
-        <div
-          key={group.hwids.join(',')}
-          className="flex items-start gap-2.5 rounded-[14px] border border-warning-500/40 bg-warning-500/10 p-3"
-        >
-          <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-warning-400" />
-          <p className="text-xs leading-relaxed text-dark-100">
-            {t('dashboard.slots.multiApp', {
-              model: group.model,
-              count: group.hwids.length,
-              apps: listFormat(group.apps, t('dashboard.slots.and')),
-            })}
-          </p>
-        </div>
-      ))}
+      <MultiAppNotes devices={devices} />
 
-      {isFull ? (
+      {status.isFull ? (
         <Button size="lg" fullWidth className="h-[52px] font-bold" onClick={manage}>
           {subscription.is_trial ? t('dashboard.slots.freeUp') : t('dashboard.slots.freeUpOrAdd')}
         </Button>

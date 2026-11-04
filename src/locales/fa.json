@@ -984,7 +984,22 @@
     "allDevicesDeleted": "همه دستگاه‌ها حذف شدند",
     "platform": "پلتفرم",
     "model": "مدل",
-    "devicesFree_other": "{{count}} دستگاه رایگان"
+    "devicesFree_other": "{{count}} دستگاه رایگان",
+    "nextTrafficReset": {
+      "line1": "بازنشانی بعدی",
+      "line2": "ترافیک:"
+    },
+    "buyTrafficButton": "＋ خرید ترافیک",
+    "devicesSection": {
+      "title": "دستگاه‌ها",
+      "hint": "برای تغییر نام یا قطع اتصال، روی دستگاه بزنید",
+      "addSlot": "＋ افزودن جایگاه",
+      "reduce": "− کاهش",
+      "rename": "تغییر نام",
+      "disconnect": "قطع اتصال",
+      "disconnectAll": "قطع اتصال همه دستگاه‌ها",
+      "addedOn": "{{platform}} · افزوده شده {{date}}"
+    }
   },
   "balance": {
     "paymentEmail": "ایمیل پرداخت",
@@ -10101,5 +10116,15 @@
     "testUntil": "دسترسی آزمایشی تا {{until}} فعال شد",
     "discount": "تخفیف {{percent}}% فعال شد!",
     "discountUntil": "تخفیف {{percent}}% فعال شد! معتبر تا {{until}}"
+  },
+  "renewBar": {
+    "label": "اشتراک در حال پایان است",
+    "daysLeft_one": "{{count}} روز مانده",
+    "daysLeft_other": "{{count}} روز مانده",
+    "lastDay": "آخرین روز اشتراک",
+    "until": "تا {{date}}",
+    "renew": "تمدید",
+    "subscribe": "اشتراک",
+    "hideUntilTomorrow": "تا فردا پنهان شود"
   }
 }

@@ -7,12 +7,19 @@ interface Props {
   subscription: TrafficAccountingSummary;
   refreshed?: TrafficAccountingSummary | null;
   className?: string;
+  /** Страница подписки сама пишет «Следующий сброс трафика» рядом с «Докупить трафик». */
+  hideNextRefresh?: boolean;
 }
 
 const isBalance = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0;
 
-export default function ManagedTrafficSummary({ subscription, refreshed, className = '' }: Props) {
+export default function ManagedTrafficSummary({
+  subscription,
+  refreshed,
+  className = '',
+  hideNextRefresh = false,
+}: Props) {
   const { t } = useTranslation();
   const latest = <K extends keyof TrafficAccountingSummary>(key: K) =>
     refreshed?.[key] !== undefined ? refreshed[key] : subscription[key];
@@ -30,7 +37,7 @@ export default function ManagedTrafficSummary({ subscription, refreshed, classNa
     ...(isBalance(base)
       ? [{ key: 'baseRemaining', value: formatTraffic(base), prominent: false }]
       : []),
-    ...(nextDate && Number.isFinite(nextDate.getTime())
+    ...(!hideNextRefresh && nextDate && Number.isFinite(nextDate.getTime())
       ? [
           {
             key: 'nextRefresh',

@@ -1023,6 +1023,21 @@
         "missingSubscription": "Подписка не найдена. Обновите страницу и выберите её заново.",
         "selectSubscription": "Сначала выберите подписку, для которой подключаете автоплатёж."
       }
+    },
+    "nextTrafficReset": {
+      "line1": "Следующий сброс",
+      "line2": "трафика:"
+    },
+    "buyTrafficButton": "＋ Докупить трафик",
+    "devicesSection": {
+      "title": "Устройства",
+      "hint": "Нажмите на устройство, чтобы переименовать или отключить его",
+      "addSlot": "＋ Добавить слот",
+      "reduce": "− Уменьшить",
+      "rename": "Переименовать",
+      "disconnect": "Отключить",
+      "disconnectAll": "Отключить все устройства",
+      "addedOn": "{{platform}} · добавлено {{date}}"
     }
   },
   "balance": {
@@ -10221,5 +10236,16 @@
     "testUntil": "Пробный доступ активирован до {{until}}",
     "discount": "Скидка {{percent}}% активирована!",
     "discountUntil": "Скидка {{percent}}% активирована! Действует до {{until}}"
+  },
+  "renewBar": {
+    "label": "Подписка заканчивается",
+    "daysLeft_one": "Остался {{count}} день",
+    "daysLeft_few": "Осталось {{count}} дня",
+    "daysLeft_many": "Осталось {{count}} дней",
+    "lastDay": "Последний день подписки",
+    "until": "до {{date}}",
+    "renew": "Продлить",
+    "subscribe": "Оформить",
+    "hideUntilTomorrow": "Скрыть до завтра"
   }
 }

@@ -1331,6 +1331,15 @@
   },
   "support": {
     "title": "支持",
+    "subtitle": "选择联系方式",
+    "hero": {
+      "title": "请描述遇到的问题",
+      "text": "回复会显示在这里，并通过机器人通知您。可以直接附上截图或视频。",
+      "textEmail": "回复会显示在这里，并通过邮件通知您。可以直接附上截图或视频。",
+      "activeTitle": "工单处理中",
+      "openTicket": "打开对话",
+      "activeHint": "此工单关闭后才能创建新工单"
+    },
     "newTicket": "新工单",
     "yourTickets": "您的工单",
     "noTickets": "暂无工单",
@@ -1371,6 +1380,8 @@
     "useExternalLink": "请使用外部链接获取支持",
     "create_ticket": "创建工单",
     "writeButton": "发消息",
+    "telegramTitle": "通过 Telegram 联系",
+    "telegramHint": "如果工单无法提交",
     "errors": {
       "alreadyOpenTicket": "您已有一个未关闭的工单。请在该工单中继续沟通，当前工单关闭后即可创建新工单。",
       "createFailed": "创建工单失败，请重试。",

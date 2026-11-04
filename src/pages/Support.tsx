@@ -12,17 +12,30 @@ import { logger } from '../utils/logger';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
 
 import { isOpenTicketConflict } from '../utils/ticketErrors';
-import type { SupportConfig, TicketDetail } from '../types';
+import type { SupportConfig, Ticket, TicketDetail } from '../types';
 import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
-import { ChatIcon, CloseIcon, ImageIcon, PlusIcon, SendIcon } from '@/components/icons';
+import {
+  ChatIcon,
+  ChevronRightIcon,
+  CloseIcon,
+  EditIcon,
+  ImageIcon,
+  SendIcon,
+  TelegramIcon,
+} from '@/components/icons';
 import { usePlatform } from '@/platform';
 import { linkifyText } from '../utils/linkify';
 import { resolveSupportContact } from '../utils/supportContact';
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 const log = logger.createLogger('Support');
+
+// Бэк держит одну незакрытую заявку на пользователя: open/answered считаются
+// активными (TicketCRUD.user_has_active_ticket), на вторую POST отвечает 409.
+// pending создание не блокирует — его здесь нет намеренно.
+const ACTIVE_TICKET_STATUSES = new Set(['open', 'answered']);
 
 const MEDIA_TYPES: Record<string, 'photo' | 'video'> = {
   'image/jpeg': 'photo',
@@ -50,6 +63,8 @@ export default function Support() {
 
   const { t } = useTranslation();
   const isAdmin = useAuthStore((state) => state.isAdmin);
+  // Без Telegram бот шлёт уведомление об ответе письмом, а не в чат.
+  const notifyByEmail = useAuthStore((state) => !!state.user && !state.user.telegram_id);
   const queryClient = useQueryClient();
   const { openTelegramLink, openLink } = usePlatform();
 
@@ -82,6 +97,17 @@ export default function Support() {
   const replyFileInputRef = useRef<HTMLInputElement>(null);
 
   const blobUrlsRef = useRef<Set<string>>(new Set());
+  const detailRef = useRef<HTMLDivElement>(null);
+  const selectedTicketId = selectedTicket?.id;
+
+  // На телефоне форма и переписка стоят под списком заявок, за краем экрана:
+  // без прокрутки нажатие «Создать заявку» выглядело так, будто ничего не
+  // произошло. На десктопе панель и так рядом со списком — страницу не дёргаем.
+  useEffect(() => {
+    if (!showCreateForm && selectedTicketId === undefined) return;
+    if (window.matchMedia?.('(min-width: 1024px)').matches) return;
+    detailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [showCreateForm, selectedTicketId]);
 
   useEffect(() => {
     const urls = blobUrlsRef;
@@ -104,6 +130,20 @@ export default function Support() {
     });
     setReplyAttachments([]);
     if (replyFileInputRef.current) replyFileInputRef.current.value = '';
+  };
+
+  const openCreateForm = () => {
+    setShowCreateForm(true);
+    setSelectedTicket(null);
+    setFormError(null);
+    clearCreateAttachments();
+  };
+
+  const openTicket = (ticket: Ticket) => {
+    setSelectedTicket(ticket as unknown as TicketDetail);
+    setShowCreateForm(false);
+    setFormError(null);
+    clearReplyAttachments();
   };
 
   // Get support configuration
@@ -349,6 +389,13 @@ export default function Support() {
       </div>
     );
 
+  // Запасной канал есть только в режиме «both» и только с открываемым контактом.
+  const contactTarget =
+    supportConfig?.support_type === 'both' && supportConfig.support_username
+      ? resolveSupportContact(supportConfig)
+      : null;
+  const activeTicket = tickets?.items.find((item) => ACTIVE_TICKET_STATUSES.has(item.status));
+
   return (
     <motion.div
       className="space-y-6"
@@ -356,55 +403,116 @@ export default function Support() {
       initial="initial"
       animate="animate"
     >
-      <motion.div
-        variants={staggerItem}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
+      <motion.div variants={staggerItem}>
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('support.title')}</h1>
-        <Button
-          onClick={() => {
-            setShowCreateForm(true);
-            setSelectedTicket(null);
-            setFormError(null);
-            clearCreateAttachments();
-          }}
-        >
-          <PlusIcon />
-          <span className="ml-2">{t('support.newTicket')}</span>
-        </Button>
+        {contactTarget && <p className="mt-1 text-sm text-dark-400">{t('support.subtitle')}</p>}
       </motion.div>
 
-      {/* Contact support card for "both" mode — self-animated: mounts after the
-          config query resolves, when the parent stagger orchestration has already
-          finished and would leave it stuck at opacity 0 */}
-      {supportConfig?.support_type === 'both' &&
-        supportConfig.support_username &&
-        resolveSupportContact(supportConfig) && (
-          <motion.div variants={staggerItem} initial="initial" animate="animate">
-            {/* Длинный ник поддержки уводил «Написать» за край карточки, а карточка
-                обрезает всё, что за краем: текст сжимается, кнопка — нет. */}
-            <Card className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-dark-800">
-                  <ChatIcon className="h-5 w-5 text-dark-400" />
+      {/* Заявка — первое и главное действие экрана. Раньше здесь была кнопка
+          «Новый тикет» в шапке, а ниже карточка «Связаться с поддержкой →
+          Написать»: люди читали вторую как «связаться» и уходили в личку. */}
+      <motion.section
+        variants={staggerItem}
+        className="rounded-[var(--bento-radius-lg)] border-[1.5px] border-accent-500 bg-accent-500/10 p-5 sm:p-6"
+      >
+        {activeTicket ? (
+          <div className="flex flex-col gap-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-accent-400">
+                {t('support.hero.activeTitle')}
+              </span>
+              <span className={`${getStatusBadge(activeTicket.status)} flex-shrink-0`}>
+                {getStatusLabel(activeTicket.status)}
+              </span>
+            </div>
+            <h2 className="break-words text-lg font-bold leading-snug text-dark-50">
+              {activeTicket.title}
+            </h2>
+            {activeTicket.last_message?.message_text && (
+              <div className="rounded-xl border border-dark-700/40 bg-dark-900/70 px-3.5 py-3">
+                <div
+                  className={`text-xs font-semibold ${activeTicket.last_message.is_from_admin ? 'text-accent-400' : 'text-dark-400'}`}
+                >
+                  {activeTicket.last_message.is_from_admin
+                    ? t('support.supportTeam')
+                    : t('support.you')}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-dark-100">{t('support.contactUs')}</div>
-                  <div className="truncate text-xs text-dark-400">
-                    {supportConfig.support_username}
-                  </div>
-                </div>
+                <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-dark-100">
+                  {activeTicket.last_message.message_text}
+                </p>
               </div>
-              <Button
-                variant="secondary"
-                className="shrink-0 whitespace-nowrap"
-                onClick={() => openSupportContact(supportConfig)}
-              >
-                {t('support.writeButton', 'Написать')}
-              </Button>
-            </Card>
-          </motion.div>
+            )}
+            <Button
+              size="lg"
+              fullWidth
+              className="h-[52px] font-bold"
+              onClick={() => openTicket(activeTicket)}
+            >
+              <ChatIcon className="h-5 w-5" />
+              {t('support.hero.openTicket')}
+            </Button>
+            <p className="text-center text-xs text-dark-400">{t('support.hero.activeHint')}</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-accent-500 text-on-accent">
+                <ChatIcon className="h-[22px] w-[22px]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold leading-snug text-dark-50">
+                  {t('support.hero.title')}
+                </h2>
+                <p className="mt-1.5 text-sm leading-relaxed text-dark-400">
+                  {notifyByEmail ? t('support.hero.textEmail') : t('support.hero.text')}
+                </p>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              className="h-[52px] w-full shrink-0 font-bold sm:w-auto"
+              onClick={openCreateForm}
+            >
+              <EditIcon className="h-5 w-5" />
+              {t('support.newTicket')}
+            </Button>
+          </div>
         )}
+      </motion.section>
+
+      {/* Telegram — запасной путь, строкой под заявкой, а не равной кнопкой.
+          Self-animated: монтируется после ответа конфига, когда stagger родителя
+          уже отыграл и оставил бы его на opacity 0. */}
+      {contactTarget && supportConfig && (
+        <motion.div variants={staggerItem} initial="initial" animate="animate">
+          <button
+            type="button"
+            onClick={() => openSupportContact(supportConfig)}
+            className="flex w-full items-center gap-3 rounded-[var(--bento-radius)] border border-dark-700/40 bg-dark-900/70 px-4 py-3.5 text-left transition-colors hover:border-dark-600/50 hover:bg-dark-800/60"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-dark-800 text-dark-400">
+              {contactTarget.kind === 'telegram' ? (
+                <TelegramIcon className="h-5 w-5" />
+              ) : (
+                <ChatIcon className="h-5 w-5" />
+              )}
+            </span>
+            {/* Длинный ник не должен выталкивать стрелку за край: подпись переносится
+                (а не режется многоточием — иначе пропадает «когда сюда писать»), иконки не сжимаются. */}
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-dark-100">
+                {contactTarget.kind === 'telegram'
+                  ? t('support.telegramTitle')
+                  : t('support.openSupport')}
+              </span>
+              <span className="mt-0.5 block break-words text-xs leading-snug text-dark-400">
+                {supportConfig.support_username} · {t('support.telegramHint')}
+              </span>
+            </span>
+            <ChevronRightIcon className="h-[18px] w-[18px] shrink-0 text-dark-400" />
+          </button>
+        </motion.div>
+      )}
 
       <motion.div variants={staggerItem} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Tickets List */}
@@ -420,12 +528,7 @@ export default function Support() {
               {tickets.items.map((ticket) => (
                 <button
                   key={ticket.id}
-                  onClick={() => {
-                    setSelectedTicket(ticket as unknown as TicketDetail);
-                    setShowCreateForm(false);
-                    setFormError(null);
-                    clearReplyAttachments();
-                  }}
+                  onClick={() => openTicket(ticket)}
                   className={`w-full rounded-bento border p-4 text-left transition-all ${
                     selectedTicket?.id === ticket.id
                       ? 'border-accent-500 bg-accent-500/10'
@@ -445,17 +548,19 @@ export default function Support() {
               ))}
             </div>
           ) : (
-            <div className="py-12 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
-                <ChatIcon className="h-8 w-8 text-dark-500" />
-              </div>
-              <div className="text-dark-400">{t('support.noTickets')}</div>
-            </div>
+            // Пустой список — строкой: большая иконка тут спорила с кнопкой заявки.
+            <p className="-mt-2 text-sm text-dark-400">{t('support.noTickets')}</p>
           )}
         </Card>
 
-        {/* Ticket Detail / Create Form */}
-        <Card className="lg:col-span-2">
+        {/* Ticket Detail / Create Form. Пустая панель «выберите заявку» на телефоне
+            — полэкрана ни о чём, там она скрыта; на десктопе это правая колонка. */}
+        <Card
+          ref={detailRef}
+          className={`scroll-mt-24 lg:col-span-2 ${
+            !showCreateForm && !selectedTicket ? 'hidden lg:block' : ''
+          }`}
+        >
           {showCreateForm ? (
             <div>
               <h2 className="mb-6 text-lg font-semibold text-dark-100">

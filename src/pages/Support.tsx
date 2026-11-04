@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ticketsApi } from '../api/tickets';
+import { ticketNotificationsApi } from '../api/ticketNotifications';
+import { SUPPORT_UNREAD_COUNT_KEY } from '../hooks/useSupportUnreadCount';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
 import { infoApi } from '../api/info';
 import { useAuthStore } from '../store/auth';
@@ -108,6 +110,19 @@ export default function Support() {
     if (window.matchMedia?.('(min-width: 1024px)').matches) return;
     detailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }, [showCreateForm, selectedTicketId]);
+
+  // Ответ прочитан здесь, в переписке: гасим и колокольчик, и точку на вкладке.
+  // Без этого они горели, пока человек не откроет сам колокольчик.
+  useEffect(() => {
+    if (selectedTicketId === undefined) return;
+    ticketNotificationsApi
+      .markTicketAsRead(selectedTicketId)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: SUPPORT_UNREAD_COUNT_KEY });
+        queryClient.invalidateQueries({ queryKey: ['ticket-notifications'] });
+      })
+      .catch(() => undefined);
+  }, [selectedTicketId, queryClient]);
 
   useEffect(() => {
     const urls = blobUrlsRef;

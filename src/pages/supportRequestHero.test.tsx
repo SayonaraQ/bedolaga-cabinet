@@ -15,6 +15,7 @@ const state = vi.hoisted(() => ({
   config: { tickets_enabled: true, support_type: 'tickets' } as Record<string, unknown>,
   tickets: [] as Record<string, unknown>[],
   getTicket: vi.fn(),
+  markRead: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -30,6 +31,9 @@ vi.mock('@/platform', () => ({
     openLink: vi.fn(),
     openTelegramLink: vi.fn(),
   }),
+}));
+vi.mock('../api/ticketNotifications', () => ({
+  ticketNotificationsApi: { markTicketAsRead: state.markRead },
 }));
 vi.mock('../api/tickets', () => ({
   ticketsApi: {
@@ -92,6 +96,7 @@ beforeEach(() => {
     is_reply_blocked: false,
     messages: [],
   }));
+  state.markRead.mockResolvedValue({ success: true, marked_count: 1 });
   useAuthStore.setState({ user: { id: 1, telegram_id: 42 } as unknown as User });
   Element.prototype.scrollIntoView = vi.fn();
 });
@@ -156,6 +161,18 @@ it.each(['pending', 'closed'])('lets a %s ticket coexist with a new request', as
 
   expect(await screen.findByRole('button', { name: 'support.newTicket' })).toBeTruthy();
   expect(screen.queryByText('support.hero.activeTitle')).toBeNull();
+});
+
+// Без этого колокольчик и точка на вкладке горели, пока человек не откроет
+// колокольчик, хотя ответ он уже прочитал здесь, в переписке.
+it('marks the reply as read once the conversation is opened', async () => {
+  state.tickets = [ticket(7, 'answered', 'Не подключается на iPhone')];
+  renderSupport();
+
+  expect(state.markRead).not.toHaveBeenCalled();
+  fireEvent.click(await screen.findByRole('button', { name: 'support.hero.openTicket' }));
+
+  await waitFor(() => expect(state.markRead).toHaveBeenCalledWith(7));
 });
 
 it('scrolls the form into view when the request button is pressed', async () => {

@@ -2,7 +2,7 @@ import { resolveCisPayTarget } from '@/utils/cispayRecurring';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
 import { getGlassColors } from '../utils/glassTheme';
@@ -17,12 +17,13 @@ import { TariffPickerLite } from '../components/subscription/purchase/TariffPick
 import { formatLiteDate } from '@/utils/liteDate';
 import { useLiteMode } from '../hooks/useLiteMode';
 import { ClassicPurchaseWizard } from '../components/subscription/purchase/ClassicPurchaseWizard';
-import { ExclamationIcon, SparklesIcon } from '@/components/icons';
+import { ChatIcon, ExclamationIcon, SparklesIcon } from '@/components/icons';
 import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 export default function SubscriptionPurchase() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const subscriptionId = searchParams.get('subscriptionId')
     ? parseInt(searchParams.get('subscriptionId')!, 10)
     : undefined;
@@ -431,7 +432,10 @@ export default function SubscriptionPurchase() {
         />
       )}
 
-      {/* No options available fallback */}
+      {/* Пустая витрина — почти всегда настройка, а не сбой: тарифы не привязаны
+          к промогруппе человека (сентябрь 2026 — 510 аккаунтов с пустым магазином,
+          деньги на балансе, купить нечего). «Повторить» этого не лечит, поэтому
+          главное действие — поддержка; повтор оставлен второстепенным. */}
       {purchaseOptions &&
         !optionsLoading &&
         !(isTariffsMode && tariffs.length > 0) &&
@@ -443,15 +447,31 @@ export default function SubscriptionPurchase() {
               border: `1px solid ${g.cardBorder}`,
             }}
           >
-            <p className="mb-4 text-dark-300">
-              {t('subscription.noOptionsAvailable', 'Нет доступных вариантов подписки')}
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-dark-800 text-dark-400">
+              <ChatIcon className="h-6 w-6" />
+            </div>
+            <h2 className="text-lg font-semibold text-dark-50">
+              {t('subscription.noOptionsTitle')}
+            </h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-dark-300">
+              {t('subscription.noOptionsHint')}
             </p>
-            <button
-              onClick={() => refetchOptions()}
-              className="rounded-xl bg-accent-500 px-6 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-accent-600"
-            >
-              {t('common.retry')}
-            </button>
+            <div className="mt-5 flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate('/support')}
+                className="w-full max-w-xs rounded-xl bg-accent-500 px-6 py-3 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-600"
+              >
+                {t('subscription.noOptionsContactSupport')}
+              </button>
+              <button
+                type="button"
+                onClick={() => refetchOptions()}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-dark-400 transition-colors hover:text-dark-100"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
           </div>
         )}
     </div>

@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePlatform } from '@/platform';
 import { HIDDEN_UNDER_KEYBOARD, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
+import { useSupportUnreadCount } from '@/hooks/useSupportUnreadCount';
+
+import { NavUnreadDot } from './NavUnreadDot';
 
 import { HomeIcon, SubscriptionIcon, WalletIcon, UsersIcon, ChatIcon, WheelIcon } from './icons';
 import type { MobileNavItem, MobileNavKey } from './mobileNavRoutes';
@@ -32,6 +35,7 @@ export function MobileBottomNav({ items, isMenuOpen = false }: MobileBottomNavPr
   const location = useLocation();
   const { haptic } = usePlatform();
   const isKeyboardOpen = useVirtualKeyboard();
+  const supportUnread = useSupportUnreadCount();
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -86,7 +90,12 @@ export function MobileBottomNav({ items, isMenuOpen = false }: MobileBottomNavPr
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
-              <Icon className="relative z-10 h-5 w-5" />
+              <span className="relative z-10 flex">
+                <Icon className="h-5 w-5" />
+                {item.key === 'support' && supportUnread > 0 && (
+                  <NavUnreadDot className="-right-0.5 -top-0.5" />
+                )}
+              </span>
               <span className="relative z-10 mt-1 max-w-full truncate text-2xs">
                 {t(`navShort.${item.key}`, { defaultValue: t(`nav.${item.key}`) })}
               </span>

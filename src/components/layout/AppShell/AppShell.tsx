@@ -14,6 +14,7 @@ import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useLiteMode } from '@/hooks/useLiteMode';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { resetVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
+import { useSupportUnreadCount } from '@/hooks/useSupportUnreadCount';
 import { themeColorsApi } from '@/api/themeColors';
 import { isLogoPreloaded } from '@/api/branding';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ import SuccessNotificationModal from '@/components/SuccessNotificationModal';
 import { PromptDialogHost } from '@/components/PromptDialogHost';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import TicketNotificationBell from '@/components/TicketNotificationBell';
+import { NavUnreadDot } from './NavUnreadDot';
 import {
   SubscriptionIcon,
   GiftIcon,
@@ -92,6 +94,7 @@ export function AppShell({ children }: AppShellProps) {
   // Нижняя панель живёт только на экранах своих кнопок; на остальных её нет и
   // место под неё не резервируется (data-mobile-nav="off" → --mobile-nav-clearance).
   const navItems = mobileNavItems({ wheelEnabled, referralEnabled, lite });
+  const supportUnread = useSupportUnreadCount();
   const showMobileNav = isMobileNavScreen(location.pathname, navItems);
 
   // Desktop navigation — labels always visible (no hover-reveal gimmick)
@@ -124,12 +127,14 @@ export function AppShell({ children }: AppShellProps) {
     admin = false,
   ) => {
     const active = admin ? location.pathname.startsWith('/admin') : isActive(path);
+    // Тот же сигнал, что точка на нижней панели телефона: ответ поддержки не прочитан.
+    const unreadDot = !admin && path === '/support' && supportUnread > 0;
     return (
       <Link
         key={path}
         to={path}
         onClick={handleNavClick}
-        aria-label={label}
+        aria-label={unreadDot ? `${label}, ${t('nav.supportUnread')}` : label}
         className={cn(
           'relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors duration-200',
           active
@@ -154,7 +159,10 @@ export function AppShell({ children }: AppShellProps) {
             transition={{ type: 'spring', stiffness: 500, damping: 35 }}
           />
         )}
-        <Icon className="relative h-4 w-4 shrink-0" />
+        <span className="relative flex shrink-0">
+          <Icon className="h-4 w-4" />
+          {unreadDot && <NavUnreadDot className="-right-1 -top-1" />}
+        </span>
         <span className="relative whitespace-nowrap">{label}</span>
       </Link>
     );

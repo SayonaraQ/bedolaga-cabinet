@@ -126,7 +126,7 @@ describe('витрина тарифов на странице покупки', (
 
     expect(await screen.findByText('Базовый')).toBeTruthy();
     expect(screen.getByText('Премиум')).toBeTruthy();
-    expect(screen.queryByText('Доступных опций нет')).toBeNull();
+    expect(screen.queryByText('subscription.noOptionsTitle')).toBeNull();
   });
 
   it('в простом виде показывает те же тарифы', async () => {
@@ -135,6 +135,6 @@ describe('витрина тарифов на странице покупки', (
 
     expect(await screen.findByText('Базовый')).toBeTruthy();
     expect(screen.getByText('Премиум')).toBeTruthy();
-    expect(screen.queryByText('Доступных опций нет')).toBeNull();
+    expect(screen.queryByText('subscription.noOptionsTitle')).toBeNull();
   });
 });

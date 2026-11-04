@@ -15,6 +15,8 @@ export interface SlotDevice {
   created_at: string | null;
   local_name?: string | null;
   app?: string | null;
+  /** Название по коду модели от бота («25102PCBEG» → «POCO F8 Ultra»); нет — справочник не знает. */
+  device_name?: string | null;
 }
 
 // Сырые токены User-Agent → имя, как его пишет само приложение. На 04.11.2026
@@ -114,10 +116,14 @@ function physicalDevices(devices: SlotDevice[]): PhysicalDevice[] {
     else groups.push([device]);
   }
   return groups.map((members) => {
-    // Самое полное имя из записей группы: «Xiaomi 25102PCBEG», а не «25102PCBEG».
+    // Название от бота, если его знает хоть одна запись телефона; иначе самое
+    // полное имя модели: «Xiaomi 25102PCBEG», а не «25102PCBEG».
+    const marketing = members.map((m) => m.device_name?.trim()).find(Boolean);
     const names = members.map((m) => cleanModel(m.device_model));
-    const name = names.reduce((best, n) => (tokensOf(n).length > tokensOf(best).length ? n : best));
-    return { name, members };
+    const longest = names.reduce((best, n) =>
+      tokensOf(n).length > tokensOf(best).length ? n : best,
+    );
+    return { name: marketing || longest, members };
   });
 }
 
@@ -125,6 +131,7 @@ function physicalDevices(devices: SlotDevice[]): PhysicalDevice[] {
 export function deviceName(device: SlotDevice): string {
   return (
     device.local_name?.trim() ||
+    device.device_name?.trim() ||
     (hasModel(device) ? cleanModel(device.device_model) : '') ||
     device.platform
   );

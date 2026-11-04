@@ -147,3 +147,37 @@ describe('slotGridColumns', () => {
     expect(slotGridColumns(slots)).toBe(cols);
   });
 });
+
+// Бот отдаёт `device_name` по справочнику Google Play: «25102PCBEG» → «POCO F8 Ultra».
+describe('marketing names from the bot', () => {
+  const named = (hwid: string, model: string, app: string, device_name: string | null) => ({
+    ...dev(hwid, 'Android', model, app),
+    device_name,
+  });
+
+  it('shows the marketing name on every slot of the phone and in the warning', () => {
+    const devices = [
+      named('a', 'Xiaomi 25102PCBEG', 'INCY', 'POCO F8 Ultra'),
+      named('b', '25102PCBEG', 'Happ', 'POCO F8 Ultra'),
+    ];
+    const names = slotDeviceNames(devices);
+    expect(names.get('a')).toBe('POCO F8 Ultra');
+    expect(names.get('b')).toBe('POCO F8 Ultra');
+    expect(findMultiAppDevices(devices)[0].model).toBe('POCO F8 Ultra');
+  });
+
+  it('borrows the name from a sibling record of the same phone', () => {
+    const names = slotDeviceNames([
+      named('a', 'Xiaomi 25102PCBEG', 'INCY', 'POCO F8 Ultra'),
+      named('b', '25102PCBEG', 'Happ', null),
+    ]);
+    expect(names.get('b')).toBe('POCO F8 Ultra');
+  });
+
+  it('keeps the user alias above the marketing name', () => {
+    const names = slotDeviceNames([
+      { ...named('a', '25102PCBEG', 'Happ', 'POCO F8 Ultra'), local_name: 'Рабочий' },
+    ]);
+    expect(names.get('a')).toBe('Рабочий');
+  });
+});

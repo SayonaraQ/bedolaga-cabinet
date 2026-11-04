@@ -364,6 +364,7 @@ export const subscriptionApi = {
       created_at: string | null;
       local_name?: string | null;
       app?: string | null;
+      device_name?: string | null;
     }>;
     total: number;
     device_limit: number;

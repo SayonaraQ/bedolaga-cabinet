@@ -118,8 +118,12 @@ export function DevicesPanel({ subscription, subscriptionId }: DevicesPanelProps
           </div>
           {devicesData.devices.map((device) => {
             const isEditing = editingDeviceHwid === device.hwid;
-            // Display priority: user alias → device model → platform.
-            const displayName = device.local_name?.trim() || device.device_model || device.platform;
+            // Порядок: свой псевдоним → название от бота («POCO F8 Ultra») → код модели → платформа.
+            const displayName =
+              device.local_name?.trim() ||
+              device.device_name?.trim() ||
+              device.device_model ||
+              device.platform;
 
             return (
               <div
@@ -144,7 +148,7 @@ export function DevicesPanel({ subscription, subscriptionId }: DevicesPanelProps
                         autoFocus
                         value={editingDeviceName}
                         maxLength={DEVICE_ALIAS_MAX_LENGTH}
-                        placeholder={device.device_model || device.platform}
+                        placeholder={device.device_name || device.device_model || device.platform}
                         onChange={(e) => setEditingDeviceName(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {

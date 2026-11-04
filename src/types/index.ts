@@ -166,6 +166,8 @@ export interface Device {
   local_name?: string | null;
   /** Приложение-клиент (сырой токен User-Agent: Happ, INCY, koala-clash…). Нет у старого бота. */
   app?: string | null;
+  /** Название по коду модели («25102PCBEG» → «POCO F8 Ultra»); нет — справочник бота не знает. */
+  device_name?: string | null;
 }
 
 export interface RenewalOption {

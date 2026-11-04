@@ -375,7 +375,22 @@
     "devicesShort": "台设备",
     "trafficUsage": "{{used}} / {{limit}} GB",
     "usedTraffic": "已使用 {{amount}}",
-    "daysRemaining": "剩余天数"
+    "daysRemaining": "剩余天数",
+    "slots": {
+      "title": "设备",
+      "legend": "一个名额 = 设备上一个添加了订阅的应用",
+      "usedFree_other": "已用 {{used}}/{{max}} · 空闲 {{count}}",
+      "oneTaken": "1/1 · 已占用",
+      "allTaken": "{{used}}/{{max}} · 已全部占用",
+      "free": "空闲",
+      "freeHint": "连接设备",
+      "manage": "管理",
+      "moreFree_other": "+{{count}} 空闲",
+      "multiApp_other": "{{model}} 占用 {{count}} 个名额：订阅已添加到 {{apps}}。每个应用都算作单独的设备。",
+      "freeUp": "释放名额",
+      "freeUpOrAdd": "释放或增加名额",
+      "and": "和"
+    }
   },
   "subscription": {
     "accounting": {

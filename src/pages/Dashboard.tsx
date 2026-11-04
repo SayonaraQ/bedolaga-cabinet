@@ -409,7 +409,7 @@ export default function Dashboard() {
             trafficData={trafficData}
             refreshTrafficMutation={refreshTrafficMutation}
             trafficRefreshCooldown={trafficRefreshCooldown}
-            connectedDevices={devicesData?.total ?? 0}
+            devices={devicesData?.devices ?? []}
           />
         ) : null)}
 
@@ -439,6 +439,10 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Напоминания (админка → Напоминания) — сразу под подпиской: внизу главной,
+          после статистики и колеса, их на телефоне не видели. */}
+      <ReminderCards />
+
       {/* Promo Offers */}
       <PromoOffersSection />
 
@@ -465,9 +469,6 @@ export default function Dashboard() {
           </div>
         </Link>
       )}
-
-      {/* Напоминания (админка → Напоминания) */}
-      <ReminderCards />
 
       {/* News Section */}
       <NewsSection />

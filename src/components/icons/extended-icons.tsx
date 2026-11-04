@@ -1,5 +1,7 @@
 import {
   PiDeviceMobile,
+  PiDeviceTablet,
+  PiTelevisionSimple,
   PiTrendUp,
   PiTranslate,
   PiArchive,
@@ -585,6 +587,16 @@ export const ReceiptIcon = ({ className }: IconProps) => (
 /** Телефон — устройство пользователя. */
 export const PhoneIcon = ({ className }: IconProps) => (
   <PiDeviceMobile className={cn('h-5 w-5', className)} />
+);
+
+/** Планшет — устройство пользователя (слоты на главной). */
+export const TabletIcon = ({ className }: IconProps) => (
+  <PiDeviceTablet className={cn('h-5 w-5', className)} />
+);
+
+/** Телевизор / ТВ-приставка — устройство пользователя (слоты на главной). */
+export const TvIcon = ({ className }: IconProps) => (
+  <PiTelevisionSimple className={cn('h-5 w-5', className)} />
 );
 
 /** Рост показателя. */

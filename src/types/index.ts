@@ -164,6 +164,8 @@ export interface Device {
    * to `device_model` / `platform` for display.
    */
   local_name?: string | null;
+  /** Приложение-клиент (сырой токен User-Agent: Happ, INCY, koala-clash…). Нет у старого бота. */
+  app?: string | null;
 }
 
 export interface RenewalOption {

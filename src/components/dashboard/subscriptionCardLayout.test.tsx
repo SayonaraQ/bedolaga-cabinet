@@ -11,12 +11,10 @@ import type { Subscription } from '@/types';
  *
  * У тарифа с длинным именем («🟡 Компания - 10 устройств») плитка «Осталось»
  * уезжала за правый край карточки: у флекс-элемента без `min-w-0` минимальная
- * ширина равна ширине неразрывного текста внутри. А десять точек-индикаторов
- * съедали 124px из 272px плитки «Подключить устройство», и заголовок ломался
- * на четыре строки.
+ * ширина равна ширине неразрывного текста внутри.
  *
  * jsdom не считает раскладку, поэтому здесь сторожатся сами признаки:
- * ограничитель ширины у обеих плиток и вид индикатора устройств.
+ * ограничитель ширины у обеих плиток и сетка слотов устройств.
  */
 
 vi.mock('react-i18next', () => ({
@@ -79,6 +77,13 @@ const idleMutation = {
 >[0]['refreshTrafficMutation'];
 
 async function renderCard(sub: Subscription, connectedDevices = 0) {
+  const devices = Array.from({ length: connectedDevices }, (_, i) => ({
+    hwid: `hw-${i}`,
+    platform: 'iOS',
+    device_model: `iPhone ${i}`,
+    created_at: null,
+    app: 'Happ',
+  }));
   const Card = (await import('./SubscriptionCardActive')).default;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const { container } = render(
@@ -90,7 +95,7 @@ async function renderCard(sub: Subscription, connectedDevices = 0) {
             trafficData={null}
             refreshTrafficMutation={idleMutation}
             trafficRefreshCooldown={0}
-            connectedDevices={connectedDevices}
+            devices={devices}
           />
         </MemoryRouter>
       </PlatformProvider>
@@ -122,20 +127,23 @@ describe('ряд «Тариф» + «Осталось»', () => {
   });
 });
 
-describe('индикатор устройств', () => {
-  const dots = (container: Element) =>
-    container.querySelectorAll('.h-\\[7px\\].w-\\[7px\\].rounded-full');
+describe('слоты устройств', () => {
+  // Точки «2 из 5» заменены ячейками «приложение · устройство»: на 10 слотах
+  // сетка в 4 колонки (три ряда), а не 10 точек, съедавших заголовок.
+  it('рисует занятые и свободные ячейки до лимита', async () => {
+    await renderCard(subscription({ device_limit: 5 }), 2);
 
-  it('до пяти устройств показывает точки', async () => {
-    const container = await renderCard(subscription({ device_limit: 5 }), 2);
-
-    expect(dots(container)).toHaveLength(5);
+    expect(screen.getAllByText('Happ')).toHaveLength(2);
+    expect(screen.getAllByText('dashboard.slots.free')).toHaveLength(3);
   });
 
-  it('свыше пяти — полоску: десять точек не оставляли места заголовку', async () => {
+  it('десять слотов — сетка в четыре колонки', async () => {
     const container = await renderCard(subscription({ device_limit: 10 }), 10);
 
-    expect(dots(container)).toHaveLength(0);
-    expect(container.querySelector('.w-16 .rounded-full')).toBeTruthy();
+    const grid = container.querySelector(
+      '[data-onboarding="connect-devices"] .grid',
+    ) as HTMLElement;
+    expect(grid.style.gridTemplateColumns).toBe('repeat(4, minmax(0, 1fr))');
+    expect(screen.queryByText('dashboard.slots.free')).toBeNull();
   });
 });

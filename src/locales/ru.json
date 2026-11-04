@@ -403,7 +403,28 @@
     },
     "manageAll": "Управлять всеми",
     "showAll": "Показать все",
-    "subscriptions": "Подписки"
+    "subscriptions": "Подписки",
+    "slots": {
+      "title": "Устройства",
+      "legend": "Слот — это приложение с подпиской на устройстве",
+      "usedFree_one": "{{used}} из {{max}} · {{count}} свободен",
+      "usedFree_few": "{{used}} из {{max}} · {{count}} свободно",
+      "usedFree_many": "{{used}} из {{max}} · {{count}} свободно",
+      "oneTaken": "1 из 1 · занят",
+      "allTaken": "{{used}} из {{max}} · все заняты",
+      "free": "Свободно",
+      "freeHint": "Подключите устройство",
+      "manage": "Управлять",
+      "moreFree_one": "+{{count}} свободен",
+      "moreFree_few": "+{{count}} свободно",
+      "moreFree_many": "+{{count}} свободно",
+      "multiApp_one": "{{model}} занимает {{count}} слот: подписка добавлена в {{apps}}. Каждое приложение считается отдельным устройством.",
+      "multiApp_few": "{{model}} занимает {{count}} слота: подписка добавлена в {{apps}}. Каждое приложение считается отдельным устройством.",
+      "multiApp_many": "{{model}} занимает {{count}} слотов: подписка добавлена в {{apps}}. Каждое приложение считается отдельным устройством.",
+      "freeUp": "Освободить слот",
+      "freeUpOrAdd": "Освободить или добавить слот",
+      "and": "и"
+    }
   },
   "subscription": {
     "accounting": {

@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 import type { UseMutationResult } from '@tanstack/react-query';
 import TrafficProgressBar from './TrafficProgressBar';
 import Sparkline from './Sparkline';
-import ConnectDeviceTile from './ConnectDeviceTile';
+import DeviceSlots from './DeviceSlots';
 import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
 import { useTheme } from '../../hooks/useTheme';
 import { useTrafficZone } from '../../hooks/useTrafficZone';
@@ -14,6 +14,7 @@ import { formatTraffic } from '../../utils/formatTraffic';
 import { getGlassColors } from '../../utils/glassTheme';
 import { CalendarIcon, RefreshIcon, SparklesIcon } from '@/components/icons';
 import type { Subscription } from '../../types';
+import type { SlotDevice } from '../../utils/deviceSlots';
 
 interface SubscriptionCardActiveProps {
   subscription: Subscription;
@@ -28,7 +29,8 @@ interface SubscriptionCardActiveProps {
   } | null;
   refreshTrafficMutation: UseMutationResult<unknown, unknown, void, unknown>;
   trafficRefreshCooldown: number;
-  connectedDevices: number;
+  /** Устройства подписки из панели — каждое занимает слот (приложение на устройстве). */
+  devices: SlotDevice[];
 }
 
 export default function SubscriptionCardActive({
@@ -36,7 +38,7 @@ export default function SubscriptionCardActive({
   trafficData,
   refreshTrafficMutation,
   trafficRefreshCooldown,
-  connectedDevices,
+  devices,
 }: SubscriptionCardActiveProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -153,12 +155,8 @@ export default function SubscriptionCardActive({
         <ManagedTrafficSummary subscription={subscription} refreshed={trafficData} />
       </div>
 
-      {/* ─── Connect Device Button ─── */}
-      <ConnectDeviceTile
-        subscription={subscription}
-        connectedDevices={connectedDevices}
-        usedPercent={usedPercent}
-      />
+      {/* ─── Слоты устройств: приложение на устройстве ─── */}
+      <DeviceSlots subscription={subscription} devices={devices} />
 
       {/* ─── Stats row: Tariff + Days Left ─── */}
       {/* Обеим плиткам нужен `min-w-0`: без него минимальная ширина флекс-элемента

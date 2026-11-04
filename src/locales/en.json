@@ -395,7 +395,25 @@
     },
     "manageAll": "Manage all",
     "showAll": "Show all",
-    "subscriptions": "Subscriptions"
+    "subscriptions": "Subscriptions",
+    "slots": {
+      "title": "Devices",
+      "legend": "A slot is an app with your subscription on a device",
+      "usedFree_one": "{{used}} of {{max}} · {{count}} free",
+      "usedFree_other": "{{used}} of {{max}} · {{count}} free",
+      "oneTaken": "1 of 1 · taken",
+      "allTaken": "{{used}} of {{max}} · all taken",
+      "free": "Free",
+      "freeHint": "Connect a device",
+      "manage": "Manage",
+      "moreFree_one": "+{{count}} free",
+      "moreFree_other": "+{{count}} free",
+      "multiApp_one": "{{model}} takes {{count}} slot: the subscription is added to {{apps}}. Each app counts as a separate device.",
+      "multiApp_other": "{{model}} takes {{count}} slots: the subscription is added to {{apps}}. Each app counts as a separate device.",
+      "freeUp": "Free up a slot",
+      "freeUpOrAdd": "Free up or add a slot",
+      "and": "and"
+    }
   },
   "subscription": {
     "accounting": {

@@ -386,7 +386,25 @@
     "devicesConnected": "{{count}} متصل",
     "trafficUsage": "{{used}} / {{limit}} گیگابایت",
     "usedTraffic": "{{amount}} مصرف شده",
-    "daysRemaining": "روزهای باقی‌مانده"
+    "daysRemaining": "روزهای باقی‌مانده",
+    "slots": {
+      "title": "دستگاه‌ها",
+      "legend": "هر جایگاه یعنی یک برنامه با اشتراک روی یک دستگاه",
+      "usedFree_one": "{{used}} از {{max}} · {{count}} آزاد",
+      "usedFree_other": "{{used}} از {{max}} · {{count}} آزاد",
+      "oneTaken": "۱ از ۱ · پر",
+      "allTaken": "{{used}} از {{max}} · همه پر",
+      "free": "آزاد",
+      "freeHint": "یک دستگاه وصل کنید",
+      "manage": "مدیریت",
+      "moreFree_one": "+{{count}} آزاد",
+      "moreFree_other": "+{{count}} آزاد",
+      "multiApp_one": "{{model}} {{count}} جایگاه را گرفته است: اشتراک به {{apps}} اضافه شده. هر برنامه یک دستگاه جداگانه حساب می‌شود.",
+      "multiApp_other": "{{model}} {{count}} جایگاه را گرفته است: اشتراک به {{apps}} اضافه شده. هر برنامه یک دستگاه جداگانه حساب می‌شود.",
+      "freeUp": "آزاد کردن جایگاه",
+      "freeUpOrAdd": "آزاد کردن یا افزودن جایگاه",
+      "and": "و"
+    }
   },
   "subscription": {
     "accounting": {

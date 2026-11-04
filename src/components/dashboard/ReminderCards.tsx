@@ -56,13 +56,15 @@ export default function ReminderCards() {
           >
             <XIcon />
           </button>
-          <div className="pr-8 text-sm font-semibold text-dark-50">{card.title}</div>
-          <div className="mt-1 whitespace-pre-line text-xs text-dark-300">{card.body}</div>
+          <div className="pr-8 text-[15px] font-bold leading-snug text-dark-50">{card.title}</div>
+          <div className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-dark-300">
+            {card.body}
+          </div>
           {card.button && (
             <button
               type="button"
               onClick={() => act(card)}
-              className="mt-3 rounded-xl bg-accent-500 px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-accent-400"
+              className="mt-3 w-full rounded-xl bg-accent-500 px-4 py-3 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-400"
             >
               {card.button.text}
             </button>

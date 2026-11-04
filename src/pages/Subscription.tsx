@@ -314,6 +314,12 @@ export default function Subscription() {
       subscription?.subscription_url,
     ],
   );
+  // Подписка работает (активна или кончился только трафик белых списков). У истёкшей
+  // и отключённой карточка срока с главной кнопкой встаёт первой, над трафиком,
+  // плиткой и ссылкой (владелец 05.11.2026). Плитку и ссылку не прячем: на белых
+  // списках оплатить без VPN нельзя, а после истечения по той же ссылке работает
+  // grace — только Telegram, чтобы дойти до оплаты.
+  const subscriptionRuns = !!subscription && (subscription.is_active || subscription.is_limited);
   const shouldHideConnectionLink =
     subscription?.hide_subscription_link || connectionLink?.hide_link;
 
@@ -489,6 +495,37 @@ export default function Subscription() {
       </div>
     );
   }
+
+  // Карточка срока с главной кнопкой; место на странице зависит от subscriptionRuns.
+  const renderCountdown = (sub: NonNullable<typeof subscription>) => (
+    <div className="mb-5">
+      <CountdownTimer
+        endDate={sub.end_date}
+        isActive={sub.is_active || sub.is_limited}
+        glassColors={g}
+        // Отключённая админом не истекла: дни у неё есть, просто доступ выключен.
+        inactiveLabel={
+          sub.status === 'disabled' && !sub.is_daily ? t('subscription.disabledBadge') : undefined
+        }
+        footer={
+          cardCta ? (
+            <Link
+              to={cardCta.to}
+              className="cta-pulse flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-accent-500 px-4 text-center text-base font-bold leading-tight text-on-accent transition-colors hover:bg-accent-600 max-[359px]:px-2"
+            >
+              {/* Ниже 360 px значок уступает место тексту: карточка срока вложена в
+                            карточку подписки, и надпись иначе ломалась на две строки. */}
+              <CardCtaIcon
+                action={cardCta.action}
+                className="h-[18px] w-[18px] shrink-0 max-[359px]:hidden"
+              />
+              {t(CARD_CTA_LABEL[cardCta.action])}
+            </Link>
+          ) : undefined
+        }
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -737,6 +774,9 @@ export default function Subscription() {
                 </div>
               )}
 
+              {/* ─── Countdown первой: подписка истекла или отключена ─── */}
+              {!subscriptionRuns && renderCountdown(subscription)}
+
               {/* ─── Traffic Progress ─── */}
               <div className="mb-6">
                 <div className="mb-2.5 flex items-center justify-between">
@@ -974,36 +1014,8 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* ─── Countdown ─── */}
-              <div className="mb-5">
-                <CountdownTimer
-                  endDate={subscription.end_date}
-                  isActive={subscription.is_active || subscription.is_limited}
-                  glassColors={g}
-                  // Отключённая админом не истекла: дни у неё есть, просто доступ выключен.
-                  inactiveLabel={
-                    subscription.status === 'disabled' && !subscription.is_daily
-                      ? t('subscription.disabledBadge')
-                      : undefined
-                  }
-                  footer={
-                    cardCta ? (
-                      <Link
-                        to={cardCta.to}
-                        className="cta-pulse flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-accent-500 px-4 text-center text-base font-bold leading-tight text-on-accent transition-colors hover:bg-accent-600 max-[359px]:px-2"
-                      >
-                        {/* Ниже 360 px значок уступает место тексту: карточка срока вложена в
-                            карточку подписки, и надпись иначе ломалась на две строки. */}
-                        <CardCtaIcon
-                          action={cardCta.action}
-                          className="h-[18px] w-[18px] shrink-0 max-[359px]:hidden"
-                        />
-                        {t(CARD_CTA_LABEL[cardCta.action])}
-                      </Link>
-                    ) : undefined
-                  }
-                />
-              </div>
+              {/* ─── Countdown (у работающей подписки — здесь, под ссылкой) ─── */}
+              {subscriptionRuns && renderCountdown(subscription)}
 
               {/* ─── Locations ─── */}
               {subscription.servers && subscription.servers.length > 0 && (

@@ -262,3 +262,31 @@ it('disabled by an admin: the countdown card says «disabled», not «expired»'
   expect(within(card).getByText('subscription.disabledBadge')).toBeTruthy();
   expect(within(card).queryByText('subscription.expired')).toBeNull();
 });
+
+// Владелец 05.11.2026: у истёкшей карточка «Истекла» с продлением должна быть
+// выше. Плитку и ссылку не прячем: на белых списках оплата без VPN недоступна,
+// и после истечения по той же ссылке работает grace (только Telegram), чтобы
+// дойти до оплаты. Поэтому у неработающей подписки карточка срока просто
+// встаёт первой — над трафиком, плиткой и ссылкой.
+it.each([
+  ['expired', { status: 'expired', is_active: false, is_expired: true, days_left: 0 }, true],
+  ['disabled by an admin', { status: 'disabled', is_active: false }, true],
+  ['active', {}, false],
+  [
+    'traffic ran out: VPN still works',
+    { status: 'limited', is_active: false, is_limited: true },
+    false,
+  ],
+])('%s: countdown card comes first = %s; tile and link stay', async (_name, over, first) => {
+  Object.assign(state.subscription, over);
+  renderPage();
+
+  const card = await screen.findByTestId('countdown-card');
+  const tile = await screen.findByText('dashboard.connectDevice');
+  const link = screen.getByText('https://speed.example/sub/abc');
+  const traffic = screen.getByText('subscription.traffic');
+  const before = (a: Node, b: Node) =>
+    Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+  expect(before(card, tile) && before(card, link) && before(card, traffic)).toBe(first);
+  expect(before(tile, card) && before(link, card)).toBe(!first);
+});

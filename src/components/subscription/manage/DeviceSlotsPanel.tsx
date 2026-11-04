@@ -251,7 +251,7 @@ export function DeviceSlotsPanel({
             if (confirmed) deleteAllMutation.mutate();
           }}
           disabled={deleteAllMutation.isPending}
-          className="self-end text-[11px] font-medium text-error-400 transition-colors hover:text-error-300 disabled:opacity-50"
+          className="inline-flex min-h-[38px] w-full items-center justify-center rounded-[10px] border border-error-500/35 bg-error-500/10 px-2.5 py-1.5 text-center text-[13px] font-bold leading-tight text-error-400 transition-colors hover:bg-error-500/15 disabled:opacity-50"
         >
           {t('subscription.devicesSection.disconnectAll')}
         </button>

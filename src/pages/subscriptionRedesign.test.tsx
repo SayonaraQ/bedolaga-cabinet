@@ -196,10 +196,10 @@ it.each([
     '/subscription/purchase?subscriptionId=42',
   ],
   [
-    'disabled',
+    'disabled by an admin',
     { status: 'disabled', is_active: false },
-    'subscription.getSubscription',
-    '/subscription/purchase',
+    'subscription.noOptionsContactSupport',
+    '/support',
   ],
 ])(
   '%s: the main action sits in the countdown card, not at the bottom',
@@ -228,4 +228,37 @@ it('traffic ran out: «buy traffic» is in the warning that says so, once', asyn
 
   fireEvent.click(buy);
   expect(screen.getByText('subscription.additionalOptions.buyTrafficTitle')).toBeTruthy();
+});
+
+it('expired: «change tariff» under the plan name leads to the showcase', async () => {
+  Object.assign(state.subscription, {
+    status: 'expired',
+    is_active: false,
+    is_expired: true,
+    days_left: 0,
+  });
+  renderPage();
+
+  const change = await screen.findByRole('link', { name: 'subscription.switchTariff.title' });
+  expect(change.getAttribute('href')).toBe('/subscription/purchase');
+});
+
+it('trial: «choose a plan» is also right in the trial banner', async () => {
+  Object.assign(state.subscription, { status: 'trial', is_trial: true, tariff_id: null });
+  renderPage();
+
+  const banner = await screen.findByTestId('trial-banner');
+  const choose = await within(banner).findByRole('link', {
+    name: 'subscription.cardCta.chooseTariff',
+  });
+  expect(choose.getAttribute('href')).toBe('/subscription/purchase');
+});
+
+it('disabled by an admin: the countdown card says «disabled», not «expired»', async () => {
+  Object.assign(state.subscription, { status: 'disabled', is_active: false });
+  renderPage();
+
+  const card = await screen.findByTestId('countdown-card');
+  expect(within(card).getByText('subscription.disabledBadge')).toBeTruthy();
+  expect(within(card).queryByText('subscription.expired')).toBeNull();
 });

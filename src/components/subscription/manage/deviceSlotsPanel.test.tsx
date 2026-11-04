@@ -133,3 +133,20 @@ it('offers add and reduce only when the page passes them', async () => {
     screen.queryByRole('button', { name: /subscription\.devicesSection\.addSlot/ }),
   ).toBeNull();
 });
+
+it('disconnects all devices only after confirmation', async () => {
+  api.deleteAllDevices.mockResolvedValue({});
+  renderPanel();
+
+  api.confirm.mockResolvedValueOnce(false);
+  fireEvent.click(
+    await screen.findByRole('button', { name: 'subscription.devicesSection.disconnectAll' }),
+  );
+  await waitFor(() => expect(api.confirm).toHaveBeenCalledTimes(1));
+  expect(api.deleteAllDevices).not.toHaveBeenCalled();
+
+  fireEvent.click(
+    screen.getByRole('button', { name: 'subscription.devicesSection.disconnectAll' }),
+  );
+  await waitFor(() => expect(api.deleteAllDevices).toHaveBeenCalledWith(42));
+});

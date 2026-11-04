@@ -16,16 +16,16 @@ import { copyToClipboard } from '../utils/clipboard';
 import { useTheme } from '../hooks/useTheme';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
-import { subscriptionCardCta, type CardCtaAction } from '../utils/subscriptionCta';
 import {
-  canOpenTariffSwitch,
-  planTitle,
-  showsAddonOptions,
-  tariffSelectionPath,
-} from '../utils/legacySubscription';
+  subscriptionCardCta,
+  tariffSwitchLink,
+  type CardCtaAction,
+} from '../utils/subscriptionCta';
+import { planTitle, showsAddonOptions } from '../utils/legacySubscription';
 import {
   ArrowsLeftRightIcon,
   CalendarIcon,
+  ChatIcon,
   CheckIcon,
   ClockIcon,
   CopyIcon,
@@ -63,12 +63,15 @@ const CountdownTimer = memo(function CountdownTimer({
   isActive,
   glassColors: g,
   footer,
+  inactiveLabel,
 }: {
   endDate: string;
   isActive: boolean;
   glassColors: ReturnType<typeof getGlassColors>;
   /** «Продлить подписку» прямо под сроком (макет 05.11.2026). */
   footer?: React.ReactNode;
+  /** Слово вместо таймера, когда подписка не идёт; по умолчанию «Истекла». */
+  inactiveLabel?: string;
 }) {
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -145,7 +148,7 @@ const CountdownTimer = memo(function CountdownTimer({
           className="text-[18px] font-bold tracking-tight"
           style={{ color: 'rgb(var(--color-critical-500))' }}
         >
-          {t('subscription.expired')}
+          {inactiveLabel ?? t('subscription.expired')}
         </div>
       ) : (
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
@@ -211,11 +214,13 @@ const CARD_CTA_LABEL: Record<CardCtaAction, string> = {
   chooseTariff: 'subscription.cardCta.chooseTariff',
   moveToTariff: 'subscription.cta.moveToTariff',
   getSubscription: 'subscription.getSubscription',
+  support: 'subscription.noOptionsContactSupport',
 };
 
 function CardCtaIcon({ action, className }: { action: CardCtaAction; className: string }) {
   if (action === 'renew') return <RefreshIcon className={className} />;
   if (action === 'moveToTariff') return <ArrowsLeftRightIcon className={className} />;
+  if (action === 'support') return <ChatIcon className={className} />;
   return <SubscriptionIcon className={className} />;
 }
 
@@ -326,10 +331,6 @@ export default function Subscription() {
   const purchaseOptions = purchaseOptionsQuery.data;
 
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
-  // Макет 05.11.2026: у активной тарифной подписки «Продлить» и «Сменить тариф»
-  // стоят у срока и у названия, а не общим блоком внизу. Остальные состояния
-  // (истекла, триал, старая без тарифа) — по-прежнему через PurchaseCTAButton.
-  const inlineCtas = isTariffsMode && !!subscription && canOpenTariffSwitch(subscription);
   const canManageAddons = isTariffsMode && !!subscription && showsAddonOptions(subscription);
   const canBuyTraffic = canManageAddons && (subscription?.traffic_limit_gb ?? 0) > 0;
   const nextTrafficReset =
@@ -337,6 +338,8 @@ export default function Subscription() {
   // Главная кнопка — в карточке срока у всех состояний (решение владельца
   // 05.11.2026): «продление должно быть там же, где написано, что подписка истекла».
   const cardCta = isTariffsMode ? subscriptionCardCta(subscription) : null;
+  // «Сменить тариф» под названием: смена у активной, витрина у истёкшей.
+  const switchLink = isTariffsMode ? tariffSwitchLink(subscription) : null;
   // Нижний общий блок остался только для классического режима без тарифов.
   const showBottomCta = !subscription || (!purchaseOptionsQuery.isPending && !isTariffsMode);
   // Кончился трафик — «Докупить трафик» стоит в самом предупреждении, у шкалы не дублируется.
@@ -560,9 +563,9 @@ export default function Subscription() {
                   <h2 className="text-lg font-bold tracking-tight text-dark-50">
                     {planTitle(subscription, t)}
                   </h2>
-                  {inlineCtas && (
+                  {switchLink && (
                     <Link
-                      to={tariffSelectionPath(subscription.id)}
+                      to={switchLink}
                       className="cta-shine mt-2.5 inline-flex h-[34px] items-center gap-1.5 rounded-full border border-accent-500/35 bg-accent-500/10 px-3.5 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
                     >
                       <ArrowsLeftRightIcon className="h-3.5 w-3.5" />
@@ -599,7 +602,10 @@ export default function Subscription() {
                     : subscription.is_limited
                       ? t('subscription.trafficLimited')
                       : subscription.status === 'disabled'
-                        ? t('subscription.pause.suspended')
+                        ? // «Недостаточно средств» — только про суточную; у нас disabled ставит админ.
+                          subscription.is_daily
+                          ? t('subscription.pause.suspended')
+                          : t('subscription.disabledBadge')
                         : t('subscription.expired')}
                 </span>
               </div>
@@ -651,6 +657,7 @@ export default function Subscription() {
               {/* ─── Trial Info Banner ─── */}
               {subscription.is_trial && subscription.is_active && (
                 <div
+                  data-testid="trial-banner"
                   className="mb-6 rounded-[14px] p-4"
                   style={{
                     background:
@@ -718,6 +725,15 @@ export default function Subscription() {
                       </div>
                     </div>
                   </div>
+                  {/* Та же кнопка, что в карточке срока: здесь написано «Пробный период». */}
+                  {cardCta?.action === 'chooseTariff' && (
+                    <Link
+                      to={cardCta.to}
+                      className="cta-shine mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-3 text-sm font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                    >
+                      {t('subscription.cardCta.chooseTariff')}
+                    </Link>
+                  )}
                 </div>
               )}
 
@@ -964,6 +980,12 @@ export default function Subscription() {
                   endDate={subscription.end_date}
                   isActive={subscription.is_active || subscription.is_limited}
                   glassColors={g}
+                  // Отключённая админом не истекла: дни у неё есть, просто доступ выключен.
+                  inactiveLabel={
+                    subscription.status === 'disabled' && !subscription.is_daily
+                      ? t('subscription.disabledBadge')
+                      : undefined
+                  }
                   footer={
                     cardCta ? (
                       <Link

@@ -389,7 +389,6 @@
     "daysRemaining": "روزهای باقی‌مانده",
     "slots": {
       "title": "دستگاه‌ها",
-      "legend": "هر جایگاه یعنی یک برنامه با اشتراک روی یک دستگاه",
       "usedFree_one": "{{used}} از {{max}} · {{count}} آزاد",
       "usedFree_other": "{{used}} از {{max}} · {{count}} آزاد",
       "oneTaken": "۱ از ۱ · پر",

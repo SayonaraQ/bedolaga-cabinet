@@ -398,7 +398,6 @@
     "subscriptions": "Subscriptions",
     "slots": {
       "title": "Devices",
-      "legend": "A slot is an app with your subscription on a device",
       "usedFree_one": "{{used}} of {{max}} · {{count}} free",
       "usedFree_other": "{{used}} of {{max}} · {{count}} free",
       "oneTaken": "1 of 1 · taken",

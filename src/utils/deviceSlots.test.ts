@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { appLabel, deviceKind, findMultiAppDevices, slotGridColumns } from './deviceSlots';
+import {
+  appLabel,
+  deviceKind,
+  findMultiAppDevices,
+  slotDeviceNames,
+  slotGridColumns,
+} from './deviceSlots';
 
 const dev = (hwid: string, platform: string, device_model: string, app: string | null) => ({
   hwid,
@@ -69,6 +75,64 @@ describe('findMultiAppDevices', () => {
         dev('b', 'Windows', 'Unknown', 'INCY'),
       ]),
     ).toEqual([]);
+  });
+
+  // Приложения пишут модель по-разному: INCY — «Xiaomi 25102PCBEG», Happ —
+  // «25102PCBEG». Пары взяты из панели 04.11.2026 (один юзер, одна платформа).
+  it.each([
+    ['Xiaomi 25102PCBEG', '25102PCBEG', 'Xiaomi 25102PCBEG'],
+    ['HONOR BRP-NX1', 'BRP-NX1', 'HONOR BRP-NX1'],
+    ['samsung SM-A556E', 'SM-A556E', 'samsung SM-A556E'],
+    ['xiaomi Redmi Note 6 Pro', 'Redmi Note 6 Pro', 'xiaomi Redmi Note 6 Pro'],
+    ['Xiaomi M2102J20SG', 'POCO M2102J20SG', 'Xiaomi M2102J20SG'],
+    ['TECNO TECNO BG7n', 'TECNO BG7n', 'TECNO BG7n'],
+    ['INFINIX Infinix X6856', 'Infinix Infinix X6856', 'INFINIX X6856'],
+  ])('treats «%s» and «%s» as one phone named «%s»', (first, second, name) => {
+    const groups = findMultiAppDevices([
+      dev('a', 'Android', first, 'INCY'),
+      dev('b', 'Android', second, 'Happ'),
+    ]);
+    expect(groups).toEqual([{ model: name, hwids: ['a', 'b'], apps: ['INCY', 'Happ'] }]);
+  });
+
+  it('does not glue a bare «iPhone» to a concrete model: may be two phones', () => {
+    expect(
+      findMultiAppDevices([
+        dev('a', 'iOS', 'iPhone', 'Happ'),
+        dev('b', 'iOS', 'iPhone 17 Pro', 'INCY'),
+      ]),
+    ).toEqual([]);
+  });
+
+  it('does not glue computers: «Windows 11 Pro» is the OS, not the machine', () => {
+    expect(
+      findMultiAppDevices([
+        dev('a', 'Windows', 'Windows 11 Pro', 'koala-clash'),
+        dev('b', 'Windows', 'Windows 11 Pro', 'Happ'),
+      ]),
+    ).toEqual([]);
+  });
+});
+
+describe('slotDeviceNames', () => {
+  it('gives both slots of one phone the same, fullest name', () => {
+    const names = slotDeviceNames([
+      dev('a', 'Android', 'Xiaomi 25102PCBEG', 'INCY'),
+      dev('b', 'Android', '25102PCBEG', 'Happ'),
+      dev('c', 'iOS', 'iPhone 15', 'Happ'),
+    ]);
+    expect(names.get('a')).toBe('Xiaomi 25102PCBEG');
+    expect(names.get('b')).toBe('Xiaomi 25102PCBEG');
+    expect(names.get('c')).toBe('iPhone 15');
+  });
+
+  it('drops a doubled brand and keeps the user alias first', () => {
+    const names = slotDeviceNames([
+      dev('a', 'Android', 'TECNO TECNO KJ6', 'Happ'),
+      { ...dev('b', 'Android', 'SM-A556E', 'INCY'), local_name: 'Мамин телефон' },
+    ]);
+    expect(names.get('a')).toBe('TECNO KJ6');
+    expect(names.get('b')).toBe('Мамин телефон');
   });
 });
 

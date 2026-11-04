@@ -114,3 +114,22 @@ it('shows only real devices when the tariff has no limit', () => {
   expect(screen.getByText('Happ')).toBeTruthy();
   expect(screen.queryByText('dashboard.slots.free')).toBeNull();
 });
+
+// Скриншот владельца 04.11: INCY прислал «Xiaomi 25102PCBEG», Happ — «25102PCBEG»;
+// ячейки назывались по-разному, а предупреждение про два слота не появилось.
+it('names both slots of one phone the same and warns about the second app', () => {
+  renderSlots(3, [
+    dev('a', 'Android', 'Xiaomi 25102PCBEG', 'INCY'),
+    dev('b', 'Android', '25102PCBEG', 'Happ'),
+  ]);
+
+  expect(screen.getAllByText('Xiaomi 25102PCBEG')).toHaveLength(2);
+  expect(screen.queryByText('25102PCBEG')).toBeNull();
+  expect(screen.getByText(/dashboard\.slots\.multiApp/).textContent).toContain('Xiaomi 25102PCBEG');
+});
+
+it('does not print the slot legend: it read as noise above the grid', () => {
+  renderSlots(3, [dev('a', 'iOS', 'iPhone 15', 'Happ')]);
+
+  expect(screen.queryByText('dashboard.slots.legend')).toBeNull();
+});

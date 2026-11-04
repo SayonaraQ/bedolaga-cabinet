@@ -406,7 +406,6 @@
     "subscriptions": "Подписки",
     "slots": {
       "title": "Устройства",
-      "legend": "Слот — это приложение с подпиской на устройстве",
       "usedFree_one": "{{used}} из {{max}} · {{count}} свободен",
       "usedFree_few": "{{used}} из {{max}} · {{count}} свободно",
       "usedFree_many": "{{used}} из {{max}} · {{count}} свободно",

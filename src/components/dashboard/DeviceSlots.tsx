@@ -15,7 +15,7 @@ import { getGlassColors } from '../../utils/glassTheme';
 import {
   appLabel,
   deviceKind,
-  deviceName,
+  slotDeviceNames,
   findMultiAppDevices,
   slotGridColumns,
   type DeviceKind,
@@ -72,6 +72,9 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
   const free = unlimited ? 0 : Math.max(limit - used, 0);
   const multiApp = findMultiAppDevices(devices);
   const multiAppHwids = new Set(multiApp.flatMap((m) => m.hwids));
+  // У всех HWID одного телефона — одно имя: INCY пишет «Xiaomi 25102PCBEG», Happ — «25102PCBEG».
+  const names = slotDeviceNames(devices);
+  const nameOf = (device: SlotDevice) => names.get(device.hwid) ?? device.platform;
 
   const manage = () => {
     haptic.impact('light');
@@ -110,10 +113,6 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
           {status}
         </span>
       </div>
-      <p className="-mt-1.5 px-0.5 text-[11px] leading-snug text-dark-400">
-        {t('dashboard.slots.legend')}
-      </p>
-
       {single ? (
         <div
           className="flex items-center gap-3 rounded-[14px] p-3"
@@ -125,12 +124,12 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
           <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-bold text-accent-400">
               {devices[0]
-                ? (appLabel(devices[0].app) ?? deviceName(devices[0]))
+                ? (appLabel(devices[0].app) ?? nameOf(devices[0]))
                 : t('dashboard.slots.free')}
             </div>
             <div className="mt-0.5 truncate text-xs text-dark-400">
               {devices[0]
-                ? `${deviceName(devices[0])} · ${devices[0].platform}`
+                ? `${nameOf(devices[0])} · ${devices[0].platform}`
                 : t('dashboard.slots.freeHint')}
             </div>
           </div>
@@ -151,7 +150,7 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
         >
           {devices.map((device) => {
             const app = appLabel(device.app);
-            const name = deviceName(device);
+            const name = nameOf(device);
             const twin = multiAppHwids.has(device.hwid);
             return (
               <button

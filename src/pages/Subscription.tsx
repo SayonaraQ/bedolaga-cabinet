@@ -39,6 +39,7 @@ import {
   ReissueLinkButton,
 } from '../components/subscription/manage/ReissueLinkButton';
 import { DevicesPanel } from '../components/subscription/manage/DevicesPanel';
+import { useScrollToSection } from '../hooks/useScrollToSection';
 import { RecurringPanels } from '../components/subscription/manage/RecurringPanels';
 import { DeviceTopupSheet } from '../components/subscription/sheets/DeviceTopupSheet';
 import { DeviceReductionSheet } from '../components/subscription/sheets/DeviceReductionSheet';
@@ -307,6 +308,11 @@ export default function Subscription() {
     queryFn: () => subscriptionApi.getDevices(subscriptionId),
     enabled: !!subscription,
   });
+
+  // Слот устройства на главной ведёт сюда с #devices — к списку в самом низу.
+  // Ждём подписку, устройства и ссылку подключения: иначе блок съедет вниз,
+  // когда догрузится то, что над ним, и прокрутка промахнётся.
+  useScrollToSection('devices', !!subscription && !!devicesData && !isConnectionLinkLoading);
 
   // Pause subscription mutation
   // Auto-close all modals/forms when success notification appears
@@ -1136,7 +1142,8 @@ export default function Subscription() {
       {/* My Devices Section */}
       {subscription && (
         <div
-          className="relative overflow-hidden rounded-3xl"
+          id="devices"
+          className="relative scroll-mt-24 overflow-hidden rounded-3xl"
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,

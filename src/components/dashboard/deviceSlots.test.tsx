@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, expect, it, vi } from 'vitest';
 import DeviceSlots from './DeviceSlots';
 
@@ -54,13 +54,18 @@ function renderSlots(deviceLimit: number, devices: ReturnType<typeof dev>[]) {
           }
         />
         <Route path="/connection" element={<div>connection-page</div>} />
-        <Route path="/subscriptions/:id" element={<div>subscription-page</div>} />
+        <Route path="/subscriptions/:id" element={<SubscriptionPage />} />
       </Routes>
     </MemoryRouter>,
   );
 }
 
 afterEach(cleanup);
+
+function SubscriptionPage() {
+  const location = useLocation();
+  return <div>subscription-page{location.hash}</div>;
+}
 
 it('shows the app on every occupied slot and the free ones', () => {
   renderSlots(3, [
@@ -97,7 +102,7 @@ it('leads to device management instead of a dead button when every slot is taken
 
   expect(screen.queryByRole('button', { name: 'dashboard.connectDevice' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'dashboard.slots.freeUpOrAdd' }));
-  expect(screen.getByText('subscription-page')).toBeTruthy();
+  expect(screen.getByText('subscription-page#devices')).toBeTruthy();
 });
 
 it('draws one wide row for a single slot', () => {
@@ -105,7 +110,7 @@ it('draws one wide row for a single slot', () => {
 
   expect(screen.getByText('Happ')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'dashboard.slots.manage' }));
-  expect(screen.getByText('subscription-page')).toBeTruthy();
+  expect(screen.getByText('subscription-page#devices')).toBeTruthy();
 });
 
 it('shows only real devices when the tariff has no limit', () => {
@@ -132,4 +137,13 @@ it('does not print the slot legend: it read as noise above the grid', () => {
   renderSlots(3, [dev('a', 'iOS', 'iPhone 15', 'Happ')]);
 
   expect(screen.queryByText('dashboard.slots.legend')).toBeNull();
+});
+
+// Нажатие на подключённое устройство ведёт не в начало страницы подписки, а к
+// списку «Мои устройства» внизу: там его переименовывают и отключают.
+it('opens the device list at the bottom of the subscription page', () => {
+  renderSlots(3, [dev('a', 'iOS', 'iPhone 15', 'Happ')]);
+
+  fireEvent.click(screen.getByText('Happ'));
+  expect(screen.getByText('subscription-page#devices')).toBeTruthy();
 });

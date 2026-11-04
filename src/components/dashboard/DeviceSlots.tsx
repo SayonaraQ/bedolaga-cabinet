@@ -78,7 +78,8 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
 
   const manage = () => {
     haptic.impact('light');
-    navigate(`/subscriptions/${subscription.id}`);
+    // Сразу к списку «Мои устройства» внизу страницы подписки: там отключают и переименовывают.
+    navigate(`/subscriptions/${subscription.id}#devices`);
   };
   const connect = () => {
     haptic.impact('light');

@@ -23,11 +23,11 @@ export interface DeviceSlotsPanelProps {
   onConnect?: () => void;
 }
 
-// grow + basis вместо flex-1: на 320–360 px две кнопки не помещаются в ряд, и
-// с flex-1 «Уменьшить» вылезала за край карточки. Теперь ряд переносится и
-// каждая кнопка встаёт во всю ширину; на 375+ они по-прежнему делят ряд поровну.
+// Кнопки всегда делят ряд поровну (решение владельца 05.11.2026: переносить
+// текст, а не сдвигать кнопки). На 320–360 px подпись переносится внутри кнопки
+// целыми словами; без nowrap «Уменьшить» больше не вылезает за край карточки.
 const SOFT_BUTTON =
-  'inline-flex h-[38px] grow basis-[8.75rem] items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-3 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15';
+  'inline-flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-2.5 py-1.5 text-center text-[13px] font-bold leading-tight text-accent-400 transition-colors hover:bg-accent-500/15';
 
 /**
  * Раздел «Устройства» страницы подписки (макет 05.11.2026).
@@ -225,7 +225,7 @@ export function DeviceSlotsPanel({
       <MultiAppNotes devices={devices} />
 
       {(onAddSlot || onReduce) && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           {onAddSlot && (
             <button type="button" onClick={onAddSlot} className={SOFT_BUTTON}>
               {t('subscription.devicesSection.addSlot')}

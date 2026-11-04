@@ -18,6 +18,7 @@ vi.mock('@/platform', () => ({
 
 const subscription = {
   id: 42,
+  status: 'active',
   is_active: true,
   is_limited: false,
   is_trial: false,
@@ -70,5 +71,20 @@ it('hides until tomorrow after the cross', () => {
 it('renders nothing far from the end', () => {
   renderBar({ ...subscription, days_left: 10 });
 
+  expect(screen.queryByRole('link', { name: 'renewBar.renew' })).toBeNull();
+});
+
+// Подпись кнопки — та же, что у главной кнопки в карточке срока на странице подписки.
+it.each([
+  ['a trial', { is_trial: true, tariff_id: null }, 'renewBar.chooseTariff'],
+  [
+    'a legacy subscription',
+    { tariff_id: null, requires_tariff_selection: true },
+    'renewBar.moveToTariff',
+  ],
+])('names the action for %s like the subscription page does', (_name, over, label) => {
+  renderBar({ ...subscription, ...over } as unknown as typeof subscription);
+
+  expect(screen.getByRole('link', { name: label })).toBeTruthy();
   expect(screen.queryByRole('link', { name: 'renewBar.renew' })).toBeNull();
 });

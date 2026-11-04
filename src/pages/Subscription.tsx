@@ -16,6 +16,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { useTheme } from '../hooks/useTheme';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
+import { subscriptionCardCta, type CardCtaAction } from '../utils/subscriptionCta';
 import {
   canOpenTariffSwitch,
   planTitle,
@@ -31,6 +32,7 @@ import {
   DevicesIcon,
   DownloadIcon,
   RefreshIcon,
+  SubscriptionIcon,
   TrashIcon,
   WarningIcon,
 } from '../components/icons';
@@ -203,6 +205,20 @@ const CountdownTimer = memo(function CountdownTimer({
   );
 });
 
+/** Подпись главной кнопки в карточке срока — по действию из subscriptionCardCta. */
+const CARD_CTA_LABEL: Record<CardCtaAction, string> = {
+  renew: 'subscription.extend',
+  chooseTariff: 'subscription.cardCta.chooseTariff',
+  moveToTariff: 'subscription.cta.moveToTariff',
+  getSubscription: 'subscription.getSubscription',
+};
+
+function CardCtaIcon({ action, className }: { action: CardCtaAction; className: string }) {
+  if (action === 'renew') return <RefreshIcon className={className} />;
+  if (action === 'moveToTariff') return <ArrowsLeftRightIcon className={className} />;
+  return <SubscriptionIcon className={className} />;
+}
+
 export default function Subscription() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -318,6 +334,13 @@ export default function Subscription() {
   const canBuyTraffic = canManageAddons && (subscription?.traffic_limit_gb ?? 0) > 0;
   const nextTrafficReset =
     trafficData?.next_traffic_refresh_at ?? subscription?.next_traffic_refresh_at ?? null;
+  // Главная кнопка — в карточке срока у всех состояний (решение владельца
+  // 05.11.2026): «продление должно быть там же, где написано, что подписка истекла».
+  const cardCta = isTariffsMode ? subscriptionCardCta(subscription) : null;
+  // Нижний общий блок остался только для классического режима без тарифов.
+  const showBottomCta = !subscription || (!purchaseOptionsQuery.isPending && !isTariffsMode);
+  // Кончился трафик — «Докупить трафик» стоит в самом предупреждении, у шкалы не дублируется.
+  const buyTrafficInWarning = canBuyTraffic && !!subscription?.is_limited;
 
   // Devices query
   // Счётчик подключённых устройств в шапке. Сам список живёт в <DevicesPanel>
@@ -584,6 +607,7 @@ export default function Subscription() {
               {/* ─── Traffic Limited Banner ─── */}
               {subscription.is_limited && (
                 <div
+                  data-testid="traffic-limited"
                   className="mb-6 rounded-[14px] p-4"
                   style={{
                     background:
@@ -610,6 +634,17 @@ export default function Subscription() {
                       </p>
                     </div>
                   </div>
+                  {/* Во всю ширину предупреждения: в колонке текста рядом с иконкой
+                      кнопка на 320 px не помещалась. */}
+                  {buyTrafficInWarning && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTrafficTopup((open) => !open)}
+                      className="cta-shine cta-shine-late mt-3 inline-flex h-9 w-full items-center justify-center whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-3 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                    >
+                      {t('subscription.buyTrafficButton')}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -732,17 +767,18 @@ export default function Subscription() {
                     compact
                   />
                 )}
-                {/* Строки текста не переносятся: на 320–360 px («Увеличенный» вид iPhone,
-                    маленькие Android) колонка сжималась и рвала «Следующи-й». Если рядом
-                    места нет, кнопка уходит под текст, прижатая вправо. */}
-                {(nextTrafficReset || canBuyTraffic) && (
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                {/* Кнопка всегда справа от текста (решение владельца 05.11.2026): на 320–360 px
+                    текст переносится в 3–4 строки, но только целыми словами. Без min-w-0
+                    колонка не уже самого длинного слова, поэтому «Следующи-й» больше не рвётся;
+                    дата не отрывается от месяца. */}
+                {(nextTrafficReset || (canBuyTraffic && !buyTrafficInWarning)) && (
+                  <div className="mt-3 flex items-center justify-between gap-2">
                     {nextTrafficReset ? (
-                      <div className="whitespace-nowrap text-xs leading-snug text-dark-400">
+                      <div className="text-xs leading-snug text-dark-400">
                         <div>{t('subscription.nextTrafficReset.line1')}</div>
                         <div>
                           {t('subscription.nextTrafficReset.line2')}{' '}
-                          <span className="font-bold text-dark-50">
+                          <span className="whitespace-nowrap font-bold text-dark-50">
                             {new Date(nextTrafficReset).toLocaleDateString(uiLocale(), {
                               day: 'numeric',
                               month: 'long',
@@ -753,11 +789,11 @@ export default function Subscription() {
                     ) : (
                       <span />
                     )}
-                    {canBuyTraffic && (
+                    {canBuyTraffic && !buyTrafficInWarning && (
                       <button
                         type="button"
                         onClick={() => setShowTrafficTopup((open) => !open)}
-                        className="cta-shine cta-shine-late ml-auto inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-3 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                        className="cta-shine cta-shine-late inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-2.5 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
                       >
                         {t('subscription.buyTrafficButton')}
                       </button>
@@ -929,13 +965,18 @@ export default function Subscription() {
                   isActive={subscription.is_active || subscription.is_limited}
                   glassColors={g}
                   footer={
-                    inlineCtas && !subscription.is_daily ? (
+                    cardCta ? (
                       <Link
-                        to={`/subscriptions/${subscription.id}/renew`}
-                        className="cta-pulse flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-accent-500 text-base font-bold text-on-accent transition-colors hover:bg-accent-600"
+                        to={cardCta.to}
+                        className="cta-pulse flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-accent-500 px-4 text-center text-base font-bold leading-tight text-on-accent transition-colors hover:bg-accent-600 max-[359px]:px-2"
                       >
-                        <RefreshIcon className="h-[18px] w-[18px]" />
-                        {t('subscription.extend')}
+                        {/* Ниже 360 px значок уступает место тексту: карточка срока вложена в
+                            карточку подписки, и надпись иначе ломалась на две строки. */}
+                        <CardCtaIcon
+                          action={cardCta.action}
+                          className="h-[18px] w-[18px] shrink-0 max-[359px]:hidden"
+                        />
+                        {t(CARD_CTA_LABEL[cardCta.action])}
                       </Link>
                     ) : undefined
                   }
@@ -1170,8 +1211,9 @@ export default function Subscription() {
         </div>
       )}
 
-      {/* Purchase / Renewal CTA — у активной тарифной подписки кнопки уже в карточке */}
-      {!inlineCtas && (
+      {/* Нижний общий блок — только классический режим и «подписки нет»: на тарифах
+          главная кнопка любого состояния стоит в карточке срока. */}
+      {showBottomCta && (
         <PurchaseCTAButton
           subscription={subscription}
           isMultiTariff={isMultiTariff}

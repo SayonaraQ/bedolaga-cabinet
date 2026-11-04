@@ -1029,6 +1029,9 @@
       "line2": "трафика:"
     },
     "buyTrafficButton": "＋ Докупить трафик",
+    "cardCta": {
+      "chooseTariff": "Выбрать тариф"
+    },
     "devicesSection": {
       "title": "Устройства",
       "hint": "Нажмите на устройство, чтобы переименовать или отключить его",
@@ -10245,7 +10248,9 @@
     "lastDay": "Последний день подписки",
     "until": "до {{date}}",
     "renew": "Продлить",
-    "subscribe": "Оформить",
+    "chooseTariff": "Выбрать тариф",
+    "moveToTariff": "Перейти на тариф",
+    "getSubscription": "Оформить",
     "hideUntilTomorrow": "Скрыть до завтра"
   }
 }

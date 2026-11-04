@@ -997,6 +997,9 @@
       "line2": "reset:"
     },
     "buyTrafficButton": "＋ Buy traffic",
+    "cardCta": {
+      "chooseTariff": "Choose a plan"
+    },
     "devicesSection": {
       "title": "Devices",
       "hint": "Tap a device to rename or disconnect it",
@@ -10115,7 +10118,9 @@
     "lastDay": "Last day of your subscription",
     "until": "until {{date}}",
     "renew": "Renew",
-    "subscribe": "Subscribe",
+    "chooseTariff": "Choose a plan",
+    "moveToTariff": "Switch to a plan",
+    "getSubscription": "Subscribe",
     "hideUntilTomorrow": "Hide until tomorrow"
   }
 }

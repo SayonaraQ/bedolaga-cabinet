@@ -1,5 +1,5 @@
 import type { Subscription } from '../types';
-import { needsTariff, tariffSelectionPath } from './legacySubscription';
+import { subscriptionCardCta, type CardCtaAction } from './subscriptionCta';
 
 /**
  * Закреплённая панель «Продлить» над нижним меню (решение владельца 05.11.2026).
@@ -14,6 +14,7 @@ export const RENEW_BAR_DISMISS_KEY = 'renew-bar-dismissed-on';
 export type RenewBarSubscription = Pick<
   Subscription,
   | 'id'
+  | 'status'
   | 'is_active'
   | 'is_limited'
   | 'is_trial'
@@ -27,9 +28,9 @@ export type RenewBarSubscription = Pick<
 export interface RenewBarState {
   daysLeft: number;
   endDate: string;
-  /** Куда ведёт «Продлить»: продление, витрина (триал) или выбор тарифа (старая подписка). */
+  /** Куда ведёт кнопка — та же главная кнопка, что в карточке срока на странице подписки. */
   target: string;
-  isTrial: boolean;
+  action: CardCtaAction;
 }
 
 /** Локальная дата YYYY-MM-DD: «до завтра» — по часам человека, а не по UTC. */
@@ -48,16 +49,13 @@ export function renewBarState(
   if (subscription.days_left > RENEW_BAR_DAYS) return null;
   if (dismissedOn === today) return null;
 
-  const target = subscription.is_trial
-    ? '/subscription/purchase'
-    : needsTariff(subscription) || !subscription.tariff_id
-      ? tariffSelectionPath(subscription.id)
-      : `/subscriptions/${subscription.id}/renew`;
+  const cta = subscriptionCardCta(subscription);
+  if (!cta) return null;
 
   return {
     daysLeft: Math.max(0, subscription.days_left),
     endDate: subscription.end_date,
-    target,
-    isTrial: subscription.is_trial,
+    target: cta.to,
+    action: cta.action,
   };
 }

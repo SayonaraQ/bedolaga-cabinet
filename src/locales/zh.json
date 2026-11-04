@@ -945,6 +945,9 @@
       "line2": "重置："
     },
     "buyTrafficButton": "＋ 购买流量",
+    "cardCta": {
+      "chooseTariff": "选择套餐"
+    },
     "devicesSection": {
       "title": "设备",
       "hint": "点击设备可重命名或断开连接",
@@ -9982,7 +9985,9 @@
     "lastDay": "订阅最后一天",
     "until": "至 {{date}}",
     "renew": "续订",
-    "subscribe": "订阅",
+    "chooseTariff": "选择套餐",
+    "moveToTariff": "改用套餐",
+    "getSubscription": "订阅",
     "hideUntilTomorrow": "明天前不再显示"
   }
 }

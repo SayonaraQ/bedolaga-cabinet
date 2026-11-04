@@ -166,3 +166,66 @@ it('replaces «additional options» and the bottom device list with one devices 
     screen.getByRole('button', { name: /subscription\.devicesSection\.addSlot/ }),
   ).toBeTruthy();
 });
+
+// Решение владельца 05.11.2026 (после просмотра всех состояний): главная кнопка
+// у каждого состояния — в карточке срока, там же, где написано «Истекла»;
+// общего блока внизу больше нет.
+it.each([
+  [
+    'expired',
+    { status: 'expired', is_active: false, is_expired: true, days_left: 0 },
+    'subscription.extend',
+    '/subscriptions/42/renew',
+  ],
+  [
+    'traffic ran out',
+    { status: 'limited', is_active: false, is_limited: true },
+    'subscription.extend',
+    '/subscriptions/42/renew',
+  ],
+  [
+    'trial',
+    { status: 'trial', is_trial: true, tariff_id: null },
+    'subscription.cardCta.chooseTariff',
+    '/subscription/purchase',
+  ],
+  [
+    'legacy without a tariff',
+    { tariff_id: null, requires_tariff_selection: true },
+    'subscription.cta.moveToTariff',
+    '/subscription/purchase?subscriptionId=42',
+  ],
+  [
+    'disabled',
+    { status: 'disabled', is_active: false },
+    'subscription.getSubscription',
+    '/subscription/purchase',
+  ],
+])(
+  '%s: the main action sits in the countdown card, not at the bottom',
+  async (_name, over, label, href) => {
+    Object.assign(state.subscription, over);
+    renderPage();
+
+    const card = await screen.findByTestId('countdown-card');
+    const link = await within(card).findByRole('link', { name: label });
+    expect(link.getAttribute('href')).toBe(href);
+    expect(link.className).toContain('cta-pulse');
+    expect(
+      screen.queryByText(/subscription\.cta\.(expiredHint|activeHint|trialHint|moveToTariffHint)/),
+    ).toBeNull();
+  },
+);
+
+it('traffic ran out: «buy traffic» is in the warning that says so, once', async () => {
+  Object.assign(state.subscription, { status: 'limited', is_active: false, is_limited: true });
+  renderPage();
+
+  const warning = await screen.findByTestId('traffic-limited');
+  const buy = await within(warning).findByRole('button', { name: /subscription\.buyTraffic/ });
+  expect(buy.className).toContain('cta-shine');
+  expect(screen.getAllByRole('button', { name: /subscription\.buyTraffic/ })).toHaveLength(1);
+
+  fireEvent.click(buy);
+  expect(screen.getByText('subscription.additionalOptions.buyTrafficTitle')).toBeTruthy();
+});

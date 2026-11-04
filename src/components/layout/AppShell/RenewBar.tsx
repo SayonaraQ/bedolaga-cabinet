@@ -82,7 +82,7 @@ export function RenewBar({ subscription, today = localDay() }: RenewBarProps) {
         to={state.target}
         className="cta-pulse shrink-0 rounded-xl bg-accent-500 px-4 py-2.5 text-sm font-bold text-on-accent transition-colors hover:bg-accent-600"
       >
-        {state.isTrial ? t('renewBar.subscribe') : t('renewBar.renew')}
+        {t(`renewBar.${state.action}`)}
       </Link>
       <button
         type="button"

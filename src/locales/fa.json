@@ -990,6 +990,9 @@
       "line2": "ترافیک:"
     },
     "buyTrafficButton": "＋ خرید ترافیک",
+    "cardCta": {
+      "chooseTariff": "انتخاب تعرفه"
+    },
     "devicesSection": {
       "title": "دستگاه‌ها",
       "hint": "برای تغییر نام یا قطع اتصال، روی دستگاه بزنید",
@@ -10124,7 +10127,9 @@
     "lastDay": "آخرین روز اشتراک",
     "until": "تا {{date}}",
     "renew": "تمدید",
-    "subscribe": "اشتراک",
+    "chooseTariff": "انتخاب تعرفه",
+    "moveToTariff": "انتقال به تعرفه",
+    "getSubscription": "اشتراک",
     "hideUntilTomorrow": "تا فردا پنهان شود"
   }
 }

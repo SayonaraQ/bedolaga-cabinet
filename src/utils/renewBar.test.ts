@@ -6,6 +6,7 @@ import { renewBarState } from './renewBar';
 
 const sub = (overrides: Record<string, unknown> = {}) => ({
   id: 42,
+  status: 'active',
   is_active: true,
   is_limited: false,
   is_trial: false,
@@ -25,7 +26,7 @@ describe('renewBarState', () => {
       daysLeft: 3,
       endDate: '2026-11-08T12:00:00Z',
       target: '/subscriptions/42/renew',
-      isTrial: false,
+      action: 'renew',
     });
   });
 
@@ -47,7 +48,7 @@ describe('renewBarState', () => {
   it('sends a trial to the plans, not to renewal', () => {
     expect(
       renewBarState(sub({ is_trial: true, tariff_id: null }), { today: TODAY, dismissedOn: null }),
-    ).toMatchObject({ target: '/subscription/purchase', isTrial: true });
+    ).toMatchObject({ target: '/subscription/purchase', action: 'chooseTariff' });
   });
 
   it('sends a legacy subscription without a tariff to the plan picker', () => {
@@ -56,7 +57,7 @@ describe('renewBarState', () => {
         today: TODAY,
         dismissedOn: null,
       }),
-    ).toMatchObject({ target: '/subscription/purchase?subscriptionId=42' });
+    ).toMatchObject({ target: '/subscription/purchase?subscriptionId=42', action: 'moveToTariff' });
   });
 
   it('keeps showing while traffic is exhausted but time is running out', () => {

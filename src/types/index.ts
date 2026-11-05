@@ -310,6 +310,10 @@ export interface Tariff {
   id: number;
   name: string;
   description: string | null;
+  tagline?: string | null;
+  speed_limit_mbps?: number | null;
+  has_premium_servers?: boolean;
+  max_device_limit?: number | null;
   /** Тариф отмечен оператором как выгодный — выделяется в списке. */
   is_highlighted?: boolean;
   tier_level: number;
@@ -365,9 +369,15 @@ export interface Tariff {
   is_purchased?: boolean;
 }
 
+export interface TariffCommonFeature {
+  icon: 'globe' | 'youtube' | 'infinity' | 'plus' | 'check' | string;
+  text: string;
+}
+
 export interface TariffsPurchaseOptions {
   sales_mode: 'tariffs';
   tariffs: Tariff[];
+  common_features?: TariffCommonFeature[];
   current_tariff_id: number | null;
   balance_kopeks: number;
   balance_label: string;

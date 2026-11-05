@@ -559,25 +559,9 @@ export default function Subscription() {
               {/* ─── Header ─── */}
               <div className="mb-6 flex items-start justify-between">
                 <div>
-                  {/* Zone indicator */}
-                  <div className="mb-1 flex items-center gap-2">
-                    <div
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        background: zone.mainHex,
-                        boxShadow: `0 0 8px ${zone.mainHex}80`,
-                        transition: 'all 0.6s ease',
-                      }}
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="font-mono text-[11px] font-semibold uppercase tracking-widest"
-                      style={{ color: zone.mainHex, transition: 'color 0.6s ease' }}
-                    >
-                      {isUnlimited ? t('dashboard.unlimited') : t(zone.labelKey)}
-                    </span>
-                  </div>
-
+                  {/* Подписи «Норма / Умеренный / …» (зона расхода трафика) над названием
+                      тарифа здесь нет: читалась как статус тарифа. На главной она осталась —
+                      там стоит над «Расход трафика» (решение владельца 05.11.2026). */}
                   {/* Plan name */}
                   <h2 className="text-lg font-bold tracking-tight text-dark-50">
                     {planTitle(subscription, t)}

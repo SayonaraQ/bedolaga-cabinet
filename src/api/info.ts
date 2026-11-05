@@ -6,6 +6,8 @@ export interface FaqPage {
   title: string;
   content: string;
   order: number;
+  /** Тема вопроса для справки (бот ≥ миграции 0141); нет — «Другое». */
+  category?: string | null;
 }
 
 export interface RulesResponse {

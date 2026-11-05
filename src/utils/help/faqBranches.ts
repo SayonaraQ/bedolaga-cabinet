@@ -10,20 +10,21 @@ export interface FaqBranch {
  * Меньше двух `<h3>` — обычный ответ.
  */
 export function splitFaqBranches(html: string): { intro: string; branches: FaqBranch[] } | null {
-  const body = new DOMParser().parseFromString(html, 'text/html').body;
-  const intro: string[] = [];
-  const branches: { title: string; parts: string[] }[] = [];
-  for (const node of Array.from(body.childNodes)) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  // Части собираем узлами и сериализуем браузером: textContent текстового узла
+  // уже раскодирован, и «&lt;b&gt;» превратился бы в разметку.
+  const intro = doc.createElement('div');
+  const branches: { title: string; body: HTMLElement }[] = [];
+  for (const node of Array.from(doc.body.childNodes)) {
     if (node instanceof HTMLElement && node.tagName === 'H3') {
-      branches.push({ title: (node.textContent ?? '').trim(), parts: [] });
+      branches.push({ title: (node.textContent ?? '').trim(), body: doc.createElement('div') });
       continue;
     }
-    const markup = node instanceof HTMLElement ? node.outerHTML : (node.textContent ?? '');
-    (branches.at(-1)?.parts ?? intro).push(markup);
+    (branches.at(-1)?.body ?? intro).appendChild(node);
   }
   if (branches.length < 2) return null;
   return {
-    intro: intro.join('').trim(),
-    branches: branches.map((b) => ({ title: b.title, html: b.parts.join('').trim() })),
+    intro: intro.innerHTML.trim(),
+    branches: branches.map((b) => ({ title: b.title, html: b.body.innerHTML.trim() })),
   };
 }

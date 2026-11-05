@@ -23,6 +23,14 @@ describe('splitFaqBranches', () => {
     expect(result?.branches[0].html).not.toContain('Отключите VPN');
   });
 
+  it('keeps escaped text escaped (entities never turn into markup)', () => {
+    const result = splitFaqBranches(
+      'Вводная &lt;img src=x onerror=alert(1)&gt;<h3>A</h3>текст &lt;b&gt;<h3>B</h3><p>b</p>',
+    );
+    expect(result?.intro).toBe('Вводная &lt;img src=x onerror=alert(1)&gt;');
+    expect(result?.branches[0].html).toBe('текст &lt;b&gt;');
+  });
+
   it('returns null for a plain answer or a single heading', () => {
     expect(splitFaqBranches('<p>Просто ответ</p>')).toBeNull();
     expect(splitFaqBranches('<h3>Один</h3><p>текст</p>')).toBeNull();

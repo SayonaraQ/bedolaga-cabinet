@@ -1031,6 +1031,8 @@
       "renew": "Renew for {{price}}",
       "renewalsCovered_one": "Enough for {{count}} renewal",
       "renewalsCovered_other": "Enough for {{count}} renewals",
+      "extraDevices_one": "+ {{count}} device",
+      "extraDevices_other": "+ {{count}} devices",
       "topUpHeading": "Top up by",
       "otherAmount": "Other amount",
       "topUpAmount": "Top up by {{amount}}",

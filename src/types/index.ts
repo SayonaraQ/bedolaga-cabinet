@@ -179,6 +179,8 @@ export interface RenewalOption {
   original_price_kopeks: number | null;
   /** Период, отмеченный оператором как самый выгодный. */
   is_highlighted?: boolean;
+  /** Устройства сверх лимита тарифа, доплата за которые включена в цену. */
+  extra_devices?: number;
 }
 
 export interface TrafficPackage {

@@ -1024,6 +1024,8 @@
       "renew": "تمدید با {{price}}",
       "renewalsCovered_one": "موجودی برای {{count}} بار تمدید کافی است",
       "renewalsCovered_other": "موجودی برای {{count}} بار تمدید کافی است",
+      "extraDevices_one": "+ {{count}} دستگاه",
+      "extraDevices_other": "+ {{count}} دستگاه",
       "topUpHeading": "مبلغ شارژ",
       "otherAmount": "مبلغ دیگر",
       "topUpAmount": "شارژ به مبلغ {{amount}}",

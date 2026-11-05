@@ -19,6 +19,7 @@ export function pickAutopayOption(
 export type RenewalPlan = {
   kind: 'enough' | 'short' | 'expired';
   tariffName: string | null;
+  extraDevices: number;
   periodDays: number;
   priceKopeks: number;
   renewalsCovered: number;
@@ -44,6 +45,7 @@ export function buildRenewalPlan(input: {
   const option = pickAutopayOption(options, subscription.autopay_period_days);
   if (!option) return null;
 
+  const extraDevices = option.extra_devices ?? 0;
   const priceKopeks = option.price_kopeks;
   const endDate = new Date(subscription.end_date);
   const chargeDate = new Date(endDate.getTime() - 86400000 * subscription.autopay_days_before);
@@ -56,6 +58,7 @@ export function buildRenewalPlan(input: {
           ? 'enough'
           : 'short',
     tariffName: subscription.tariff_name ?? null,
+    extraDevices: Number.isInteger(extraDevices) && extraDevices >= 0 ? extraDevices : 0,
     periodDays: option.period_days,
     priceKopeks,
     renewalsCovered: Math.floor(balanceKopeks / priceKopeks),

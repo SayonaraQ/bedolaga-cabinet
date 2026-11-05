@@ -44,7 +44,17 @@ export function RenewalStatus({ plan }: { plan: RenewalPlan }) {
       }`}
     >
       <div className="flex items-baseline justify-between gap-2 text-xs text-dark-400 sm:text-sm">
-        <span className="min-w-0 [overflow-wrap:anywhere]">{plan.tariffName}</span>
+        <span className="min-w-0 [overflow-wrap:anywhere]">
+          {plan.tariffName}
+          {plan.extraDevices > 0 && (
+            <>
+              {plan.tariffName ? ' ' : null}
+              <span className="whitespace-nowrap font-semibold text-dark-100">
+                {t('balance.wallet.extraDevices', { count: plan.extraDevices })}
+              </span>
+            </>
+          )}
+        </span>
         <span className="shrink-0">
           {t('balance.wallet.periodPrice', { price, count: plan.periodDays })}
         </span>

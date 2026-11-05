@@ -151,6 +151,46 @@ it('показывает покрытие трёх продлений, дату 
   expect(screen.getByRole('button', { name: 'Пополнить на 600 ₽' })).toBeTruthy();
 });
 
+it.each([subscription.tariff_name, undefined])(
+  'показывает дополнительное устройство и полную цену с названием тарифа %s',
+  (tariffName) => {
+    renderWallet({
+      subscription: { ...subscription, tariff_name: tariffName },
+      renewalOptions: renewalOptions.map((option) => {
+        const priceKopeks = option.price_kopeks + (15000 * option.period_days) / 30;
+        return {
+          ...option,
+          extra_devices: 1,
+          price_kopeks: priceKopeks,
+          price_rubles: priceKopeks / 100,
+        };
+      }),
+    });
+    const status = within(screen.getByRole('status'));
+    const devices = status.getByText('+ 1 устройство');
+    expect(devices.parentElement?.textContent).toBe(
+      tariffName ? `${tariffName} + 1 устройство` : '+ 1 устройство',
+    );
+    expect(status.getByText('450 ₽ / 30 дн.')).toBeTruthy();
+    expect(status.getByText('Хватит на 2 продления')).toBeTruthy();
+  },
+);
+
+it.each([
+  [2, '+ 2 устройства'],
+  [5, '+ 5 устройств'],
+])('склоняет число дополнительных устройств %i', (count, text) => {
+  renderWallet({
+    renewalOptions: renewalOptions.map((option) => ({ ...option, extra_devices: count })),
+  });
+  expect(within(screen.getByRole('status')).getByText(text)).toBeTruthy();
+});
+
+it('не показывает дополнительные устройства в статусе для опций старого бота', () => {
+  renderWallet();
+  expect(within(screen.getByRole('status')).queryByText(/устройств/)).toBeNull();
+});
+
 it('округляет нехватку вверх до рубля и выбирает её для пополнения', () => {
   renderWallet({ balanceKopeks: 12050 });
   expect(screen.getByText('Не хватает 180 ₽ на продление')).toBeTruthy();

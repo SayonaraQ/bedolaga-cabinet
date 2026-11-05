@@ -978,6 +978,7 @@
       "enableAutopay": "开启",
       "renew": "支付 {{price}} 续费",
       "renewalsCovered_other": "余额足够续费 {{count}} 次",
+      "extraDevices_other": "+ {{count}} 个设备",
       "topUpHeading": "充值金额",
       "otherAmount": "其他金额",
       "topUpAmount": "充值 {{amount}}",

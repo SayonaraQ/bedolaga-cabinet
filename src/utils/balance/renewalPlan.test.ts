@@ -88,6 +88,7 @@ describe('buildRenewalPlan', () => {
     expect(plan(102904)).toEqual({
       kind: 'enough',
       tariffName: 'Уверенный стандарт',
+      extraDevices: 0,
       periodDays: 30,
       priceKopeks: 30000,
       renewalsCovered: 3,
@@ -98,6 +99,35 @@ describe('buildRenewalPlan', () => {
       chargeDatePassed: false,
       subscriptionId: 42,
     });
+  });
+
+  it('берёт дополнительные устройства и полную цену из выбранной опции', () => {
+    expect(
+      buildRenewalPlan({
+        subscription: subscription(),
+        options: [
+          { ...option(30, 45000), extra_devices: 1 },
+          { ...option(60, 88000), extra_devices: 2 },
+        ],
+        balanceKopeks: 102904,
+        now,
+      }),
+    ).toMatchObject({ extraDevices: 1, priceKopeks: 45000 });
+  });
+
+  it('считает дополнительные устройства отсутствующими у старого бота', () => {
+    expect(plan(102904)).toMatchObject({ extraDevices: 0 });
+  });
+
+  it.each([-1, 1.5])('сбрасывает недопустимое число дополнительных устройств %s', (count) => {
+    expect(
+      buildRenewalPlan({
+        subscription: subscription(),
+        options: [{ ...option(30, 45000), extra_devices: count }],
+        balanceKopeks: 102904,
+        now,
+      }),
+    ).toMatchObject({ extraDevices: 0, priceKopeks: 45000 });
   });
 
   it('округляет нехватку 179,50 рубля вверх до 180 рублей', () => {

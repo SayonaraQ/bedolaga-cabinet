@@ -1,12 +1,10 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, expect, it, vi } from 'vitest';
 import { FaqItem } from './FaqItem';
-import { copyToClipboard } from '../../utils/clipboard';
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('../../utils/clipboard', () => ({ copyToClipboard: vi.fn(async () => undefined) }));
 afterEach(cleanup);
 
 const GUIDE = {
@@ -57,15 +55,6 @@ it('shows one branch at a time and switches with the chips', () => {
       .getByRole('button', { name: 'Подключено, но интернета нет' })
       .getAttribute('aria-pressed'),
   ).toBe('true');
-});
-
-it('copies a link to the answer', async () => {
-  mount();
-  fireEvent.click(screen.getByRole('button', { name: 'help.faq.copyLink' }));
-  await waitFor(() =>
-    expect(copyToClipboard).toHaveBeenCalledWith(`${window.location.origin}/info/faq/9`),
-  );
-  expect(await screen.findByText('help.faq.copied')).toBeTruthy();
 });
 
 it('opens same-origin links inside the app', () => {

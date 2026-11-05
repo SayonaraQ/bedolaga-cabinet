@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { PiArrowLeft } from 'react-icons/pi';
 import { faqAnchorId, FaqItem } from '../components/help/FaqItem';
 import { SupportBlock } from '../components/help/SupportBlock';
@@ -56,7 +56,6 @@ export default function HelpTopic() {
     return () => window.cancelAnimationFrame(frame);
   }, [openId, requested]);
 
-  const otherTopics = topics.filter((g) => g.key !== topic);
   const title = t(`help.topics.${topic}.title`);
 
   return (
@@ -99,20 +98,6 @@ export default function HelpTopic() {
             />
           ))}
         </div>
-      )}
-
-      {otherTopics.length > 0 && (
-        <nav aria-label={t('help.title')} className="flex flex-wrap gap-2">
-          {otherTopics.map((group) => (
-            <Link
-              key={group.key}
-              to={`/info/topic/${group.key}`}
-              className="inline-flex min-h-[44px] items-center rounded-full border border-dark-700/60 bg-dark-800/50 px-4 text-sm font-semibold text-dark-100 hover:border-dark-600"
-            >
-              {t(`help.topics.${group.key}.title`)}
-            </Link>
-          ))}
-        </nav>
       )}
 
       {topic !== SUPPORT_TOPIC && <SupportBlock supportPages={support} />}

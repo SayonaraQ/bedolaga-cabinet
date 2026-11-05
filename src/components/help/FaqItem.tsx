@@ -1,15 +1,13 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { PiCaretDown, PiCheck, PiLink } from 'react-icons/pi';
+import { PiCaretDown } from 'react-icons/pi';
 import type { FaqPage } from '../../api/info';
 import { useInternalLinks } from '../../hooks/useInternalLinks';
-import { copyToClipboard } from '../../utils/clipboard';
 import { splitFaqBranches } from '../../utils/help/faqBranches';
 import { formatContent } from '../../utils/legalContent';
 
 export const faqAnchorId = (id: number) => `faq-${id}`;
-export const faqLink = (id: number) => `${window.location.origin}/info/faq/${id}`;
 
 const PROSE =
   'prose prose-invert max-w-none text-[15px] leading-relaxed text-dark-200 prose-a:text-accent-400 prose-li:my-1';
@@ -27,7 +25,6 @@ interface FaqItemProps {
 export function FaqItem({ page, open, onToggle, compact = false }: FaqItemProps) {
   const { t } = useTranslation();
   const onContentClick = useInternalLinks();
-  const [copied, setCopied] = useState(false);
   const [branchIndex, setBranchIndex] = useState(0);
   const headerRef = useRef<HTMLButtonElement>(null);
   const headerTopBeforeToggle = useRef<number | null>(null);
@@ -35,12 +32,6 @@ export function FaqItem({ page, open, onToggle, compact = false }: FaqItemProps)
   // Сначала очищаем, потом режем на ветки: ветки собираются из уже чистого DOM.
   const html = useMemo(() => formatContent(page.content), [page.content]);
   const split = useMemo(() => splitFaqBranches(html), [html]);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timer = window.setTimeout(() => setCopied(false), 2000);
-    return () => window.clearTimeout(timer);
-  }, [copied]);
 
   // Открыт один вопрос: тап по вопросу ниже открытого сворачивает верхний, всё
   // над пальцем сжимается, а прокрутка остаётся прежней — заголовок уезжал за
@@ -59,15 +50,6 @@ export function FaqItem({ page, open, onToggle, compact = false }: FaqItemProps)
     const shift = Math.round(headerRef.current.getBoundingClientRect().top - before);
     if (shift !== 0) window.scrollBy({ top: shift, behavior: 'instant' });
   }, [open]);
-
-  const copy = async () => {
-    try {
-      await copyToClipboard(faqLink(page.id));
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
 
   const shell = compact
     ? 'rounded-xl bg-dark-900/40'
@@ -141,19 +123,7 @@ export function FaqItem({ page, open, onToggle, compact = false }: FaqItemProps)
           )}
 
           {!compact && (
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-dark-700/50 pt-3">
-              <button
-                type="button"
-                onClick={copy}
-                className="-ml-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-dark-400 hover:text-dark-200"
-              >
-                {copied ? (
-                  <PiCheck aria-hidden className="h-4 w-4 text-success-400" />
-                ) : (
-                  <PiLink aria-hidden className="h-4 w-4" />
-                )}
-                {copied ? t('help.faq.copied') : t('help.faq.copyLink')}
-              </button>
+            <div className="border-t border-dark-700/50 pt-3">
               <Link
                 to="/support"
                 className="inline-flex min-h-[44px] items-center text-sm font-bold text-accent-400 hover:text-accent-300"

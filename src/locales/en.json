@@ -10178,8 +10178,6 @@
       "count_other": "{{count}} questions"
     },
     "faq": {
-      "copyLink": "Link to answer",
-      "copied": "Link copied",
       "notHelped": "Didn't help? Create a ticket",
       "whatBroken": "What exactly isn't working?"
     },

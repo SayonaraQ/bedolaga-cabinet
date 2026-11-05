@@ -10044,8 +10044,6 @@
       "count_other": "{{count}} 个问题"
     },
     "faq": {
-      "copyLink": "答案链接",
-      "copied": "链接已复制",
       "notHelped": "没有帮助？创建工单",
       "whatBroken": "具体哪里不能用？"
     },

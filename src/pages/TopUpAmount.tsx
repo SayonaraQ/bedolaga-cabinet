@@ -4,33 +4,20 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { QRCodeSVG } from 'qrcode.react';
 
 import { useAuthStore } from '../store/auth';
 import { balanceApi } from '../api/balance';
 import { useCurrency } from '../hooks/useCurrency';
-import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
+import { getTopUpRateLimitError, useTopUpPayment } from '../hooks/useTopUpPayment';
+import { PaymentReadyPanel } from '../components/balance/PaymentReadyPanel';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import { useHaptic, usePlatform } from '@/platform';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import type { PaymentMethod, PaymentMethodOption } from '../types';
 import BentoCard from '../components/ui/BentoCard';
-import { saveTopUpPendingInfo } from '../utils/topUpStorage';
 import { getSafeRedirectPath } from '../utils/safeRedirect';
-import { openPaymentUrl } from '../utils/openPaymentUrl';
-import { getApiErrorMessage } from '../utils/api-error';
-import { copyToClipboard } from '@/utils/clipboard';
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
-import {
-  CardIcon,
-  CheckIcon,
-  CopyIcon,
-  CryptoIcon,
-  ExclamationIcon,
-  ExternalLinkIcon,
-  SparklesIcon,
-  StarIcon,
-} from '@/components/icons';
+import { CardIcon, CryptoIcon, ExclamationIcon, SparklesIcon, StarIcon } from '@/components/icons';
 
 const getMethodIcon = (methodId: string) => {
   const id = methodId.toLowerCase();
@@ -84,7 +71,7 @@ export default function TopUpAmount() {
   const [searchParams] = useSearchParams();
   const { formatAmount, currencySymbol, convertAmount, convertToRub, targetCurrency } =
     useCurrency();
-  const { openInvoice, openTelegramLink, openLink, platform } = usePlatform();
+  const { openInvoice, platform } = usePlatform();
   const haptic = useHaptic();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -145,13 +132,18 @@ export default function TopUpAmount() {
   const emailRef = useRef<HTMLInputElement>(null);
   const customerEmail = paymentEmail ?? userEmail ?? '';
   const [amount, setAmount] = useState(initialDisplayAmount);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    pay,
+    isPending: isTopUpPending,
+    error,
+    setError,
+    paymentUrl,
+    qrPayload,
+    reset,
+  } = useTopUpPayment(method);
   const [selectedOption, setSelectedOption] = useState<string | null>(
     getPreferredOptionId(method?.options),
   );
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-  const [qrPayload, setQrPayload] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   // Canonical RUB amount when the user picked a quick-amount chip. The input shows a
   // rounded display-currency value; validating/charging the canonical RUB avoids the FX
@@ -213,95 +205,6 @@ export default function TopUpAmount() {
     },
   });
 
-  const topUpMutation = useMutation<
-    {
-      payment_id: string;
-      payment_url?: string;
-      invoice_url?: string;
-      amount_kopeks: number;
-      amount_rubles: number;
-      status: string;
-      expires_at: string | null;
-      qr_payload?: string | null;
-    },
-    unknown,
-    number
-  >({
-    mutationFn: (amountKopeks: number) => {
-      if (!method) throw new Error('Method not loaded');
-      if (method.id === 'antilopay') {
-        return balanceApi.createTopUp(
-          amountKopeks,
-          method.id,
-          selectedOption || undefined,
-          customerEmail.trim(),
-        );
-      }
-      return balanceApi.createTopUp(amountKopeks, method.id, selectedOption || undefined);
-    },
-    onSuccess: (data) => {
-      const redirectUrl = data.payment_url || data.invoice_url;
-      if (redirectUrl) {
-        // Save payment info for the result page (do BEFORE possible redirect,
-        // иначе после window.location.href этот код не выполнится).
-        if (method && data.payment_id) {
-          const methodKey = method.id.toLowerCase().replace(/-/g, '_');
-          const displayName =
-            method.name || t(`balance.paymentMethods.${methodKey}.name`, { defaultValue: '' });
-          saveTopUpPendingInfo({
-            amount_kopeks: data.amount_kopeks,
-            method_id: method.id,
-            method_name: displayName,
-            payment_id: data.payment_id,
-            created_at: Date.now(),
-          });
-        }
-
-        // open_url_direct: seamless флоу как при покупке подарка.
-        // window.location.href внутри Telegram MiniApp WebView навигирует
-        // в том же контейнере без открытия внешнего браузера. После
-        // оплаты return_url возвращает на /balance/top-up/result.
-        //
-        // t.me/ URL (Telegram Stars, CryptoBot) — всегда через нативный
-        // handler (openInvoice / openTelegramLink в setPaymentUrl-ветке).
-        // Stars уже отбит раньше через starsPaymentMutation, здесь — защита
-        // на случай CryptoBot и других Telegram-deep-link провайдеров.
-        // toLowerCase для устойчивости к редким провайдерам, которые могут вернуть
-        // URL в нестандартном регистре. Также покрываем tg:// scheme на всякий случай.
-        const lowerUrl = redirectUrl.toLowerCase();
-        const isTelegramDeepLink =
-          lowerUrl.startsWith('https://t.me/') ||
-          lowerUrl.startsWith('http://t.me/') ||
-          lowerUrl.startsWith('tg://');
-        // Свой экран оплаты: QR показываем здесь же — уводить на страницу провайдера незачем.
-        if (data.qr_payload) {
-          setQrPayload(data.qr_payload);
-          setPaymentUrl(redirectUrl);
-          return;
-        }
-
-        if (method?.open_url_direct && !isTelegramDeepLink) {
-          // In the Telegram WebView, same-container navigation to the provider page breaks
-          // when it hands off to a bank app via a custom scheme (SBP) — Android shows
-          // ERR_UNKNOWN_URL_SCHEME, iOS opens nothing (bug #654272). Open externally there;
-          // on web keep same-tab navigation.
-          openPaymentUrl(redirectUrl, platform, openLink);
-          return;
-        }
-
-        setPaymentUrl(redirectUrl);
-      }
-    },
-    onError: (err: unknown) => {
-      const detail = getApiErrorMessage(err, '');
-      setError(
-        detail.includes('not yet implemented')
-          ? t('balance.useBot')
-          : getLocalizedApiErrorMessage(err, t('common.error'), t),
-      );
-    },
-  });
-
   // Auto-focus input (only on desktop — mobile keyboard hides bottom nav)
   useEffect(() => {
     if (platform === 'telegram') return;
@@ -339,9 +242,7 @@ export default function TopUpAmount() {
     method.name || t(`balance.paymentMethods.${methodKey}.name`, { defaultValue: '' });
 
   const handleSubmit = () => {
-    setError(null);
-    setPaymentUrl(null);
-    setQrPayload(null);
+    reset();
     inputRef.current?.blur();
     if (
       method.id === 'antilopay' &&
@@ -352,11 +253,12 @@ export default function TopUpAmount() {
       return;
     }
 
-    if (!checkRateLimit(RATE_LIMIT_KEYS.PAYMENT, 3, 30000)) {
-      setError(
-        t('balance.errors.rateLimit', { seconds: getRateLimitResetTime(RATE_LIMIT_KEYS.PAYMENT) }),
-      );
-      return;
+    if (isStarsMethod) {
+      const rateLimitError = getTopUpRateLimitError(t);
+      if (rateLimitError) {
+        setError(rateLimitError);
+        return;
+      }
     }
     if (hasOptions && !selectedOption) {
       setError(t('balance.errors.selectMethod'));
@@ -409,7 +311,7 @@ export default function TopUpAmount() {
     if (isStarsMethod) {
       starsPaymentMutation.mutate(amountKopeks);
     } else {
-      topUpMutation.mutate(amountKopeks);
+      pay(amountKopeks, selectedOption, { email: customerEmail });
     }
   };
 
@@ -423,27 +325,7 @@ export default function TopUpAmount() {
     targetCurrency === 'IRR'
       ? Math.round(convertAmount(rub)).toString()
       : convertAmount(rub).toFixed(currencyDecimals);
-  const isPending = topUpMutation.isPending || starsPaymentMutation.isPending;
-
-  const handleOpenPayment = () => {
-    if (!paymentUrl) return;
-    if (paymentUrl.includes('t.me/')) {
-      openTelegramLink(paymentUrl);
-    } else {
-      openLink(paymentUrl);
-    }
-  };
-
-  const handleCopyUrl = async () => {
-    if (!paymentUrl) return;
-    try {
-      await copyToClipboard(paymentUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard write failed silently
-    }
-  };
+  const isPending = isTopUpPending || starsPaymentMutation.isPending;
 
   return (
     <motion.div
@@ -647,60 +529,7 @@ export default function TopUpAmount() {
       )}
 
       {/* Payment link display - shown when URL is received */}
-      {paymentUrl && (
-        <motion.div
-          variants={staggerItem}
-          className="space-y-3 rounded-2xl border border-success-500/20 bg-success-500/10 p-4"
-        >
-          <div className="flex items-center gap-2 text-success-400">
-            <CheckIcon className="h-5 w-5" />
-            <span className="font-semibold">{t('balance.paymentReady')}</span>
-          </div>
-
-          {qrPayload ? (
-            <div className="flex flex-col items-center gap-2">
-              <div className="rounded-xl bg-white p-3" data-testid="topup-qr">
-                <QRCodeSVG value={qrPayload} size={192} level="M" includeMargin={false} />
-              </div>
-              <p className="text-center text-sm text-dark-400">
-                {t(
-                  'balance.scanQrToPay',
-                  'Отсканируйте QR-код в приложении банка или откройте оплату',
-                )}
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-dark-400">{t('balance.clickToOpenPayment')}</p>
-          )}
-
-          <button
-            type="button"
-            onClick={handleOpenPayment}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-success-500 font-bold text-white transition-colors hover:bg-success-400 active:bg-success-600"
-          >
-            <ExternalLinkIcon />
-            <span>{t('balance.openPaymentPage')}</span>
-          </button>
-
-          <div className="flex items-center gap-2">
-            <div className="min-w-0 flex-1 rounded-lg border border-dark-700/50 bg-dark-800/70 px-3 py-2">
-              <p className="truncate text-xs text-dark-500">{paymentUrl}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyUrl}
-              className={`shrink-0 rounded-lg p-2.5 transition-colors ${
-                copied
-                  ? 'bg-success-500/20 text-success-400'
-                  : 'bg-dark-800/70 text-dark-400 hover:bg-dark-700 hover:text-dark-200'
-              }`}
-              title={t('common.copy')}
-            >
-              {copied ? <CheckIcon className="h-5 w-5" /> : <CopyIcon className="h-5 w-5" />}
-            </button>
-          </div>
-        </motion.div>
-      )}
+      {paymentUrl && <PaymentReadyPanel paymentUrl={paymentUrl} qrPayload={qrPayload} />}
     </motion.div>
   );
 }

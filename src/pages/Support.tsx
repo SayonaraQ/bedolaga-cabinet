@@ -497,7 +497,27 @@ export default function Support() {
         )}
       </motion.section>
 
-      {/* Telegram — запасной путь, строкой под заявкой, а не равной кнопкой.
+      {/* Вход в справку: в нижнем меню телефона места нет (решение владельца 05.11.2026).
+          Сразу под заявкой — до Telegram: сначала «создать заявку», потом «найти ответ самому». */}
+      <motion.div variants={staggerItem}>
+        <Link
+          to="/info"
+          className="flex min-h-[64px] items-center gap-3 rounded-2xl border border-dark-700/60 bg-dark-800/40 px-4 py-3 hover:border-dark-600"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
+            <PiQuestion aria-hidden className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold text-dark-50">
+              {t('help.entry.title')}
+            </span>
+            <span className="mt-0.5 block text-xs text-dark-400">{t('help.entry.subtitle')}</span>
+          </span>
+          <PiCaretRight aria-hidden className="h-4 w-4 shrink-0 text-dark-500" />
+        </Link>
+      </motion.div>
+
+      {/* Telegram — запасной путь, строкой под заявкой и справкой, а не равной кнопкой.
           Self-animated: монтируется после ответа конфига, когда stagger родителя
           уже отыграл и оставил бы его на opacity 0. */}
       {contactTarget && supportConfig && (
@@ -859,25 +879,6 @@ export default function Support() {
             </div>
           )}
         </Card>
-      </motion.div>
-
-      {/* Вход в справку: в нижнем меню телефона места нет (решение владельца 05.11.2026). */}
-      <motion.div variants={staggerItem}>
-        <Link
-          to="/info"
-          className="flex min-h-[64px] items-center gap-3 rounded-2xl border border-dark-700/60 bg-dark-800/40 px-4 py-3 hover:border-dark-600"
-        >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
-            <PiQuestion aria-hidden className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-semibold text-dark-50">
-              {t('help.entry.title')}
-            </span>
-            <span className="mt-0.5 block text-xs text-dark-400">{t('help.entry.subtitle')}</span>
-          </span>
-          <PiCaretRight aria-hidden className="h-4 w-4 shrink-0 text-dark-500" />
-        </Link>
       </motion.div>
     </motion.div>
   );

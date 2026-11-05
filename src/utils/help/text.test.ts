@@ -99,6 +99,29 @@ describe('search', () => {
     expect(searchHelp('topic:services', FAQ, label, []).faq.map((h) => h.key)).toEqual(['faq-45']);
   });
 
+  it('finds Latin brand names typed in Russian', () => {
+    const rules: HelpDocSection[] = [
+      {
+        doc: 'rules',
+        docTitle: 'Правила',
+        id: '',
+        title: 'Правила',
+        text: 'Запрещается скачивание torrent-файлов.',
+      },
+    ];
+    expect(searchHelp('торрент', [], label, rules).docs).toHaveLength(1);
+    const tiktok = [
+      faq(13, 'Не работает TikTok/Instagram/ChatGPT/Gemini', '<p>Смените локацию</p>', 'services'),
+    ];
+    expect(searchHelp('тикток', tiktok, label, []).faq).toHaveLength(1);
+    expect(
+      searchHelp('инстаграм', tiktok, label, []).faq[0].title.some(
+        (s) => s.mark && s.text === 'Instagram',
+      ),
+    ).toBe(true);
+    expect(searchHelp('андроид', FAQ, label, []).faq.map((h) => h.key)).toEqual(['faq-45']);
+  });
+
   it('returns nothing for a one-character query', () => {
     expect(searchHelp('б', FAQ, label, SECTIONS)).toEqual({ faq: [], docs: [] });
   });

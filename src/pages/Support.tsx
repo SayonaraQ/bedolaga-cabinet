@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router';
+import { PiCaretRight, PiQuestion } from 'react-icons/pi';
 import { ticketsApi } from '../api/tickets';
 import { ticketNotificationsApi } from '../api/ticketNotifications';
 import { SUPPORT_UNREAD_COUNT_KEY } from '../hooks/useSupportUnreadCount';
@@ -857,6 +859,25 @@ export default function Support() {
             </div>
           )}
         </Card>
+      </motion.div>
+
+      {/* Вход в справку: в нижнем меню телефона места нет (решение владельца 05.11.2026). */}
+      <motion.div variants={staggerItem}>
+        <Link
+          to="/info"
+          className="flex min-h-[64px] items-center gap-3 rounded-2xl border border-dark-700/60 bg-dark-800/40 px-4 py-3 hover:border-dark-600"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/10 text-accent-400">
+            <PiQuestion aria-hidden className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold text-dark-50">
+              {t('help.entry.title')}
+            </span>
+            <span className="mt-0.5 block text-xs text-dark-400">{t('help.entry.subtitle')}</span>
+          </span>
+          <PiCaretRight aria-hidden className="h-4 w-4 shrink-0 text-dark-500" />
+        </Link>
       </motion.div>
     </motion.div>
   );

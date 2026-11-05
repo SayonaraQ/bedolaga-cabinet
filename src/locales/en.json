@@ -10242,6 +10242,11 @@
     "entry": {
       "title": "FAQ and documents",
       "subtitle": "Rules, offer, answers"
+    },
+    "docs": {
+      "offer": "Payment and access terms",
+      "privacy": "Privacy policy",
+      "rules": "Service rules"
     }
   }
 }

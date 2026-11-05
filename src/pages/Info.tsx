@@ -1,777 +1,240 @@
-import { uiLocale } from '@/utils/uiLocale';
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { PiCaretDown } from 'react-icons/pi';
-import DOMPurify from 'dompurify';
-import { infoApi, type FaqPage, type InfoVisibility } from '../api/info';
-import { formatContent } from '../utils/legalContent';
+import { Link, useSearchParams } from 'react-router';
+import {
+  PiCaretRight,
+  PiFileText,
+  PiMagnifyingGlass,
+  PiShieldCheck,
+  PiStar,
+  PiX,
+} from 'react-icons/pi';
+import type { FaqPage } from '../api/info';
 import { infoPagesApi } from '../api/infoPages';
-import { promoApi, type LoyaltyTierInfo } from '../api/promo';
-import type { FaqItem, ReplacesTab } from '../api/infoPages';
-import { DocumentIcon, InfoIcon, QuestionIcon, ShieldIcon, StarIcon } from '@/components/icons';
+import { promoApi } from '../api/promo';
+import { subscriptionApi } from '../api/subscription';
+import { DocumentList, type HelpDocumentRow } from '../components/help/DocumentList';
+import { HelpSearchResults } from '../components/help/HelpSearchResults';
+import { SituationCard } from '../components/help/SituationCard';
+import { SupportBlock } from '../components/help/SupportBlock';
+import { TopicGrid } from '../components/help/TopicGrid';
+import {
+  useFaqPages,
+  useHelpDocument,
+  useHelpLocale,
+  useInfoVisibility,
+  useTabReplacements,
+} from '../components/help/useHelpQueries';
+import { outlineDocument } from '../utils/help/docOutline';
+import {
+  searchHelp,
+  searchStems,
+  type HelpDocKind,
+  type HelpDocSection,
+} from '../utils/help/search';
+import { pickHelpSituation } from '../utils/help/situation';
+import {
+  groupFaqByTopic,
+  HELP_POPULAR_FAQ_IDS,
+  pickFaq,
+  SUPPORT_TOPIC,
+  topicOf,
+} from '../utils/help/topics';
+import { formatContent } from '../utils/legalContent';
+import { uiLocale } from '../utils/uiLocale';
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
-const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
-  <PiCaretDown className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-);
+const BUILTIN_SLUGS = new Set(['faq', 'rules', 'privacy', 'offer', 'loyalty']);
 
-const BUILTIN_TABS = new Set<string>(['faq', 'rules', 'privacy', 'offer', 'loyalty']);
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(uiLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
-// Rich sanitizer for custom InfoPage content (TipTap editor output with media)
-const ALLOWED_IFRAME_HOSTS = new Set([
-  'www.youtube.com',
-  'youtube.com',
-  'player.vimeo.com',
-  'www.youtube-nocookie.com',
-]);
-
-const infoPagePurify = DOMPurify(window);
-
-infoPagePurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'IFRAME') {
-    const src = node.getAttribute('src') ?? '';
-    try {
-      const url = new URL(src);
-      if (url.protocol !== 'https:' || !ALLOWED_IFRAME_HOSTS.has(url.hostname)) {
-        node.remove();
-        return;
-      }
-    } catch {
-      node.remove();
-      return;
-    }
-    node.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
-    node.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-  }
-  if (node.tagName === 'VIDEO') {
-    const src = node.getAttribute('src') ?? '';
-    try {
-      const url = new URL(src);
-      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-        node.remove();
-        return;
-      }
-    } catch {
-      node.remove();
-      return;
-    }
-    node.setAttribute('controls', '');
-    node.setAttribute('preload', 'metadata');
-  }
-  if (node.tagName === 'A') {
-    node.setAttribute('target', '_blank');
-    node.setAttribute('rel', 'noopener noreferrer');
-  }
-  if (node.hasAttribute('style')) {
-    const style = node.getAttribute('style') ?? '';
-    const match = style.match(/text-align\s*:\s*(left|center|right|justify)/i);
-    if (match) {
-      node.setAttribute('style', `text-align: ${match[1]}`);
-    } else {
-      node.removeAttribute('style');
-    }
-  }
-});
-
-const RICH_SANITIZE_CONFIG = {
-  ALLOWED_TAGS: [
-    'p',
-    'div',
-    'br',
-    'hr',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'blockquote',
-    'pre',
-    'code',
-    'ul',
-    'ol',
-    'li',
-    'table',
-    'thead',
-    'tbody',
-    'tr',
-    'th',
-    'td',
-    'a',
-    'strong',
-    'b',
-    'em',
-    'i',
-    'u',
-    's',
-    'del',
-    'ins',
-    'span',
-    'mark',
-    'sub',
-    'sup',
-    'small',
-    'img',
-    'video',
-    'iframe',
-    'figure',
-    'figcaption',
-  ],
-  ALLOWED_ATTR: [
-    'href',
-    'target',
-    'rel',
-    'src',
-    'alt',
-    'title',
-    'width',
-    'height',
-    'loading',
-    'class',
-    'start',
-    'reversed',
-    'type',
-    'controls',
-    'preload',
-    'frameborder',
-    'allowfullscreen',
-    'allow',
-    'sandbox',
-    'style',
-  ],
-  ALLOW_DATA_ATTR: false,
-  ADD_ATTR: ['target'],
-};
-
-const sanitizeRichHtml = (html: string): string => {
-  return infoPagePurify.sanitize(html, RICH_SANITIZE_CONFIG);
-};
-
-// --- FAQ Accordion for tab replacements ---
-
-function ReplacementFaqItem({
-  item,
-  isOpen,
-  onToggle,
-}: {
-  item: FaqItem;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(0);
-
-  useEffect(() => {
-    if (contentRef.current) {
-      setHeight(isOpen ? contentRef.current.scrollHeight : 0);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen || !contentRef.current) return;
-    const observer = new ResizeObserver(() => {
-      if (contentRef.current) setHeight(contentRef.current.scrollHeight);
-    });
-    observer.observe(contentRef.current);
-    return () => observer.disconnect();
-  }, [isOpen]);
-
-  const sanitizedAnswer = useMemo(() => sanitizeRichHtml(item.a), [item.a]);
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50 transition-all hover:border-dark-600">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex min-h-[52px] w-full items-center justify-between gap-3 px-5 py-4 text-left"
-        aria-expanded={isOpen}
-      >
-        <span className="text-sm font-medium text-dark-100 sm:text-base">{item.q}</span>
-        <ChevronIcon expanded={isOpen} />
-      </button>
-      <div
-        style={{ height }}
-        className="overflow-hidden transition-[height] duration-300 ease-in-out"
-      >
-        <div ref={contentRef} className="border-t border-dark-700/50 px-5 pb-4 pt-3">
-          <div
-            className="prose prose-sm max-w-none text-dark-300"
-            dangerouslySetInnerHTML={{ __html: sanitizedAnswer }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ReplacementFaqView({ items }: { items: FaqItem[] }) {
-  const [openKey, setOpenKey] = useState<string | null>(null);
-
-  const handleToggle = useCallback((key: string) => {
-    setOpenKey((prev) => (prev === key ? null : key));
-  }, []);
-
-  return (
-    <div className="space-y-2">
-      {items.map((item, index) => {
-        const key = `${index}-${item.q.slice(0, 50)}`;
-        return (
-          <ReplacementFaqItem
-            key={key}
-            item={item}
-            isOpen={openKey === key}
-            onToggle={() => handleToggle(key)}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
+/**
+ * «Справка» (была «Информация»): карточка по подписке, поиск, темы, частые
+ * вопросы, «Не нашли ответ?» и документы. Макет — холст «Справка: A+B на живом
+ * FAQ», утверждён владельцем 05.11.2026.
+ */
 export default function Info() {
-  const { t, i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState<string>('faq');
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  const locale = i18n.language.split('-')[0];
+  const { t } = useTranslation();
+  const locale = useHelpLocale();
+  const [params, setParams] = useSearchParams();
+  const query = params.get('q') ?? '';
+  const searching = searchStems(query).length > 0;
+  const setQuery = (value: string) => setParams(value ? { q: value } : {}, { replace: true });
 
-  // Fetch tab replacements
-  const { data: tabReplacements, isError: replacementsError } = useQuery({
-    queryKey: ['info-pages', 'tab-replacements'],
-    queryFn: infoPagesApi.getTabReplacements,
-    staleTime: 60_000,
-  });
-
-  // Fetch custom InfoPages (active pages without replaces_tab — shown as extra tabs)
+  const { data: visibility } = useInfoVisibility();
+  const faqVisible = visibility?.faq !== false;
+  const { data: faqPages, isLoading: faqLoading } = useFaqPages(faqVisible);
+  const { data: replacements } = useTabReplacements();
   const { data: customPages } = useQuery({
     queryKey: ['info-pages', 'list'],
     queryFn: () => infoPagesApi.getPages(),
     staleTime: 60_000,
   });
-
-  const { data: visibility } = useQuery({
-    queryKey: ['info-visibility'],
-    queryFn: infoApi.getVisibility,
-    staleTime: 60_000,
-  });
-
-  // Filter to only pages that don't replace a built-in tab and don't collide with built-in IDs
-  const extraPages = useMemo(
-    () => (customPages ?? []).filter((p) => !p.replaces_tab && !BUILTIN_TABS.has(p.slug)),
-    [customPages],
-  );
-
-  // Determine if we're on a built-in tab or a custom page tab
-  const isCustomTab = !BUILTIN_TABS.has(activeTab);
-  const customTabSlug = isCustomTab ? activeTab : null;
-
-  // Check if current built-in tab has a replacement
-  const currentTabSlug =
-    !isCustomTab && activeTab !== 'loyalty'
-      ? (tabReplacements?.[activeTab as ReplacesTab] ?? null)
-      : null;
-
-  // Slug to fetch: either a custom page tab or a tab replacement
-  const pageSlugToFetch = customTabSlug ?? currentTabSlug;
-
-  // Wait for tab replacements before firing built-in queries (also proceed on error — graceful degradation)
-  const replacementsLoaded = tabReplacements !== undefined || replacementsError;
-
-  // Fetch the InfoPage when needed (replacement or custom tab)
-  const { data: infoPage, isLoading: infoPageLoading } = useQuery({
-    queryKey: ['info-pages', 'page', pageSlugToFetch],
-    queryFn: () => {
-      if (!pageSlugToFetch) throw new Error('No slug');
-      return infoPagesApi.getPageBySlug(pageSlugToFetch);
-    },
-    enabled: !!pageSlugToFetch,
-    staleTime: 60_000,
-  });
-
-  // Parse FAQ items from InfoPage content
-  const infoPageFaqItems = useMemo((): FaqItem[] => {
-    if (!infoPage || infoPage.page_type !== 'faq') return [];
-    const raw =
-      infoPage.content[locale] || infoPage.content['ru'] || infoPage.content['en'] || '[]';
-    try {
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, [infoPage, locale]);
-
-  // Sanitize regular InfoPage HTML content
-  const infoPageHtml = useMemo(() => {
-    if (!infoPage || infoPage.page_type === 'faq') return '';
-    const rawContent =
-      infoPage.content[locale] || infoPage.content['ru'] || infoPage.content['en'] || '';
-    return sanitizeRichHtml(rawContent);
-  }, [infoPage, locale]);
-
-  const { data: faqPages, isLoading: faqLoading } = useQuery({
-    queryKey: ['faq-pages', locale],
-    queryFn: () => infoApi.getFaqPages(locale),
-    enabled: activeTab === 'faq' && !currentTabSlug && replacementsLoaded,
-    staleTime: 0,
-    refetchOnMount: 'always',
-  });
-
-  const { data: rules, isLoading: rulesLoading } = useQuery({
-    queryKey: ['rules', locale],
-    queryFn: () => infoApi.getRules(locale),
-    enabled: activeTab === 'rules' && !currentTabSlug && replacementsLoaded,
-    staleTime: 0,
-    refetchOnMount: 'always',
-  });
-
-  const { data: privacy, isLoading: privacyLoading } = useQuery({
-    queryKey: ['privacy-policy', locale],
-    queryFn: () => infoApi.getPrivacyPolicy(locale),
-    enabled: activeTab === 'privacy' && !currentTabSlug && replacementsLoaded,
-    staleTime: 0,
-    refetchOnMount: 'always',
-  });
-
-  const { data: offer, isLoading: offerLoading } = useQuery({
-    queryKey: ['public-offer', locale],
-    queryFn: () => infoApi.getPublicOffer(locale),
-    enabled: activeTab === 'offer' && !currentTabSlug && replacementsLoaded,
-    staleTime: 0,
-    refetchOnMount: 'always',
-  });
-
-  const { data: loyaltyData, isLoading: loyaltyLoading } = useQuery({
+  const { data: loyalty } = useQuery({
     queryKey: ['loyalty-tiers'],
     queryFn: promoApi.getLoyaltyTiers,
-    enabled: activeTab === 'loyalty',
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: 60_000,
+    retry: false,
   });
 
-  const tabs = useMemo(() => {
-    const builtinTabs: Array<{ id: string; label: string; icon: React.FC; emoji?: string }> = [
-      { id: 'faq', label: t('info.faq'), icon: QuestionIcon },
-      { id: 'rules', label: t('info.rules'), icon: DocumentIcon },
-      { id: 'privacy', label: t('info.privacy'), icon: ShieldIcon },
-      { id: 'offer', label: t('info.offer'), icon: DocumentIcon },
-      { id: 'loyalty', label: t('info.loyalty'), icon: StarIcon },
-    ];
+  const { data: subscriptionResponse } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: () => subscriptionApi.getSubscription(),
+    retry: false,
+  });
+  const subscription = subscriptionResponse?.subscription ?? null;
+  const { data: devicesData } = useQuery({
+    queryKey: ['devices'],
+    queryFn: () => subscriptionApi.getDevices(),
+    enabled: !!subscription,
+    retry: false,
+  });
 
-    const visibleBuiltinTabs = builtinTabs.filter((tab) => {
-      if (tab.id === 'loyalty') return true;
-      if (tabReplacements?.[tab.id as ReplacesTab]) return true;
-      if (!visibility) return true;
-      return visibility[tab.id as keyof InfoVisibility];
-    });
+  const docVisible = (doc: HelpDocKind) => visibility?.[doc] !== false && !replacements?.[doc];
+  const offer = useHelpDocument('offer', docVisible('offer'));
+  const privacy = useHelpDocument('privacy', docVisible('privacy'));
+  const rules = useHelpDocument('rules', docVisible('rules'));
 
-    const customTabs = extraPages.map((p) => {
-      const label = p.title[locale] || p.title['ru'] || p.title['en'] || p.slug;
-      return { id: p.slug, label, icon: DocumentIcon, emoji: p.icon ?? undefined };
-    });
+  const faq = faqPages ?? [];
+  const { topics, support } = useMemo(() => groupFaqByTopic(faq), [faq]);
+  const popular = useMemo(() => pickFaq(faq, HELP_POPULAR_FAQ_IDS), [faq]);
+  const situation = subscription
+    ? pickHelpSituation(subscription, devicesData?.total ?? null)
+    : null;
 
-    return [...visibleBuiltinTabs, ...customTabs];
-  }, [visibility, tabReplacements, extraPages, locale, t]);
+  const docs = useMemo<
+    { kind: HelpDocKind; data?: { content: string; updated_at: string | null } }[]
+  >(
+    () => [
+      { kind: 'offer', data: offer.data },
+      { kind: 'privacy', data: privacy.data },
+      { kind: 'rules', data: rules.data },
+    ],
+    [offer.data, privacy.data, rules.data],
+  );
 
-  useEffect(() => {
-    if (tabs.length === 0) return;
-    if (!tabs.some((tab) => tab.id === activeTab)) {
-      setActiveTab(tabs[0].id);
-    }
-  }, [tabs, activeTab]);
-
-  const toggleFaq = useCallback((id: number) => {
-    setExpandedFaq((prev) => (prev === id ? null : id));
-  }, []);
-
-  const renderInfoPageContent = () => {
-    if (infoPageLoading) {
-      return (
-        <SkeletonGroup className="space-y-3">
-          <Skeleton variant="card" count={3} className="h-16" />
-        </SkeletonGroup>
-      );
-    }
-
-    if (!infoPage) {
-      return <div className="py-8 text-center text-dark-400">{t('info.noContent')}</div>;
-    }
-
-    if (infoPage.page_type === 'faq') {
-      if (infoPageFaqItems.length === 0) {
-        return <div className="py-8 text-center text-dark-400">{t('info.noFaq')}</div>;
-      }
-      return <ReplacementFaqView items={infoPageFaqItems} />;
-    }
-
-    if (!infoPageHtml) {
-      return <div className="py-8 text-center text-dark-400">{t('info.noContent')}</div>;
-    }
-
-    return (
-      <div className="bento-card prose prose-invert max-w-none">
-        <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: infoPageHtml }} />
-      </div>
+  // Документы режем на разделы только во время поиска.
+  const sections = useMemo<HelpDocSection[]>(() => {
+    if (!searching) return [];
+    return docs.flatMap(({ kind, data }) =>
+      data?.content
+        ? outlineDocument(formatContent(data.content), kind, t(`help.docs.${kind}`)).sections
+        : [],
     );
-  };
+  }, [searching, docs, t]);
 
-  const renderContent = () => {
-    // Custom page tab — always render InfoPage content
-    if (isCustomTab) {
-      return renderInfoPageContent();
-    }
+  const topicLabel = (page: FaqPage) =>
+    page.category === SUPPORT_TOPIC
+      ? t('help.topics.support.title')
+      : t(`help.topics.${topicOf(page)}.title`);
+  const results = searching ? searchHelp(query, faq, topicLabel, sections) : null;
 
-    // Show spinner while tab replacements are loading (prevents flash of wrong content)
-    if (!replacementsLoaded) {
-      return (
-        <SkeletonGroup className="space-y-3">
-          <Skeleton variant="card" count={3} className="h-16" />
-        </SkeletonGroup>
-      );
-    }
-
-    // Built-in tab replaced by an InfoPage
-    if (currentTabSlug) {
-      return renderInfoPageContent();
-    }
-
-    if (activeTab === 'faq') {
-      if (faqLoading) {
-        return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
-        );
-      }
-
-      if (!faqPages || faqPages.length === 0) {
-        return <div className="py-8 text-center text-dark-400">{t('info.noFaq')}</div>;
-      }
-
-      return (
-        <div className="space-y-2">
-          {faqPages.map((faq: FaqPage) => (
-            <div key={faq.id} className="bento-card overflow-hidden p-0">
-              <button
-                onClick={() => toggleFaq(faq.id)}
-                className="flex min-h-[52px] w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-dark-800/50"
-              >
-                <span className="min-w-0 font-medium">{faq.title}</span>
-                <ChevronIcon expanded={expandedFaq === faq.id} />
-              </button>
-              {expandedFaq === faq.id && (
-                <div className="prose prose-invert max-w-none px-4 pb-4 text-dark-300">
-                  <div dangerouslySetInnerHTML={{ __html: formatContent(faq.content) }} />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (activeTab === 'rules') {
-      if (rulesLoading) {
-        return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
-        );
-      }
-
-      if (!rules?.content) {
-        return <div className="py-8 text-center text-dark-400">{t('info.noContent')}</div>;
-      }
-
-      return (
-        <div className="bento-card prose prose-invert max-w-none">
-          <div
-            className="overflow-x-auto"
-            dangerouslySetInnerHTML={{ __html: formatContent(rules.content) }}
-          />
-          {rules.updated_at && (
-            <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
-              {t('info.updatedAt')}: {new Date(rules.updated_at).toLocaleDateString(uiLocale())}
-            </p>
-          )}
-        </div>
-      );
-    }
-
-    if (activeTab === 'privacy') {
-      if (privacyLoading) {
-        return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
-        );
-      }
-
-      if (!privacy?.content) {
-        return <div className="py-8 text-center text-dark-400">{t('info.noContent')}</div>;
-      }
-
-      return (
-        <div className="bento-card prose prose-invert max-w-none">
-          <div
-            className="overflow-x-auto"
-            dangerouslySetInnerHTML={{ __html: formatContent(privacy.content) }}
-          />
-          {privacy.updated_at && (
-            <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
-              {t('info.updatedAt')}: {new Date(privacy.updated_at).toLocaleDateString(uiLocale())}
-            </p>
-          )}
-        </div>
-      );
-    }
-
-    if (activeTab === 'offer') {
-      if (offerLoading) {
-        return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
-        );
-      }
-
-      if (!offer?.content) {
-        return <div className="py-8 text-center text-dark-400">{t('info.noContent')}</div>;
-      }
-
-      return (
-        <div className="bento-card prose prose-invert max-w-none">
-          <div
-            className="overflow-x-auto"
-            dangerouslySetInnerHTML={{ __html: formatContent(offer.content) }}
-          />
-          {offer.updated_at && (
-            <p className="mt-6 border-t border-dark-700 pt-4 text-sm text-dark-400">
-              {t('info.updatedAt')}: {new Date(offer.updated_at).toLocaleDateString(uiLocale())}
-            </p>
-          )}
-        </div>
-      );
-    }
-
-    if (activeTab === 'loyalty') {
-      if (loyaltyLoading) {
-        return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
-        );
-      }
-
-      if (!loyaltyData || loyaltyData.tiers.length === 0) {
-        return <div className="py-8 text-center text-dark-400">{t('info.noLoyaltyTiers')}</div>;
-      }
-
-      const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat(uiLocale(), {
-          style: 'currency',
-          currency: 'RUB',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        }).format(amount);
-      };
-
-      const getStatusBadge = (tier: LoyaltyTierInfo) => {
-        if (tier.is_current) {
-          return (
-            <span className="rounded-full bg-accent-500/20 px-2 py-1 text-xs font-medium text-accent-400">
-              {t('info.statusCurrent')}
-            </span>
-          );
-        }
-        if (tier.is_achieved) {
-          return (
-            <span className="rounded-full bg-success-500/20 px-2 py-1 text-xs font-medium text-success-400">
-              {t('info.statusAchieved')}
-            </span>
-          );
-        }
-        return (
-          <span className="rounded-full bg-dark-600 px-2 py-1 text-xs font-medium text-dark-400">
-            {t('info.statusLocked')}
-          </span>
-        );
-      };
-
-      const hasAnyDiscount = (tier: LoyaltyTierInfo) => {
-        return (
-          tier.server_discount_percent > 0 ||
-          tier.traffic_discount_percent > 0 ||
-          tier.device_discount_percent > 0 ||
-          Object.keys(tier.period_discounts).length > 0
-        );
-      };
-
-      return (
-        <div className="space-y-6">
-          {/* Progress Card */}
-          <div className="bento-card p-5">
-            <h3 className="mb-4 text-lg font-semibold text-dark-50">{t('info.yourProgress')}</h3>
-
-            <div className="mb-4 grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-400">{t('info.totalSpent')}</div>
-                <div className="truncate text-base font-bold text-dark-50 sm:text-lg">
-                  {formatCurrency(loyaltyData.current_spent_rubles)}
-                </div>
-              </div>
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-400">{t('info.currentStatus')}</div>
-                <div className="truncate text-base font-bold text-accent-400 sm:text-lg">
-                  {loyaltyData.current_tier_name || '-'}
-                </div>
-              </div>
-            </div>
-
-            {/* Progress bar to next tier */}
-            {loyaltyData.next_tier_name && loyaltyData.next_tier_threshold_rubles ? (
-              <div>
-                <div className="mb-2 flex flex-col gap-1 text-xs text-dark-400 sm:flex-row sm:justify-between">
-                  <span>
-                    {t('info.nextStatus')}: {loyaltyData.next_tier_name}
-                  </span>
-                  <span>
-                    {t('info.toNextStatus')}:{' '}
-                    {formatCurrency(
-                      Math.max(
-                        0,
-                        loyaltyData.next_tier_threshold_rubles - loyaltyData.current_spent_rubles,
-                      ),
-                    )}
-                  </span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full bg-dark-700">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-accent-500 to-accent-400 transition-all duration-500"
-                    style={{ width: `${Math.min(100, loyaltyData.progress_percent)}%` }}
-                  />
-                </div>
-                <div className="mt-1 text-right text-xs text-dark-400">
-                  {loyaltyData.progress_percent.toFixed(1)}%
-                </div>
-              </div>
-            ) : (
-              <div className="py-2 text-center font-medium text-success-400">
-                {t('info.allStatusesAchieved')}
-              </div>
-            )}
-          </div>
-
-          {/* Tiers List */}
-          <div className="space-y-3">
-            {loyaltyData.tiers.map((tier) => (
-              <div
-                key={tier.id}
-                className={`bento-card p-4 transition-all ${
-                  tier.is_current
-                    ? 'bg-accent-500/5 ring-2 ring-accent-500/50'
-                    : tier.is_achieved
-                      ? 'bg-success-500/5'
-                      : 'opacity-70'
-                }`}
-              >
-                {/* Левая группа сжимается, плашка статуса — нет: раньше она уходила
-                    за карточку, а название уровня обрезалось. */}
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                        tier.is_current
-                          ? 'bg-accent-500/20 text-accent-400'
-                          : tier.is_achieved
-                            ? 'bg-success-500/20 text-success-400'
-                            : 'bg-dark-700 text-dark-400'
-                      }`}
-                    >
-                      <StarIcon />
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-semibold text-dark-50 [overflow-wrap:anywhere]">
-                        {tier.name}
-                      </h4>
-                      <p className="text-xs text-dark-400">
-                        {t('info.threshold')}: {formatCurrency(tier.threshold_rubles)}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="shrink-0">{getStatusBadge(tier)}</span>
-                </div>
-
-                {/* Discounts */}
-                {hasAnyDiscount(tier) ? (
-                  <div className="rounded-xl bg-dark-800/50 p-3">
-                    <div className="mb-2 text-xs text-dark-400">{t('info.discounts')}:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {tier.server_discount_percent > 0 && (
-                        <span className="rounded-lg bg-dark-700 px-2 py-1 text-xs text-dark-200">
-                          {t('info.serverDiscount')}: -{tier.server_discount_percent}%
-                        </span>
-                      )}
-                      {tier.traffic_discount_percent > 0 && (
-                        <span className="rounded-lg bg-dark-700 px-2 py-1 text-xs text-dark-200">
-                          {t('info.trafficDiscount')}: -{tier.traffic_discount_percent}%
-                        </span>
-                      )}
-                      {tier.device_discount_percent > 0 && (
-                        <span className="rounded-lg bg-dark-700 px-2 py-1 text-xs text-dark-200">
-                          {t('info.deviceDiscount')}: -{tier.device_discount_percent}%
-                        </span>
-                      )}
-                      {Object.entries(tier.period_discounts).map(([days, percent]) => (
-                        <span
-                          key={days}
-                          className="rounded-lg bg-dark-700 px-2 py-1 text-xs text-dark-200"
-                        >
-                          {t('info.periodDiscount', { days })}: -{percent}%
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-xs italic text-dark-500">{t('info.noDiscounts')}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    return null;
-  };
+  const docRows: HelpDocumentRow[] = [];
+  for (const { kind, data } of docs) {
+    const slug = replacements?.[kind];
+    if (visibility?.[kind] === false && !slug) continue;
+    if (!slug && !data?.content) continue;
+    const updated = data?.updated_at
+      ? t('help.updatedAt', { date: formatDate(data.updated_at) })
+      : '';
+    const subtitle =
+      kind === 'offer'
+        ? [t('help.offerSubtitle'), updated].filter(Boolean).join(' · ')
+        : updated || undefined;
+    docRows.push({
+      key: kind,
+      title: t(`help.docs.${kind}`),
+      subtitle,
+      to: slug ? `/info/${slug}` : `/info/doc/${kind}`,
+      Icon: kind === 'privacy' ? PiShieldCheck : PiFileText,
+    });
+  }
+  if (loyalty?.tiers?.length) {
+    docRows.push({ key: 'loyalty', title: t('help.loyalty'), to: '/info/loyalty', Icon: PiStar });
+  }
+  for (const page of customPages ?? []) {
+    if (page.replaces_tab || BUILTIN_SLUGS.has(page.slug)) continue;
+    docRows.push({
+      key: `page-${page.slug}`,
+      title: page.title[locale] || page.title.ru || page.title.en || page.slug,
+      to: `/info/${page.slug}`,
+      Icon: PiFileText,
+    });
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <InfoIcon className="h-6 w-6" />
-        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('info.title')}</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('help.title')}</h1>
+        <p className="mt-1.5 text-sm text-dark-400">{t('help.subtitle')}</p>
       </div>
 
-      {/* Tabs */}
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-x-visible">
-        {tabs.map((tab) => (
+      {!searching && situation && subscription && (
+        <SituationCard situation={situation} subscription={subscription} faq={faq} />
+      )}
+
+      <label className="flex h-[52px] items-center gap-2.5 rounded-2xl border border-dark-700 bg-dark-900/60 pl-4 pr-1.5 text-dark-400 focus-within:border-accent-500/60">
+        <PiMagnifyingGlass aria-hidden className="h-5 w-5 shrink-0" />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t('help.searchPlaceholder')}
+          aria-label={t('help.searchPlaceholder')}
+          className="h-full min-w-0 flex-1 border-0 bg-transparent text-[15px] text-dark-50 outline-none placeholder:text-dark-500 [&::-webkit-search-cancel-button]:hidden"
+        />
+        {query && (
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex min-h-[44px] shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'bg-accent-500 text-on-accent'
-                : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-            }`}
+            type="button"
+            onClick={() => setQuery('')}
+            aria-label={t('help.searchClear')}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-dark-400 hover:text-dark-200"
           >
-            {tab.emoji ? <span className="text-base">{tab.emoji}</span> : <tab.icon />}
-            <span className="max-w-[140px] truncate">{tab.label}</span>
+            <PiX className="h-[18px] w-[18px]" />
           </button>
-        ))}
-      </div>
+        )}
+      </label>
 
-      {/* Content */}
-      {renderContent()}
+      {results ? (
+        <HelpSearchResults query={query} faq={results.faq} docs={results.docs} />
+      ) : (
+        <>
+          {faqLoading ? (
+            <SkeletonGroup className="grid grid-cols-2 gap-2.5">
+              <Skeleton variant="card" count={4} className="h-28" />
+            </SkeletonGroup>
+          ) : (
+            <TopicGrid topics={topics} />
+          )}
+
+          {popular.length > 0 && (
+            <section className="space-y-2.5" aria-label={t('help.popular')}>
+              <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-dark-400">
+                {t('help.popular')}
+              </h2>
+              <div className="overflow-hidden rounded-2xl border border-dark-700/60 bg-dark-800/40">
+                {popular.map((page, index) => (
+                  <Link
+                    key={page.id}
+                    to={`/info/faq/${page.id}`}
+                    className={`flex min-h-[54px] items-center gap-3 px-4 py-3 text-[15px] font-medium text-dark-50 hover:bg-dark-800/60 ${
+                      index > 0 ? 'border-t border-dark-700/50' : ''
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1 break-words">{page.title}</span>
+                    <PiCaretRight aria-hidden className="h-4 w-4 shrink-0 text-dark-500" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <SupportBlock supportPages={support} />
+          <DocumentList title={t('help.documents')} rows={docRows} />
+        </>
+      )}
     </div>
   );
 }

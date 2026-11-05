@@ -40,6 +40,46 @@ export function searchStems(query: string): string[] {
     .map((word) => (word.length > 5 ? word.slice(0, -2) : word));
 }
 
+/**
+ * Русское написание → латинское: в FAQ и документах бренды и термины латиницей
+ * (TikTok, HAPP, torrent-файлы), а ищут их по-русски. Ключ — начало слова.
+ */
+const LATIN_ALIASES: readonly [string, string][] = [
+  ['торр', 'torrent'],
+  ['ютуб', 'youtube'],
+  ['телег', 'telegram'],
+  ['инста', 'instagram'],
+  ['тикток', 'tiktok'],
+  ['гугл', 'google'],
+  ['чатгпт', 'chatgpt'],
+  ['гемини', 'gemini'],
+  ['джемини', 'gemini'],
+  ['айфон', 'iphone'],
+  ['андро', 'android'],
+  ['винд', 'windows'],
+  ['хапп', 'happ'],
+  ['хэпп', 'happ'],
+  ['инси', 'incy'],
+  ['впн', 'vpn'],
+  ['вайфай', 'wi-fi'],
+  ['вай-фай', 'wi-fi'],
+];
+
+/** Для каждого слова запроса — его основа и латинские варианты; слово совпало, если нашёлся любой. */
+export function searchTerms(query: string): string[][] {
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word.length >= 2)
+    .map((word) => {
+      const stem = word.length > 5 ? word.slice(0, -2) : word;
+      const latin = LATIN_ALIASES.filter(([prefix]) => word.startsWith(prefix)).map(
+        ([, alias]) => alias,
+      );
+      return [stem, ...latin];
+    });
+}
+
 function firstMatch(text: string, stems: string[]): { index: number; length: number } | null {
   const lower = text.toLowerCase();
   let best: { index: number; length: number } | null = null;
@@ -83,11 +123,12 @@ export function searchHelp(
   topicLabel: (page: FaqPage) => string,
   sections: HelpDocSection[],
 ): { faq: HelpHit[]; docs: HelpHit[] } {
-  const stems = searchStems(query);
-  if (stems.length === 0) return { faq: [], docs: [] };
+  const terms = searchTerms(query);
+  if (terms.length === 0) return { faq: [], docs: [] };
+  const stems = terms.flat();
   const matches = (haystack: string) => {
     const lower = haystack.toLowerCase();
-    return stems.every((stem) => lower.includes(stem));
+    return terms.every((variants) => variants.some((variant) => lower.includes(variant)));
   };
 
   const faqHits = faq.flatMap((page) => {

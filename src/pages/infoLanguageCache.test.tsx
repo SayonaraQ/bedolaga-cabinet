@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import Info from './Info';
+import HelpDocument from './HelpDocument';
+import HelpTopic from './HelpTopic';
 import PublicLegal, { type PublicLegalDoc } from './PublicLegal';
 
 const state = vi.hoisted(() => ({ language: 'ru', get: vi.fn() }));
@@ -15,6 +16,7 @@ vi.mock('../api/client', () => ({ default: { get: (...args: unknown[]) => state.
 vi.mock('../api/infoPages', () => ({
   infoPagesApi: { getTabReplacements: async () => ({}), getPages: async () => [] },
 }));
+vi.mock('../api/promo', () => ({ promoApi: { getLoyaltyTiers: async () => ({ tiers: [] }) } }));
 let client: QueryClient;
 beforeEach(() => {
   state.language = 'ru';
@@ -61,21 +63,27 @@ it.each(['offer', 'privacy', 'recurrent'] as PublicLegalDoc[])(
 );
 
 it('switches FAQ and rules language without mixing their cached responses', async () => {
-  const element = () => (
+  const element = (path: string) => (
     <QueryClientProvider client={client}>
-      <Info />
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/info/topic/:topic" element={<HelpTopic />} />
+          <Route path="/info/doc/:doc" element={<HelpDocument />} />
+        </Routes>
+      </MemoryRouter>
     </QueryClientProvider>
   );
-  const view = render(element());
+  const view = render(element('/info/topic/other'));
   expect(await screen.findByText('FAQ-ru')).toBeTruthy();
   state.language = 'en';
-  view.rerender(element());
+  view.rerender(element('/info/topic/other'));
   expect(await screen.findByText('FAQ-en')).toBeTruthy();
   expect(screen.queryByText('FAQ-ru')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'info.rules' }));
+  view.unmount();
+  const docView = render(element('/info/doc/rules'));
   expect(await screen.findByText('Document-en')).toBeTruthy();
   state.language = 'ru';
-  view.rerender(element());
+  docView.rerender(element('/info/doc/rules'));
   expect(await screen.findByText('Document-ru')).toBeTruthy();
   expect(state.get).toHaveBeenCalledWith('/cabinet/info/faq', { params: { language: 'en' } });
   expect(state.get).toHaveBeenCalledWith('/cabinet/info/rules', { params: { language: 'ru' } });

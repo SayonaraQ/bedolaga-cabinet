@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import Support from './Support';
 
@@ -51,7 +52,9 @@ it.each(['create', 'reply'])('preserves mixed image and video types on %s', asyn
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <Support />
+      <MemoryRouter>
+        <Support />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
   if (mode === 'create') {

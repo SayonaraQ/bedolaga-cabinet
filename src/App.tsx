@@ -177,6 +177,9 @@ const AdminNewsCreate = lazyWithRetry(() => import('./pages/AdminNewsCreate'));
 
 // Info pages
 const InfoPageView = lazyWithRetry(() => import('./pages/InfoPageView'));
+const HelpTopic = lazyWithRetry(() => import('./pages/HelpTopic'));
+const HelpDocument = lazyWithRetry(() => import('./pages/HelpDocument'));
+const HelpLoyalty = lazyWithRetry(() => import('./pages/HelpLoyalty'));
 const AdminInfoPages = lazyWithRetry(() => import('./pages/AdminInfoPages'));
 const AdminInfoPageEditor = lazyWithRetry(() => import('./pages/AdminInfoPageEditor'));
 const AdminLegalPages = lazyWithRetry(() => import('./pages/AdminLegalPages'));
@@ -636,6 +639,46 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <NewsArticlePage />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/info/topic/:topic"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <HelpTopic />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/info/faq/:id"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <HelpTopic />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/info/doc/:doc"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <HelpDocument />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/info/loyalty"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <HelpLoyalty />
               </LazyPage>
             </ProtectedRoute>
           }

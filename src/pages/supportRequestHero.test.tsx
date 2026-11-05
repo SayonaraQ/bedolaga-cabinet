@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import Support from './Support';
 import { useAuthStore } from '../store/auth';
@@ -81,7 +82,9 @@ function renderSupport() {
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <Support />
+      <MemoryRouter>
+        <Support />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -182,4 +185,10 @@ it('scrolls the form into view when the request button is pressed', async () => 
 
   expect(await screen.findByText('support.createTicket')).toBeTruthy();
   await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalled());
+});
+
+it('links to the help center below the requests', async () => {
+  renderSupport();
+  const entry = await screen.findByRole('link', { name: /help\.entry\.title/ });
+  expect(entry.getAttribute('href')).toBe('/info');
 });

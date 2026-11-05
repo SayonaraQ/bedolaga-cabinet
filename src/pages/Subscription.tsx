@@ -228,10 +228,8 @@ export default function Subscription() {
   const [copied, setCopied] = useState(false);
   // Ссылку подписки не находят: 11-й кегль на 30% контраста прямо под
   // вращающейся рамкой «Подключить устройство», которая забирает весь взгляд.
-  // Пока человек ни разу её не копировал, кнопка копирования держит акцентный
-  // цвет и пульсирующий ореол; после первого копирования гаснет навсегда —
-  // подсказка нужна один раз, дальше это шум на каждом заходе.
-  const [linkNeverCopied, setLinkNeverCopied] = useState(false);
+  // Поэтому кнопка копирования всегда в акценте и с пульсирующим ореолом
+  // (владелец 05.11.2026: раньше гасла навсегда после первого копирования).
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
 
   // Device/traffic topup state
@@ -438,18 +436,10 @@ export default function Subscription() {
     refreshTrafficMutation.mutate();
   }, [subscription, refreshTrafficMutation, subscriptionId]);
 
-  useEffect(() => {
-    setLinkNeverCopied(
-      safeLocal.getItem(`sub_link_copied_${subscriptionId ?? 'default'}`) === null,
-    );
-  }, [subscriptionId]);
-
   const copyUrl = () => {
     if (displayedConnectionUrl) {
       void copyToClipboard(displayedConnectionUrl);
       setCopied(true);
-      safeLocal.setItem(`sub_link_copied_${subscriptionId ?? 'default'}`, '1');
-      setLinkNeverCopied(false);
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -984,19 +974,12 @@ export default function Subscription() {
                   <button
                     onClick={copyUrl}
                     className={`flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300${
-                      linkNeverCopied && !copied ? ' copy-link-attention' : ''
+                      copied ? '' : ' copy-link-attention'
                     }`}
                     style={{
-                      background:
-                        copied || linkNeverCopied
-                          ? 'rgba(var(--color-accent-400), 0.12)'
-                          : g.innerBorder,
-                      border:
-                        copied || linkNeverCopied
-                          ? '1px solid rgba(var(--color-accent-400), 0.28)'
-                          : `1px solid ${g.trackBg}`,
-                      color:
-                        copied || linkNeverCopied ? 'rgb(var(--color-accent-400))' : g.textMuted,
+                      background: 'rgba(var(--color-accent-400), 0.12)',
+                      border: '1px solid rgba(var(--color-accent-400), 0.28)',
+                      color: 'rgb(var(--color-accent-400))',
                     }}
                     aria-label={t('subscription.copyLink')}
                     title={t('subscription.copyLink')}

@@ -290,3 +290,18 @@ it.each([
   expect(before(card, tile) && before(card, link) && before(card, traffic)).toBe(first);
   expect(before(tile, card) && before(link, card)).toBe(!first);
 });
+
+// Владелец 05.11.2026: кнопка копирования ссылки мигает всегда, а не до первого
+// нажатия — раньше после одного копирования она гасла навсегда.
+it('the copy-link button keeps pulsing even after the link was copied before', async () => {
+  localStorage.setItem('sub_link_copied_42', '1');
+  renderPage();
+
+  const copy = await screen.findByRole('button', { name: 'subscription.copyLink' });
+  expect(copy.className).toContain('copy-link-attention');
+
+  fireEvent.click(copy);
+  // Пока горит галочка «скопировано», ореол не нужен.
+  expect(copy.className).not.toContain('copy-link-attention');
+  localStorage.removeItem('sub_link_copied_42');
+});

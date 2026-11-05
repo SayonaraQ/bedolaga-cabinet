@@ -25,7 +25,15 @@ const showcases = tsxFiles(SRC)
 
 describe('плашка «Выгодно» на витринах', () => {
   it('витрины найдены', () => {
-    expect(showcases.length).toBeGreaterThanOrEqual(5);
+    // The purchase accordion has its own popular badge; other showcases keep the shared one.
+    const accordion = readFileSync(
+      join(SRC, 'components/subscription/purchase/TariffAccordionCard.tsx'),
+      'utf8',
+    );
+    expect(accordion).toContain("t('subscription.tariffCard.popular')");
+    expect(accordion).toContain('text-urgent-400');
+    expect(accordion).not.toContain('bestValueFrame');
+    expect(showcases.length + 1).toBeGreaterThanOrEqual(5);
   });
 
   it.each(showcases.map((s) => [s.path, s.code]))(

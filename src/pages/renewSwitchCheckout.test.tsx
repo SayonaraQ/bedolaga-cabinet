@@ -122,7 +122,7 @@ it.each([false, true].flatMap((lite) => [11, 12].map((id) => ({ lite, id }))))(
     await screen.findByRole('heading', { level: 1, name: 'subscription.switchTariff.title' });
     fireEvent.click(
       await screen.findByRole('button', {
-        name: /Target/,
+        name: state.lite ? /Target/ : 'Target: subscription.switchTariff.choose',
       }),
     );
     await waitFor(() => expect(state.preview).toHaveBeenCalledWith(2, id));
@@ -154,15 +154,25 @@ it('failed preview can be retried without charging or showing the catalog undern
   state.lite = false;
   state.preview.mockRejectedValueOnce(new Error('Preview unavailable'));
   const client = mount('/subscription/purchase?subscriptionId=11');
-  fireEvent.click(await screen.findByRole('button', { name: /Target/ }));
+  fireEvent.click(
+    await screen.findByRole('button', {
+      name: state.lite ? /Target/ : 'Target: subscription.switchTariff.choose',
+    }),
+  );
   await screen.findByRole('alert');
-  expect(screen.queryByRole('button', { name: /Target/ })).toBeNull();
+  expect(
+    screen.queryByRole('button', {
+      name: state.lite ? /Target/ : 'Target: subscription.switchTariff.choose',
+    }),
+  ).toBeNull();
   expect(screen.queryByRole('button', { name: 'subscription.switchTariff.confirm' })).toBeNull();
   expect(state.switch).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'common.retry' }));
   await screen.findByText('Current 11');
   fireEvent.click(screen.getByRole('button', { name: 'subscription.switchTariff.chooseAnother' }));
-  await screen.findByRole('button', { name: /Target/ });
+  await screen.findByRole('button', {
+    name: state.lite ? /Target/ : 'Target: subscription.switchTariff.choose',
+  });
   expect(state.switch).not.toHaveBeenCalled();
   client.clear();
 });
@@ -180,7 +190,11 @@ it('insufficient balance does not allow confirming a switch', async () => {
     missing_amount_kopeks: 1000,
   });
   const client = mount('/subscription/purchase?subscriptionId=11');
-  fireEvent.click(await screen.findByRole('button', { name: /Target/ }));
+  fireEvent.click(
+    await screen.findByRole('button', {
+      name: state.lite ? /Target/ : 'Target: subscription.switchTariff.choose',
+    }),
+  );
   const confirm = await screen.findByRole('button', { name: 'subscription.switchTariff.confirm' });
   expect((confirm as HTMLButtonElement).disabled).toBe(true);
   expect(screen.queryByText('subscription.switchTariff.balanceAfter')).toBeNull();

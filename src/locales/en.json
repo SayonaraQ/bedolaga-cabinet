@@ -1014,7 +1014,31 @@
       "disconnect": "Disconnect",
       "disconnectAll": "Disconnect all devices",
       "addedOn": "{{platform}} · added {{date}}"
-    }
+    },
+    "tariffCard": {
+      "commonFeatures": "In every plan",
+      "popular": "Most popular",
+      "current": "Current plan",
+      "dedicatedSpeed": "Dedicated speed",
+      "speed": "up to {{speed}} Mbps",
+      "traffic": "{{gb}} GB",
+      "moreDevices": "up to {{count}} available",
+      "premium": "Premium servers",
+      "perDevice": "{{price}} per device",
+      "bestPerDevice": "best value",
+      "perMonth": "per month",
+      "perPeriod": "for {{count}} days",
+      "perDay": "per day",
+      "trafficPeriod": {
+        "month": "per month for whitelists",
+        "week": "per week for whitelists",
+        "day": "per day for whitelists",
+        "none": "for whitelists"
+      },
+      "longPeriod_one": "{{price}}/mo when paying for {{count}} month",
+      "longPeriod_other": "{{price}}/mo when paying for {{count}} months"
+    },
+    "chooseTariff": "Choose a plan"
   },
   "balance": {
     "wallet": {
@@ -5338,7 +5362,12 @@
       "panelTagLabel": "Remnawave panel tag",
       "panelTagDesc": "Up to 16 characters: Latin letters, digits and underscore. Empty — the global tag from settings (trial or paid). The tag shows in the panel which tariff a user is on.",
       "trialDaysLabel": "Trial days on this tariff",
-      "trialDaysDesc": "Empty — the global trial duration setting."
+      "trialDaysDesc": "Empty — the global trial duration setting.",
+      "taglineLabel": "Subtitle below the name",
+      "taglineHint": "Who the plan is for: shown in the cabinet instead of the description",
+      "speedLimitLabel": "Dedicated speed, Mbps",
+      "speedLimitHint": "Leave empty to hide",
+      "premiumServersLabel": "Premium servers"
     },
     "servers": {
       "title": "Squad Management",

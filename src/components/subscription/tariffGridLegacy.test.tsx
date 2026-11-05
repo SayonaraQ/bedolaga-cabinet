@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup } from '@testing-library/react';
+import { cleanup, fireEvent, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -40,17 +40,26 @@ afterEach(() => {
 describe('карточка тарифа для старой подписки', () => {
   it('предлагает перейти на тариф, а не «выбрать для продления»', async () => {
     const { render, cardFor } = await import('./tariffGridHarness');
+    const onSelectTariff = vi.fn();
+    const onSwitchTariff = vi.fn();
     render([{ id: 1, name: 'Базовый' }], {
+      onSelectTariff,
+      onSwitchTariff,
       subscription: { id: 42, is_active: true, is_trial: false, requires_tariff_selection: true },
     });
 
     const card = cardFor('Базовый');
     expect(card.textContent).toContain('subscription.cta.moveToTariff');
     expect(card.textContent).not.toContain('subscription.tariff.selectForRenewal');
+    fireEvent.click(within(card).getByRole('button', { name: 'subscription.cta.moveToTariff' }));
+    expect(onSelectTariff).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: 1 }));
+    expect(onSwitchTariff).not.toHaveBeenCalled();
   });
 
   it('обычной подписке с тарифом по-прежнему предлагает смену тарифа', async () => {
     const { render, cardFor } = await import('./tariffGridHarness');
+    const onSwitchTariff = vi.fn();
+    const onSelectTariff = vi.fn();
     render(
       [
         { id: 1, name: 'Базовый' },
@@ -58,9 +67,17 @@ describe('карточка тарифа для старой подписки', (
       ],
       {
         subscription: { id: 42, is_active: true, is_trial: false, tariff_id: 1 },
+        onSwitchTariff,
+        onSelectTariff,
       },
     );
 
+    fireEvent.click(within(cardFor('Премиум')).getByRole('button', { expanded: false }));
+    fireEvent.click(
+      within(cardFor('Премиум')).getByRole('button', { name: 'subscription.switchTariff.switch' }),
+    );
+    expect(onSwitchTariff).toHaveBeenCalledExactlyOnceWith(2);
+    expect(onSelectTariff).not.toHaveBeenCalled();
     expect(cardFor('Премиум').textContent).not.toContain('subscription.cta.moveToTariff');
   });
 });

@@ -2,7 +2,7 @@ import { render as rtlRender, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import type { Subscription, Tariff } from '@/types';
-import { TariffPickerGrid } from './purchase/TariffPickerGrid';
+import { TariffPickerGrid, type TariffPickerGridProps } from './purchase/TariffPickerGrid';
 
 /**
  * Обвязка для тестов сетки тарифов: карточка — это блок вокруг названия.
@@ -29,19 +29,23 @@ const base = (overrides: Partial<Tariff> & { id: number; name: string }): Tariff
 
 export function render(
   tariffs: Array<Partial<Tariff> & { id: number; name: string }>,
-  options: { currentTariffId?: number; subscription?: Partial<Subscription> } = {},
+  options: {
+    currentTariffId?: number;
+    subscription?: Partial<Subscription>;
+  } & Partial<Omit<TariffPickerGridProps, 'tariffs' | 'subscription'>> = {},
 ) {
+  const { currentTariffId, subscription, ...gridProps } = options;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  rtlRender(
+  return rtlRender(
     <QueryClientProvider client={client}>
       <MemoryRouter>
         <TariffPickerGrid
           tariffs={tariffs.map(base)}
           subscription={
-            options.subscription
-              ? (options.subscription as never)
-              : options.currentTariffId
-                ? ({ tariff_id: options.currentTariffId, is_active: true } as never)
+            subscription
+              ? (subscription as never)
+              : currentTariffId
+                ? ({ tariff_id: currentTariffId, is_active: true } as never)
                 : null
           }
           purchaseOptions={undefined}
@@ -49,6 +53,7 @@ export function render(
           isMultiTariff={false}
           onSelectTariff={() => {}}
           onSwitchTariff={() => {}}
+          {...gridProps}
         />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -58,7 +63,7 @@ export function render(
 /** Карточка тарифа — ближайший блок вокруг его названия. */
 export function cardFor(name: string): HTMLElement {
   const title = screen.getByText(name);
-  const card = title.closest('div.bento-card-hover');
+  const card = title.closest('article');
   if (!card) throw new Error(`не нашёл карточку тарифа ${name}`);
   return card as HTMLElement;
 }

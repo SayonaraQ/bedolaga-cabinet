@@ -109,7 +109,13 @@ it.each(['grid', 'lite', 'form'] as const)(
     ]) {
       await i18n.changeLanguage(language);
       rendered.rerender(content(unlimited));
-      expect(screen.getByText((text) => text.includes(expected))).toBeTruthy();
+      if (view === 'grid') {
+        // No whitelist allowance: the new card omits the traffic row entirely.
+        expect(screen.queryByText((text) => text.includes(expected))).toBeNull();
+        expect(rendered.container.querySelectorAll('li')).toHaveLength(1);
+      } else {
+        expect(screen.getByText((text) => text.includes(expected))).toBeTruthy();
+      }
       if (language !== 'ru') expect(rendered.container.textContent).not.toContain('Безлимит');
     }
   },

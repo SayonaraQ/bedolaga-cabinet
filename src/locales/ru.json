@@ -1046,7 +1046,33 @@
       "disconnect": "Отключить",
       "disconnectAll": "Отключить все устройства",
       "addedOn": "{{platform}} · добавлено {{date}}"
-    }
+    },
+    "tariffCard": {
+      "commonFeatures": "Во всех тарифах",
+      "popular": "Чаще всего выбирают",
+      "current": "Текущий тариф",
+      "dedicatedSpeed": "Выделенная скорость",
+      "speed": "до {{speed}} Мбит/с",
+      "traffic": "{{gb}} ГБ",
+      "moreDevices": "можно до {{count}}",
+      "premium": "Премиум-серверы",
+      "perDevice": "{{price}} за устройство",
+      "bestPerDevice": "выгоднее всех",
+      "perMonth": "в месяц",
+      "perPeriod": "за {{count}} дн.",
+      "perDay": "в день",
+      "trafficPeriod": {
+        "month": "в месяц на белые списки",
+        "week": "в неделю на белые списки",
+        "day": "в день на белые списки",
+        "none": "на белые списки"
+      },
+      "longPeriod_one": "{{price}}/мес при оплате за {{count}} месяц",
+      "longPeriod_few": "{{price}}/мес при оплате за {{count}} месяца",
+      "longPeriod_many": "{{price}}/мес при оплате за {{count}} месяцев",
+      "longPeriod_other": "{{price}}/мес при оплате за {{count}} месяца"
+    },
+    "chooseTariff": "Выберите тариф"
   },
   "balance": {
     "wallet": {
@@ -5295,7 +5321,12 @@
       "panelTagLabel": "Тег в панели Remnawave",
       "panelTagDesc": "До 16 символов: латинские буквы, цифры и подчёркивание. Пусто — общий тег из настроек (триальный или платный). По тегу в панели видно, на каком тарифе пользователь.",
       "trialDaysLabel": "Дней триала на этом тарифе",
-      "trialDaysDesc": "Пусто — глобальная настройка длительности триала."
+      "trialDaysDesc": "Пусто — глобальная настройка длительности триала.",
+      "taglineLabel": "Строка под названием",
+      "taglineHint": "Для кого тариф: показывается в кабинете вместо описания",
+      "speedLimitLabel": "Выделенная скорость, Мбит/с",
+      "speedLimitHint": "Пусто — не показывать",
+      "premiumServersLabel": "Премиум-серверы"
     },
     "servers": {
       "title": "Управление сквадами",

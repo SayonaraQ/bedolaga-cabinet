@@ -1,37 +1,15 @@
-import { tariffTrafficLabel } from '../../../utils/tariffTrafficLabel';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BestValueBadge, bestValueFrame } from '../BestValueBadge';
 import { useNavigate } from 'react-router';
 import { useTheme } from '../../../hooks/useTheme';
-import { useCurrency } from '../../../hooks/useCurrency';
 import { usePromoDiscount } from '../../../hooks/usePromoDiscount';
-import { dailyPriceQuote } from './dailyPrice';
 import { getGlassColors } from '../../../utils/glassTheme';
-import { ArrowDownIcon, DevicesIcon, GiftIcon, RestartIcon } from '@/components/icons';
+import { GiftIcon } from '@/components/icons';
 import type { Tariff, Subscription, PurchaseOptions } from '../../../types';
-import { tariffAction, type TariffActionKind } from './tariffAction';
-
-/** Подпись кнопки для действий, которые ведут в один и тот же сценарий выбора. */
-const TARIFF_ACTION_LABEL: Record<Exclude<TariffActionKind, 'current-daily' | 'switch'>, string> = {
-  extend: 'subscription.extend',
-  moveToTariff: 'subscription.cta.moveToTariff',
-  purchase: 'subscription.purchase',
-};
-
-// ──────────────────────────────────────────────────────────────────
-// TariffPickerGrid
-//
-// The tariff selection surface inside SubscriptionPurchase. Renders:
-//   - an optional promo-group banner when any tariff carries a
-//     promo_group_name
-//   - the "all tariffs purchased" empty state (multi-tariff mode)
-//   - the grid itself (1 col mobile, 2 cols sm+) with promo prices,
-//     per-tariff CTAs differentiated by user state (extend / switch /
-//     purchase / legacy renewal)
-//
-// Owns nothing — pure presentation that calls back into the parent
-// for selection (`onSelectTariff`) and switch (`onSwitchTariff`).
-// ──────────────────────────────────────────────────────────────────
+import { bestPerDeviceTariff, initialOpenTariffId } from '@/utils/tariffCard';
+import { tariffAction } from './tariffAction';
+import { TariffAccordionCard } from './TariffAccordionCard';
+import { TariffCommonFeatures } from './TariffCommonFeatures';
 
 export interface TariffPickerGridProps {
   tariffs: Tariff[];
@@ -60,13 +38,25 @@ export function TariffPickerGrid({
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
-  const { formatAmount, currencySymbol } = useCurrency();
   const { applyPromoDiscount } = usePromoDiscount();
-
-  const formatPrice = (kopeks: number) =>
-    kopeks === 0
-      ? t('subscription.free', 'Бесплатно')
-      : `${formatAmount(kopeks / 100)}\u00A0${currencySymbol}`;
+  const visible = [...tariffs]
+    .filter((tariff) => {
+      if (isMultiTariff && tariff.is_purchased) return false;
+      if (subscription?.is_trial && tariff.name.toLowerCase().includes('trial')) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const aIsCurrent = a.is_current || a.id === subscription?.tariff_id;
+      const bIsCurrent = b.is_current || b.id === subscription?.tariff_id;
+      if (aIsCurrent && !bIsCurrent) return -1;
+      if (!aIsCurrent && bIsCurrent) return 1;
+      return 0;
+    });
+  const [openId, setOpenId] = useState(() => initialOpenTariffId(visible, subscription?.tariff_id));
+  if (openId !== null && !visible.some((tariff) => tariff.id === openId)) {
+    setOpenId(initialOpenTariffId(visible, subscription?.tariff_id));
+  }
+  const best = bestPerDeviceTariff(visible, applyPromoDiscount);
 
   return (
     <>
@@ -116,191 +106,35 @@ export function TariffPickerGrid({
             </button>
           </div>
         )}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {[...tariffs]
-          .filter((tariff) => {
-            // In multi-tariff mode: hide already purchased tariffs
-            if (isMultiTariff && tariff.is_purchased) return false;
-            if (subscription?.is_trial && tariff.name.toLowerCase().includes('trial')) {
-              return false;
-            }
-            return true;
-          })
-          .sort((a, b) => {
-            const aIsCurrent = a.is_current || a.id === subscription?.tariff_id;
-            const bIsCurrent = b.is_current || b.id === subscription?.tariff_id;
-            if (aIsCurrent && !bIsCurrent) return -1;
-            if (!aIsCurrent && bIsCurrent) return 1;
-            return 0;
-          })
-          .map((tariff) => {
-            const isCurrentTariff = tariff.is_current || tariff.id === subscription?.tariff_id;
-            // Ветвление кнопки живёт в tariffAction(): витрин стало две
-            // (обычная и простая), и расхождение в этом условии списало бы с
-            // части людей не ту сумму.
-            const action = tariffAction({
+      <TariffCommonFeatures
+        features={
+          purchaseOptions && 'common_features' in purchaseOptions
+            ? (purchaseOptions.common_features ?? [])
+            : []
+        }
+      />
+      <div className="flex flex-col gap-3">
+        {visible.map((tariff) => (
+          <TariffAccordionCard
+            key={tariff.id}
+            tariff={tariff}
+            open={openId === tariff.id}
+            onToggle={() => setOpenId(openId === tariff.id ? null : tariff.id)}
+            isCurrent={Boolean(tariff.is_current || tariff.id === subscription?.tariff_id)}
+            isBestPerDevice={best?.tariffId === tariff.id ? best : null}
+            action={tariffAction({
               tariff,
               subscription,
               purchaseOptions,
               isTariffsMode,
               isMultiTariff,
               subscriptionId,
-            });
-
-            return (
-              <div
-                key={tariff.id}
-                className={`bento-card-hover p-5 text-left transition-all ${
-                  isCurrentTariff
-                    ? 'bento-card-glow border-accent-500'
-                    : tariff.is_highlighted
-                      ? // Текущий тариф важнее подсказки: две «активные» рамки
-                        // сразу не дают понять, что именно сейчас куплено.
-                        bestValueFrame(false)
-                      : ''
-                }`}
-              >
-                {tariff.is_highlighted && !isCurrentTariff && <BestValueBadge className="mb-2" />}
-                <div className="mb-3 flex items-start justify-between">
-                  <div>
-                    <div className="text-lg font-semibold text-dark-100">{tariff.name}</div>
-                    {tariff.description && (
-                      <div className="mt-1 whitespace-pre-line text-sm text-dark-400">
-                        {tariff.description}
-                      </div>
-                    )}
-                  </div>
-                  {isCurrentTariff && (
-                    <span className="badge-success text-xs">{t('subscription.currentTariff')}</span>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-1.5">
-                    <ArrowDownIcon className="h-4 w-4 text-accent-400" />
-                    <span className="font-medium text-dark-200">
-                      {tariffTrafficLabel(tariff.traffic_limit_gb, t)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <DevicesIcon className="h-4 w-4 text-dark-400" />
-                    <span className="text-dark-300">
-                      {tariff.device_limit === 0
-                        ? '∞'
-                        : t('subscription.devices', { count: tariff.device_limit })}
-                    </span>
-                  </div>
-                  {tariff.traffic_reset_mode && tariff.traffic_reset_mode !== 'NO_RESET' && (
-                    <div className="flex items-center gap-1.5">
-                      <RestartIcon className="h-4 w-4 text-dark-400" />
-                      <span className="text-dark-300">
-                        {t(`subscription.trafficReset.${tariff.traffic_reset_mode}`)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                {/* Price info */}
-                <div className="mt-3 border-t border-dark-700/50 pt-3 text-sm text-dark-400">
-                  {(() => {
-                    const promoDaily = dailyPriceQuote(tariff, applyPromoDiscount);
-                    if (promoDaily) {
-                      return (
-                        <span className="flex items-center gap-2">
-                          <span className="font-medium text-accent-400">
-                            {formatPrice(promoDaily.price)}
-                          </span>
-                          {promoDaily.original && promoDaily.original > promoDaily.price && (
-                            <span className="text-xs text-dark-500 line-through">
-                              {formatPrice(promoDaily.original)}
-                            </span>
-                          )}
-                          <span>{t('subscription.tariff.perDay')}</span>
-                          {promoDaily.percent != null && promoDaily.percent > 0 && (
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-xs ${
-                                promoDaily.isPromoGroup
-                                  ? 'bg-success-500/20 text-success-400'
-                                  : 'bg-warning-500/20 text-warning-400'
-                              }`}
-                            >
-                              -{promoDaily.percent}%
-                            </span>
-                          )}
-                        </span>
-                      );
-                    }
-                    if (tariff.periods.length > 0) {
-                      const firstPeriod = tariff.periods[0];
-                      const promoPeriod = applyPromoDiscount(
-                        firstPeriod?.price_kopeks || 0,
-                        firstPeriod?.original_price_kopeks,
-                      );
-                      return (
-                        <span className="flex flex-wrap items-center gap-2">
-                          <span>{t('subscription.from')}</span>
-                          <span className="font-medium text-accent-400">
-                            {formatPrice(promoPeriod.price)}
-                          </span>
-                          {promoPeriod.original && promoPeriod.original > promoPeriod.price && (
-                            <span className="text-xs text-dark-500 line-through">
-                              {formatPrice(promoPeriod.original)}
-                            </span>
-                          )}
-                          {promoPeriod.percent != null && promoPeriod.percent > 0 && (
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-xs ${
-                                promoPeriod.isPromoGroup
-                                  ? 'bg-success-500/20 text-success-400'
-                                  : 'bg-warning-500/20 text-warning-400'
-                              }`}
-                            >
-                              -{promoPeriod.percent}%
-                            </span>
-                          )}
-                        </span>
-                      );
-                    }
-                    return (
-                      <span className="font-medium text-accent-400">
-                        {t('subscription.tariff.flexiblePayment')}
-                      </span>
-                    );
-                  })()}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="mt-4 flex gap-2">
-                  {action === 'current-daily' ? (
-                    <div className="flex-1 py-2 text-center text-sm text-dark-500">
-                      {t('subscription.currentTariff')}
-                    </div>
-                  ) : action === 'switch' ? (
-                    <button
-                      onClick={() => onSwitchTariff(tariff.id)}
-                      className="btn-secondary flex-1 py-2 text-sm"
-                      aria-label={
-                        switchSelection
-                          ? `${tariff.name}: ${t('subscription.switchTariff.choose')}`
-                          : undefined
-                      }
-                    >
-                      {t(
-                        switchSelection
-                          ? 'subscription.switchTariff.choose'
-                          : 'subscription.switchTariff.switch',
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => onSelectTariff(tariff)}
-                      className="btn-primary flex-1 py-2 text-sm"
-                    >
-                      {t(TARIFF_ACTION_LABEL[action])}
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+            })}
+            switchSelection={switchSelection}
+            onSelect={() => onSelectTariff(tariff)}
+            onSwitch={() => onSwitchTariff(tariff.id)}
+          />
+        ))}
       </div>
     </>
   );

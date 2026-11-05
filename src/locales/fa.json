@@ -1007,7 +1007,31 @@
       "disconnect": "قطع اتصال",
       "disconnectAll": "قطع اتصال همه دستگاه‌ها",
       "addedOn": "{{platform}} · افزوده شده {{date}}"
-    }
+    },
+    "tariffCard": {
+      "commonFeatures": "در همه طرح‌ها",
+      "popular": "محبوب‌ترین",
+      "current": "طرح فعلی",
+      "dedicatedSpeed": "سرعت اختصاصی",
+      "speed": "تا {{speed}} مگابیت بر ثانیه",
+      "traffic": "{{gb}} گیگابایت",
+      "moreDevices": "امکان افزایش تا {{count}}",
+      "premium": "سرورهای ویژه",
+      "perDevice": "{{price}} برای هر دستگاه",
+      "bestPerDevice": "به‌صرفه‌ترین",
+      "perMonth": "در ماه",
+      "perPeriod": "برای {{count}} روز",
+      "perDay": "در روز",
+      "trafficPeriod": {
+        "month": "در ماه برای فهرست‌های مجاز",
+        "week": "در هفته برای فهرست‌های مجاز",
+        "day": "در روز برای فهرست‌های مجاز",
+        "none": "برای فهرست‌های مجاز"
+      },
+      "longPeriod_one": "{{price}}/ماه با پرداخت برای {{count}} ماه",
+      "longPeriod_other": "{{price}}/ماه با پرداخت برای {{count}} ماه"
+    },
+    "chooseTariff": "یک طرح انتخاب کنید"
   },
   "balance": {
     "wallet": {
@@ -4355,7 +4379,12 @@
       "days_one": "{{count}} روز",
       "serverTrafficLimit": "سقف ترافیک",
       "useDefault": "پیش‌فرض",
-      "periodDisabled": "غیرفعال"
+      "periodDisabled": "غیرفعال",
+      "taglineLabel": "زیرعنوان نام طرح",
+      "taglineHint": "این طرح برای چه کسی است: در پنل به‌جای توضیحات نمایش داده می‌شود",
+      "speedLimitLabel": "سرعت اختصاصی، مگابیت بر ثانیه",
+      "speedLimitHint": "برای پنهان کردن، خالی بگذارید",
+      "premiumServersLabel": "سرورهای ویژه"
     },
     "servers": {
       "title": "مدیریت اسکوادها",

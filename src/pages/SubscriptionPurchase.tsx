@@ -241,19 +241,21 @@ export default function SubscriptionPurchase() {
                   ? t('subscription.switchTariff.title')
                   : subscription && !subscription.is_trial
                     ? t('subscription.extend')
-                    : t('subscription.getSubscription')}
+                    : isTariffsMode
+                      ? t('subscription.chooseTariff')
+                      : t('subscription.getSubscription')}
         </h1>
       </div>
 
       {/* Tariffs Section */}
       {isTariffsMode && tariffs.length > 0 && (
         <div
-          className="relative overflow-hidden rounded-3xl"
+          className={`relative overflow-hidden rounded-3xl ${lite ? '' : 'px-3 py-6 sm:px-7'}`}
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,
             boxShadow: g.shadow,
-            padding: '24px 28px',
+            padding: lite ? '24px 28px' : undefined,
           }}
         >
           {/* Trial upgrade prompt — hidden when expired banner is active */}

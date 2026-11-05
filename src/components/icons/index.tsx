@@ -12,6 +12,7 @@ import {
   PiClock,
   PiCopy,
   PiCreditCard,
+  PiCrown,
   PiDiceFive,
   PiDownloadSimple,
   PiGameController,
@@ -46,6 +47,7 @@ import {
   PiUsers,
   PiWallet,
   PiX,
+  PiYoutubeLogo,
 } from 'react-icons/pi';
 
 import { cn } from '@/lib/utils';
@@ -276,6 +278,14 @@ export const XrayIcon = ({ className }: IconProps) => (
 
 export const GlobeIcon = ({ className }: IconProps) => (
   <PiGlobe className={cn('h-5 w-5', className)} />
+);
+
+export const CrownIcon = ({ className }: IconProps) => (
+  <PiCrown className={cn('h-5 w-5', className)} />
+);
+
+export const YoutubeIcon = ({ className }: IconProps) => (
+  <PiYoutubeLogo className={cn('h-5 w-5', className)} />
 );
 
 export const PlayIcon = ({ className }: IconProps) => (

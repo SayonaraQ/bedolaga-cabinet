@@ -168,7 +168,7 @@ describe('выделенный тариф в списке', () => {
       { id: 2, name: 'Про', is_highlighted: true },
     ]);
 
-    const badges = await screen.findAllByText(ru('subscription.bestValue'));
+    const badges = await screen.findAllByText(ru('subscription.tariffCard.popular'));
     expect(badges).toHaveLength(1);
     expect(tariffCard('Про').contains(badges[0])).toBe(true);
     expect(tariffCard('Про').className).toContain('border-2');
@@ -179,7 +179,7 @@ describe('выделенный тариф в списке', () => {
     const { render: renderGrid, cardFor: tariffCard } = await import('./tariffGridHarness');
     renderGrid([{ id: 2, name: 'Про', is_highlighted: true }], { currentTariffId: 2 });
 
-    expect(screen.queryByText(ru('subscription.bestValue'))).toBeNull();
+    expect(screen.queryByText(ru('subscription.tariffCard.popular'))).toBeNull();
     expect(tariffCard('Про').className).toContain('border-accent-500');
   });
 });

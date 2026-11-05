@@ -962,7 +962,30 @@
       "disconnect": "断开",
       "disconnectAll": "断开所有设备",
       "addedOn": "{{platform}} · 添加于 {{date}}"
-    }
+    },
+    "tariffCard": {
+      "commonFeatures": "所有套餐均包含",
+      "popular": "最受欢迎",
+      "current": "当前套餐",
+      "dedicatedSpeed": "专属速度",
+      "speed": "最高 {{speed}} Mbps",
+      "traffic": "{{gb}} GB",
+      "moreDevices": "最多可增至 {{count}} 台",
+      "premium": "高级服务器",
+      "perDevice": "每台设备 {{price}}",
+      "bestPerDevice": "最划算",
+      "perMonth": "每月",
+      "perPeriod": "{{count}} 天",
+      "perDay": "每天",
+      "trafficPeriod": {
+        "month": "每月白名单流量",
+        "week": "每周白名单流量",
+        "day": "每日白名单流量",
+        "none": "白名单流量"
+      },
+      "longPeriod_other": "支付 {{count}} 个月，每月 {{price}}"
+    },
+    "chooseTariff": "选择套餐"
   },
   "balance": {
     "wallet": {
@@ -4367,7 +4390,12 @@
       "descriptionPlaceholder2": "套餐简短描述",
       "periodDisabled": "已禁用",
       "serverTrafficLimit": "流量限额",
-      "useDefault": "默认"
+      "useDefault": "默认",
+      "taglineLabel": "名称下方的说明",
+      "taglineHint": "套餐适用人群：在用户面板中代替描述显示",
+      "speedLimitLabel": "专属速度，Mbps",
+      "speedLimitHint": "留空则不显示",
+      "premiumServersLabel": "高级服务器"
     },
     "servers": {
       "title": "服务器管理",

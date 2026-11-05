@@ -62,6 +62,7 @@ it('refreshes an already cached subscription after granting promo days', async (
     </QueryClientProvider>,
   );
   expect(await screen.findByText('old-date')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: /balance.wallet.promoTitle/ }));
   fireEvent.change(screen.getByPlaceholderText('balance.promocode.placeholder'), {
     target: { value: 'FREE3' },
   });

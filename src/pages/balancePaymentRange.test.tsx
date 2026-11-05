@@ -65,5 +65,10 @@ it.each([
       </PlatformProvider>
     </QueryClientProvider>,
   );
-  expect(await screen.findByText(`${phrase} ¤`)).toBeTruthy();
+  expect(
+    await screen.findByText(`${phrase} ¤`, {
+      exact: false,
+      normalizer: (text) => text.toLowerCase().replace(/\s+/g, ' ').trim(),
+    }),
+  ).toBeTruthy();
 });

@@ -58,7 +58,7 @@ export function TariffCommonFeatures({ features }: { features: TariffCommonFeatu
       <h2 id={headingId} className="mb-3 text-xs font-bold uppercase tracking-wider text-dark-400">
         {t('subscription.tariffCard.commonFeatures')}
       </h2>
-      <ul className="grid grid-cols-2 gap-x-3 gap-y-3">
+      <ul className="grid grid-cols-1 gap-x-3 gap-y-2.5 min-[360px]:grid-cols-2 min-[360px]:gap-y-3">
         {features.map((feature, index) => (
           <li
             key={`${index}-${feature.text}`}

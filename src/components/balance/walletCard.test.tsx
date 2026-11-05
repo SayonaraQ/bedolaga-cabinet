@@ -148,7 +148,7 @@ it('показывает покрытие трёх продлений, дату 
     ...(chargeDate.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}),
   }).format(chargeDate);
   expect(screen.getByText(`${date} автопродление спишет 300 ₽ с баланса`)).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Пополнить на 600 ₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Пополнить на 600\u00A0₽' })).toBeTruthy();
 });
 
 it.each([subscription.tariff_name, undefined])(
@@ -194,8 +194,8 @@ it('не показывает дополнительные устройства 
 it('округляет нехватку вверх до рубля и выбирает её для пополнения', () => {
   renderWallet({ balanceKopeks: 12050 });
   expect(screen.getByText('Не хватает 180 ₽ на продление')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Пополнить на 180 ₽' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: '+ 1 месяц 480 ₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Пополнить на 180\u00A0₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '+ 1 месяц 480\u00A0₽' })).toBeTruthy();
 });
 
 it('предлагает включить автопродление на странице подписки', () => {
@@ -207,7 +207,7 @@ it('предлагает включить автопродление на стр
 
 it('предлагает ручное продление законченной подписки при достаточном балансе', () => {
   renderWallet({ subscription: { ...subscription, is_expired: true } });
-  expect(screen.getByRole('link', { name: 'Продлить за 300 ₽' }).getAttribute('href')).toBe(
+  expect(screen.getByRole('link', { name: 'Продлить за 300\u00A0₽' }).getAttribute('href')).toBe(
     '/subscriptions/42/renew',
   );
 });
@@ -216,7 +216,7 @@ it('без подписки показывает четыре обычные с�
   renderWallet({ subscription: null });
   expect(screen.queryByRole('status')).toBeNull();
   for (const amount of ['100', '300', '500', '1\\s000']) {
-    expect(screen.getByRole('button', { name: new RegExp(`^${amount} ₽$`) })).toBeTruthy();
+    expect(screen.getByRole('button', { name: new RegExp(`^${amount}\u00A0₽$`) })).toBeTruthy();
   }
 });
 
@@ -227,7 +227,7 @@ it('СБП стоит первым и выбран по умолчанию, хо
   expect(options.map((button) => button.textContent)).toEqual(['🏦 СБП', '💳 Карта']);
   expect(options[0].getAttribute('aria-pressed')).toBe('true');
 
-  fireEvent.click(screen.getByRole('button', { name: 'Пополнить на 600 ₽' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Пополнить на 600\u00A0₽' }));
   await waitFor(() =>
     expect(balanceApi.createTopUp).toHaveBeenCalledWith(60000, 'yookassa', 'sbp'),
   );
@@ -243,7 +243,7 @@ it('два последовательных нажатия создают оди
   renderWallet();
   fireEvent.click(screen.getByRole('button', { name: '💳 Карта' }));
   fireEvent.click(screen.getByRole('button', { name: '🏦 СБП' }));
-  const submit = screen.getByRole('button', { name: 'Пополнить на 600 ₽' });
+  const submit = screen.getByRole('button', { name: 'Пополнить на 600\u00A0₽' });
   act(() => {
     fireEvent.click(submit);
     fireEvent.click(submit);
@@ -261,24 +261,24 @@ it('сохраняет выбранную сумму при ошибке соз�
     response: { data: { detail: 'Платёж временно недоступен' } },
   });
   renderWallet();
-  fireEvent.click(screen.getByRole('button', { name: '3 месяца 900 ₽' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Пополнить на 900 ₽' }));
+  fireEvent.click(screen.getByRole('button', { name: '3 месяца 900\u00A0₽' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Пополнить на 900\u00A0₽' }));
   expect(await screen.findByRole('alert')).toHaveProperty(
     'textContent',
     'Платёж временно недоступен',
   );
-  expect(screen.getByRole('button', { name: '3 месяца 900 ₽' }).getAttribute('aria-pressed')).toBe(
-    'true',
-  );
+  expect(
+    screen.getByRole('button', { name: '3 месяца 900\u00A0₽' }).getAttribute('aria-pressed'),
+  ).toBe('true');
 });
 
 it('ручной ввод снимает выбор, а быстрая сумма очищает поле', () => {
   renderWallet();
   const input = screen.getByRole('textbox', { name: 'Другая сумма' });
   fireEvent.change(input, { target: { value: '250' } });
-  expect(screen.getByRole('button', { name: 'Пополнить на 250 ₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Пополнить на 250\u00A0₽' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: /месяц/, pressed: true })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: '1 месяц 300 ₽' }));
+  fireEvent.click(screen.getByRole('button', { name: '1 месяц 300\u00A0₽' }));
   expect((input as HTMLInputElement).value).toBe('');
 });
 
@@ -296,7 +296,7 @@ it.each(['stars', 'antilopay', 'foreign'])('переводит особый сп
   if (id === 'foreign') currency.targetCurrency = 'USD';
   const selectedMethod = id === 'foreign' ? method : { ...method, id };
   renderWallet({ methods: [selectedMethod] });
-  fireEvent.click(screen.getByRole('button', { name: 'Пополнить на 600 ₽' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Пополнить на 600\u00A0₽' }));
   expect(screen.getByText(`/balance/top-up/${selectedMethod.id}?amount=600`)).toBeTruthy();
   expect(balanceApi.createTopUp).not.toHaveBeenCalled();
 });
@@ -352,7 +352,7 @@ it.each([
 ])('скрывает статус, когда цену автопродления нельзя определить: %o', (overrides) => {
   renderWallet(overrides);
   expect(screen.queryByRole('status')).toBeNull();
-  expect(screen.getByRole('button', { name: 'Пополнить на 300 ₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Пополнить на 300\u00A0₽' })).toBeTruthy();
 });
 
 it('выбирает первый доступный способ и пересчитывает суммы при переключении', () => {
@@ -369,7 +369,7 @@ it('выбирает первый доступный способ и перес�
   );
   fireEvent.click(screen.getByRole('button', { name: 'Другой' }));
   expect(screen.getByRole('button', { name: 'Другой', pressed: true })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Пополнить на 300 ₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Пополнить на 300\u00A0₽' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: '🏦 СБП' })).toBeNull();
 });
 
@@ -378,6 +378,6 @@ it('для периода не кратного месяцу показывае�
     balanceKopeks: 12050,
     renewalOptions: [{ ...renewalOptions[0], period_days: 7 }],
   });
-  expect(screen.getByRole('button', { name: '+ 7 дней 480 ₽' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: '+ 14 дней 780 ₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '+ 7 дней 480\u00A0₽' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '+ 14 дней 780\u00A0₽' })).toBeTruthy();
 });

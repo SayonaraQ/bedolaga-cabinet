@@ -98,7 +98,7 @@ function WalletTopUp({
     amountKopeks >= method.min_amount_kopeks &&
     amountKopeks <= method.max_amount_kopeks;
   const money = (kopeks: number) =>
-    `${formatAmount(kopeks / 100, kopeks % 100 === 0 ? 0 : 2)} ${currencySymbol}`;
+    `${formatAmount(kopeks / 100, kopeks % 100 === 0 ? 0 : 2)}\u00A0${currencySymbol}`;
   const methodName = (item: PaymentMethod) =>
     item.name ||
     t(`balance.paymentMethods.${item.id.toLowerCase().replace(/-/g, '_')}.name`, {

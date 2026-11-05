@@ -11,7 +11,7 @@ export function RenewalStatus({ plan }: { plan: RenewalPlan }) {
   const { t } = useTranslation();
   const { formatAmount, currencySymbol } = useCurrency();
   const money = (kopeks: number) =>
-    `${formatAmount(kopeks / 100, kopeks % 100 === 0 ? 0 : 2)} ${currencySymbol}`;
+    `${formatAmount(kopeks / 100, kopeks % 100 === 0 ? 0 : 2)}\u00A0${currencySymbol}`;
   const date = (value: Date) =>
     new Intl.DateTimeFormat(uiLocale(), {
       day: 'numeric',

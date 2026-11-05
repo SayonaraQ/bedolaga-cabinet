@@ -171,7 +171,7 @@ export function PromoCodeRow({ onActivated }: { onActivated?: () => void }) {
                     {promocodeSuccess.amount > 0 && (
                       <div className="mt-1">
                         {t('balance.wallet.promoBalanceAdded', {
-                          amount: `${formatAmount(promocodeSuccess.amount)} ${currencySymbol}`,
+                          amount: `${formatAmount(promocodeSuccess.amount)}\u00A0${currencySymbol}`,
                         })}
                       </div>
                     )}

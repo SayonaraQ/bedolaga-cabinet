@@ -4,6 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { legacyFaqApi, type LegacyFaqPage } from '../../api/infoPages';
 import { Toggle } from './Toggle';
 import { PencilIcon } from '@/components/icons';
+import { HELP_TOPICS, SUPPORT_TOPIC } from '../../utils/help/topics';
+
+// Темы, которые админ может выбрать: плитки справки плюс блок поддержки.
+const TOPIC_OPTIONS = [
+  ...HELP_TOPICS.filter((topic) => topic.key !== 'other').map((topic) => topic.key),
+  SUPPORT_TOPIC,
+];
 
 /** Edits existing bot FAQ in place; language, IDs and group visibility are preserved. */
 export function LegacyFaqList({ pages }: { pages: LegacyFaqPage[] }) {
@@ -53,6 +60,21 @@ export function LegacyFaqList({ pages }: { pages: LegacyFaqPage[] }) {
                   value={draft.content}
                   onChange={(event) => setDraft({ ...draft, content: event.target.value })}
                 />
+              </label>
+              <label className="block space-y-2 text-sm text-dark-200">
+                <span>{t('admin.infoPages.faq.topic')}</span>
+                <select
+                  className="input"
+                  value={draft.category ?? ''}
+                  onChange={(event) => setDraft({ ...draft, category: event.target.value || null })}
+                >
+                  <option value="">{t('admin.infoPages.faq.noTopic')}</option>
+                  {TOPIC_OPTIONS.map((key) => (
+                    <option key={key} value={key}>
+                      {t(`help.topics.${key}.title`)}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="block space-y-2 text-sm text-dark-200">
                 <span>{t('admin.infoPages.fields.sortOrder')}</span>

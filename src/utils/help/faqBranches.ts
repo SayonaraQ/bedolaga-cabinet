@@ -20,7 +20,7 @@ export function splitFaqBranches(html: string): { intro: string; branches: FaqBr
       branches.push({ title: (node.textContent ?? '').trim(), body: doc.createElement('div') });
       continue;
     }
-    (branches.at(-1)?.body ?? intro).appendChild(node);
+    (branches[branches.length - 1]?.body ?? intro).appendChild(node);
   }
   if (branches.length < 2) return null;
   return {

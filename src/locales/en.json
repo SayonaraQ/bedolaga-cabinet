@@ -88,7 +88,7 @@
     "logout": "Logout",
     "contests": "Contests",
     "polls": "Polls",
-    "info": "Info",
+    "info": "Help",
     "wheel": "Fortune Wheel",
     "menu": "Menu",
     "gift": "Gift",
@@ -7456,7 +7456,9 @@
         "moveUp": "Move up",
         "moveDown": "Move down",
         "searchPlaceholder": "Search questions...",
-        "noResults": "No results found"
+        "noResults": "No results found",
+        "topic": "Help center topic",
+        "noTopic": "No topic (“Other”)"
       },
       "locales": {
         "ru": "Russian",
@@ -10127,5 +10129,119 @@
     "moveToTariff": "Switch to a plan",
     "getSubscription": "Subscribe",
     "hideUntilTomorrow": "Hide until tomorrow"
+  },
+  "help": {
+    "title": "Help",
+    "subtitle": "Answers and service documents",
+    "back": "Back to help",
+    "searchPlaceholder": "Search questions and documents",
+    "searchClear": "Clear",
+    "searchQuestions": "Questions",
+    "searchDocs": "In documents",
+    "searchNothing": "Nothing found for “{{query}}”",
+    "searchNothingHint": "Describe the problem and we will answer in a ticket",
+    "noAnswer": "Didn't find an answer?",
+    "popular": "Popular questions",
+    "documents": "Documents",
+    "updatedAt": "updated {{date}}",
+    "offerSubtitle": "public offer",
+    "loyalty": "Loyalty program",
+    "topicNotFound": "No questions in this topic yet",
+    "questionNotFound": "Question not found — it may have been removed",
+    "topics": {
+      "trouble": {
+        "title": "Not working",
+        "hint": "step-by-step check"
+      },
+      "connect": {
+        "title": "Connecting"
+      },
+      "services": {
+        "title": "Sites and services"
+      },
+      "devices": {
+        "title": "Devices"
+      },
+      "whitelist": {
+        "title": "Whitelists and traffic"
+      },
+      "billing": {
+        "title": "Payment and account"
+      },
+      "support": {
+        "title": "Support"
+      },
+      "other": {
+        "title": "Other"
+      },
+      "count_one": "{{count}} question",
+      "count_other": "{{count}} questions"
+    },
+    "faq": {
+      "copyLink": "Link to answer",
+      "copied": "Link copied",
+      "notHelped": "Didn't help? Create a ticket",
+      "whatBroken": "What exactly isn't working?"
+    },
+    "support": {
+      "title": "Didn't find an answer?",
+      "text": "Create a ticket right here — no other VPN needed. The reply comes to Telegram or email.",
+      "create": "Create ticket",
+      "telegram": "or write in Telegram"
+    },
+    "situation": {
+      "label": "About your subscription",
+      "expired": {
+        "title": "Subscription has ended",
+        "text": "To pay without another VPN, choose the “🛟 Продление подписки” location in the app: Telegram and your account open through it."
+      },
+      "trafficOut": {
+        "title": "Whitelist traffic is used up",
+        "text": "Other locations work as usual.",
+        "textDate": "Other locations work as usual. Traffic comes back on {{date}}.",
+        "action": "Buy traffic"
+      },
+      "trafficLow": {
+        "title": "Whitelist traffic is running low",
+        "text": "{{left}} of {{limit}} left. Regular locations don't use the limit — turn on whitelists only when regular ones don't connect.",
+        "action": "How to save traffic",
+        "buy": "Buy traffic"
+      },
+      "slotsFull": {
+        "title": "All slots are taken: {{count}} of {{count}}",
+        "text": "A new device won't connect. Every app with the subscription takes its own slot, even on one phone.",
+        "action": "Free or add a slot"
+      },
+      "expiring": {
+        "title_one": "Subscription ends in {{count}} day",
+        "title_other": "Subscription ends in {{count}} days",
+        "today": "Subscription ends today",
+        "text": "Renew now or top up your balance: with auto-renewal on, the amount is charged automatically."
+      },
+      "noDevices": {
+        "title": "Connect your first device",
+        "text": "Pick your system — the account suggests an app and adds the subscription to it.",
+        "action": "Connect a device"
+      },
+      "trial": {
+        "title_one": "Trial · {{count}} day left",
+        "title_other": "Trial · {{count}} days left",
+        "today": "Trial ends today",
+        "text": "Choose a plan so the VPN keeps working after the trial."
+      }
+    },
+    "doc": {
+      "contents": "Contents",
+      "contentsCount_one": "{{count}} section",
+      "contentsCount_other": "{{count}} sections",
+      "readingTime": "≈ {{count}} min read",
+      "updated": "Updated {{date}}",
+      "toTop": "Back to top",
+      "unavailable": "Document unavailable"
+    },
+    "entry": {
+      "title": "FAQ and documents",
+      "subtitle": "Rules, offer, answers"
+    }
   }
 }

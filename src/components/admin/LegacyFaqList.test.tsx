@@ -63,6 +63,33 @@ describe('existing bot FAQ editor', () => {
       ),
     );
   });
+  it('sets and clears the help-center topic of a question', async () => {
+    vi.mocked(legacyFaqApi.updatePage).mockResolvedValue(page);
+    mount();
+    fireEvent.click(screen.getByRole('button', { name: 'admin.infoPages.edit' }));
+    const topic = screen.getByRole('combobox', { name: 'admin.infoPages.faq.topic' });
+    expect((topic as HTMLSelectElement).value).toBe('');
+    fireEvent.change(topic, { target: { value: 'billing' } });
+    fireEvent.click(screen.getByRole('button', { name: 'common.save' }));
+    await waitFor(() =>
+      expect(legacyFaqApi.updatePage).toHaveBeenLastCalledWith(
+        { ...page, category: 'billing' },
+        expect.anything(),
+      ),
+    );
+    await waitFor(() => expect(screen.queryByRole('combobox')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'admin.infoPages.edit' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'admin.infoPages.faq.topic' }), {
+      target: { value: '' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'common.save' }));
+    await waitFor(() =>
+      expect(legacyFaqApi.updatePage).toHaveBeenLastCalledWith(
+        { ...page, category: null },
+        expect.anything(),
+      ),
+    );
+  });
   it('keeps the draft when saving fails', async () => {
     vi.mocked(legacyFaqApi.updatePage).mockRejectedValue(new Error('offline'));
     mount();

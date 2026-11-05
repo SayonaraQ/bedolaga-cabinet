@@ -36,7 +36,7 @@ describe('groupFaqByTopic', () => {
 
   it('has «trouble» first and accented, «other» last', () => {
     expect(HELP_TOPICS[0]).toEqual({ key: 'trouble', accent: true });
-    expect(HELP_TOPICS.at(-1)?.key).toBe('other');
+    expect(HELP_TOPICS[HELP_TOPICS.length - 1].key).toBe('other');
   });
 });
 

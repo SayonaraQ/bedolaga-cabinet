@@ -83,7 +83,7 @@
     "logout": "退出",
     "contests": "活动",
     "polls": "问卷",
-    "info": "信息",
+    "info": "帮助",
     "wheel": "幸运转盘",
     "menu": "菜单",
     "gift": "赠送",
@@ -7122,7 +7122,9 @@
         "moveUp": "上移",
         "moveDown": "下移",
         "searchPlaceholder": "搜索问题...",
-        "noResults": "未找到结果"
+        "noResults": "未找到结果",
+        "topic": "帮助中心主题",
+        "noTopic": "无主题（“其他”）"
       },
       "locales": {
         "ru": "俄语",
@@ -9994,5 +9996,115 @@
     "moveToTariff": "改用套餐",
     "getSubscription": "订阅",
     "hideUntilTomorrow": "明天前不再显示"
+  },
+  "help": {
+    "title": "帮助",
+    "subtitle": "常见问题与服务文件",
+    "back": "返回帮助",
+    "searchPlaceholder": "搜索问题和文件",
+    "searchClear": "清除",
+    "searchQuestions": "问题",
+    "searchDocs": "文件中",
+    "searchNothing": "未找到“{{query}}”的结果",
+    "searchNothingHint": "请描述问题，我们会在工单中回复",
+    "noAnswer": "没有找到答案？",
+    "popular": "常见问题",
+    "documents": "文件",
+    "updatedAt": "更新于 {{date}}",
+    "offerSubtitle": "公开要约",
+    "loyalty": "忠诚度计划",
+    "topicNotFound": "该主题暂无问题",
+    "questionNotFound": "未找到该问题，可能已被删除",
+    "topics": {
+      "trouble": {
+        "title": "无法使用",
+        "hint": "逐步排查"
+      },
+      "connect": {
+        "title": "连接"
+      },
+      "services": {
+        "title": "网站与服务"
+      },
+      "devices": {
+        "title": "设备"
+      },
+      "whitelist": {
+        "title": "白名单与流量"
+      },
+      "billing": {
+        "title": "付款与账户"
+      },
+      "support": {
+        "title": "支持"
+      },
+      "other": {
+        "title": "其他"
+      },
+      "count_other": "{{count}} 个问题"
+    },
+    "faq": {
+      "copyLink": "答案链接",
+      "copied": "链接已复制",
+      "notHelped": "没有帮助？创建工单",
+      "whatBroken": "具体哪里不能用？"
+    },
+    "support": {
+      "title": "没有找到答案？",
+      "text": "直接在这里创建工单，无需其他 VPN。回复会发送到 Telegram 或邮箱。",
+      "create": "创建工单",
+      "telegram": "或在 Telegram 联系我们"
+    },
+    "situation": {
+      "label": "关于您的订阅",
+      "expired": {
+        "title": "订阅已到期",
+        "text": "无需其他 VPN 即可付款：在应用中选择“🛟 Продление подписки”节点，通过它可以打开 Telegram 和个人中心。"
+      },
+      "trafficOut": {
+        "title": "白名单流量已用完",
+        "text": "其他节点照常可用。",
+        "textDate": "其他节点照常可用。流量将于 {{date}} 恢复。",
+        "action": "购买流量"
+      },
+      "trafficLow": {
+        "title": "白名单流量即将用完",
+        "text": "剩余 {{left}} / {{limit}}。普通节点不消耗限额——仅在普通节点无法连接时使用白名单。",
+        "action": "如何节省流量",
+        "buy": "购买流量"
+      },
+      "slotsFull": {
+        "title": "设备位已满：{{count}} / {{count}}",
+        "text": "新设备将无法连接。每个带订阅的应用都占用一个设备位，即使在同一部手机上。",
+        "action": "释放或增加设备位"
+      },
+      "expiring": {
+        "title_other": "订阅将在 {{count}} 天后到期",
+        "today": "订阅今天到期",
+        "text": "现在续订或充值余额：开启自动续订后会自动扣款。"
+      },
+      "noDevices": {
+        "title": "连接第一台设备",
+        "text": "选择系统——个人中心会推荐应用并自动添加订阅。",
+        "action": "连接设备"
+      },
+      "trial": {
+        "title_other": "试用期 · 剩余 {{count}} 天",
+        "today": "试用期今天结束",
+        "text": "选择套餐，试用期结束后 VPN 继续可用。"
+      }
+    },
+    "doc": {
+      "contents": "目录",
+      "contentsCount_other": "{{count}} 个章节",
+      "readingTime": "约 {{count}} 分钟阅读",
+      "updated": "更新于 {{date}}",
+      "toTop": "返回顶部",
+      "unavailable": "文件不可用"
+    },
+    "entry": {
+      "title": "常见问题与文件",
+      "subtitle": "规则、要约、问题解答"
+    }
   }
 }

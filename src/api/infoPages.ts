@@ -138,6 +138,8 @@ export interface LegacyFaqPage {
   display_order: number;
   is_active: boolean;
   is_enabled: boolean;
+  /** Тема для справки; null — без темы, нет поля — бот старше миграции 0141. */
+  category?: string | null;
 }
 
 export const legacyFaqApi = {
@@ -146,10 +148,10 @@ export const legacyFaqApi = {
     return response.data;
   },
   updatePage: async (page: LegacyFaqPage): Promise<LegacyFaqPage> => {
-    const { title, content, display_order, is_active } = page;
+    const { title, content, display_order, is_active, category } = page;
     const response = await apiClient.put<LegacyFaqPage>(
       `/cabinet/admin/info-pages/legacy-faq/${page.id}`,
-      { title, content, display_order, is_active },
+      { title, content, display_order, is_active, category },
     );
     return response.data;
   },

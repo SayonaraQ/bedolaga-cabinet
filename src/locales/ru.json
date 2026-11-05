@@ -680,6 +680,7 @@
       "title": "Сменить тариф",
       "preview": "Предпросмотр",
       "currentTariff": "Текущий тариф",
+      "currentTariffNote": "Это ваш тариф сейчас",
       "newTariff": "Новый тариф",
       "remainingDays": "Осталось дней",
       "upgradeCost": "Доплата",

@@ -36,11 +36,11 @@ export function render(
 ) {
   const { currentTariffId, subscription, ...gridProps } = options;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return rtlRender(
+  const grid = (values: typeof tariffs) => (
     <QueryClientProvider client={client}>
       <MemoryRouter>
         <TariffPickerGrid
-          tariffs={tariffs.map(base)}
+          tariffs={values.map(base)}
           subscription={
             subscription
               ? (subscription as never)
@@ -56,8 +56,10 @@ export function render(
           {...gridProps}
         />
       </MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+  const view = rtlRender(grid(tariffs));
+  return { ...view, rerenderTariffs: (values: typeof tariffs) => view.rerender(grid(values)) };
 }
 
 /** Карточка тарифа — ближайший блок вокруг его названия. */

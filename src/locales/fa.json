@@ -643,6 +643,7 @@
       "dailyPayment": "پرداخت روزانه",
       "dailyChargeDescription": "روزانه از موجودی کسر می‌شود",
       "currentTariff": "تعرفه فعلی",
+      "currentTariffNote": "این طرح فعلی شماست",
       "free": "رایگان",
       "newTariff": "تعرفه جدید",
       "remainingDays": "روزهای باقی‌مانده",

@@ -106,7 +106,7 @@ export function TariffAccordionCard({
 
   return (
     <article
-      className={`bento-card min-w-0 p-0 ${open ? 'border-2 !border-accent-500' : 'border border-dark-700/50'}`}
+      className={`bento-card min-w-0 p-0 ${switchSelection && isCurrent ? 'border-success-500/40' : 'border-dark-700/50'} ${open ? 'border-2 !border-accent-500' : 'border'}`}
     >
       <button
         ref={headerRef}
@@ -241,7 +241,11 @@ export function TariffAccordionCard({
               </p>
             )}
           </div>
-          {action === 'current-daily' ? (
+          {switchSelection && isCurrent ? (
+            <p className="py-2 text-center text-sm text-dark-500">
+              {t('subscription.switchTariff.currentTariffNote')}
+            </p>
+          ) : action === 'current-daily' ? (
             <p className="py-2 text-center text-sm text-dark-500">
               {t('subscription.currentTariff')}
             </p>

@@ -614,6 +614,7 @@
       "dailyPayment": "每日付费",
       "dailyChargeDescription": "每日从余额中扣除",
       "currentTariff": "当前套餐",
+      "currentTariffNote": "这是您当前的套餐",
       "free": "免费",
       "newTariff": "新套餐",
       "remainingDays": "剩余天数",

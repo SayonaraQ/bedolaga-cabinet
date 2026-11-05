@@ -119,6 +119,67 @@ it('opens current, then highlighted, then first tariff', () => {
   expect(initialOpenTariffId([basic, highlighted], null)).toBe(standard.id);
   expect(initialOpenTariffId([basic, standard], null)).toBe(basic.id);
   expect(initialOpenTariffId([], undefined)).toBeNull();
+  expect(
+    initialOpenTariffId([basic, highlighted, family], family.id, { preferUpgrade: false }),
+  ).toBe(family.id);
+});
+
+describe('initial tariff when preferring an upgrade', () => {
+  const tiers = [basic, standard, family, premium].map((value, index) => ({
+    ...value,
+    tier_level: index + 3,
+    is_current: value.id === family.id,
+    is_highlighted: value.id === standard.id,
+  }));
+  const options = { preferUpgrade: true };
+
+  it('opens tier 6 for the current tier 5 among tiers 3, 4, 5, 6', () => {
+    expect(initialOpenTariffId(tiers, family.id, options)).toBe(premium.id);
+    expect(initialOpenTariffId(tiers, null, options)).toBe(premium.id);
+  });
+
+  it('picks the smallest higher tier and breaks ties by list order', () => {
+    const next = { ...tiers[3], id: 9 };
+    const higher = { ...tiers[3], id: 10, tier_level: 7 };
+    const sameTier = { ...tiers[0], tier_level: 5 };
+    expect(
+      initialOpenTariffId([sameTier, higher, next, ...tiers.slice(1)], family.id, options),
+    ).toBe(next.id);
+  });
+
+  it('falls back to the highlighted non-current tariff when current is the top tier', () => {
+    const top = { ...tiers[2], tier_level: 7, is_highlighted: true };
+    expect(initialOpenTariffId([top, ...tiers.slice(0, 2), tiers[3]], top.id, options)).toBe(
+      standard.id,
+    );
+  });
+
+  it('falls back to the first non-current tariff without another highlighted tariff', () => {
+    const current = { ...tiers[2], tier_level: 7, is_highlighted: true };
+    const others = tiers
+      .filter((value) => !value.is_current)
+      .map((value) => ({
+        ...value,
+        is_highlighted: false,
+      }));
+    expect(initialOpenTariffId([current, ...others], current.id, options)).toBe(basic.id);
+  });
+
+  it('uses non-current fallbacks when the current tariff is missing', () => {
+    const others = [tiers[0], tiers[1], tiers[3]];
+    expect(initialOpenTariffId(others, 99, options)).toBe(standard.id);
+    expect(initialOpenTariffId([tiers[0], tiers[3]], undefined, options)).toBe(basic.id);
+  });
+
+  it('never opens the current tariff, even when it is the only highlighted choice', () => {
+    const current = { ...tiers[2], is_highlighted: true };
+    expect(initialOpenTariffId([current], current.id, options)).toBeNull();
+    expect(initialOpenTariffId([current], null, options)).toBeNull();
+    expect(
+      initialOpenTariffId([{ ...current, is_current: false }], current.id, options),
+    ).toBeNull();
+    expect(initialOpenTariffId([], current.id, options)).toBeNull();
+  });
 });
 
 it.each([

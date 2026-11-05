@@ -53,8 +53,19 @@ vi.mock('../api/subscription', () => ({
       subscription_is_expired: false,
       tariffs: [
         {
+          id: 1,
+          name: 'Current plan',
+          tier_level: 5,
+          is_current: true,
+          is_purchased: true,
+          traffic_limit_gb: 70,
+          device_limit: 3,
+          periods: [{ days: 30, price_kopeks: 2000, price_rubles: 20, discount_percent: 0 }],
+        },
+        {
           id: 2,
           name: 'Target',
+          tier_level: 6,
           is_current: false,
           is_purchased: false,
           traffic_limit_gb: 100,
@@ -120,6 +131,19 @@ it.each([false, true].flatMap((lite) => [11, 12].map((id) => ({ lite, id }))))(
     state.limited = false;
     const client = mount(`/subscription/purchase?subscriptionId=${id}`);
     await screen.findByRole('heading', { level: 1, name: 'subscription.switchTariff.title' });
+    expect(await screen.findByText('Current plan')).toBeTruthy();
+    if (!lite) {
+      const current = screen.getByText('Current plan').closest('article');
+      if (!current) throw new Error('Current tariff card missing');
+      expect(document.querySelector('article')).toBe(current);
+      fireEvent.click(within(current).getByRole('button', { expanded: false }));
+      expect(within(current).getByText('subscription.switchTariff.currentTariffNote')).toBeTruthy();
+      expect(within(current).getAllByRole('button')).toHaveLength(1);
+      expect(state.preview).not.toHaveBeenCalled();
+      expect(state.switch).not.toHaveBeenCalled();
+      expect(state.purchase).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: /Target/, expanded: false }));
+    }
     fireEvent.click(
       await screen.findByRole('button', {
         name: state.lite ? /Target/ : 'Target: subscription.switchTariff.choose',

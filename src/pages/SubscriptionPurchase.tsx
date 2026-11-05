@@ -187,7 +187,7 @@ export default function SubscriptionPurchase() {
               ) ? (
                 <TariffPicker
                   tariffs={tariffs.filter(
-                    (tariff) => tariff.id !== subscription.tariff_id && !tariff.is_purchased,
+                    (tariff) => tariff.id === subscription.tariff_id || !tariff.is_purchased,
                   )}
                   subscription={subscription}
                   purchaseOptions={purchaseOptions}

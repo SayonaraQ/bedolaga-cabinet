@@ -34,7 +34,7 @@ const tariffs = [
     prices: [30000, 58000, 85000],
     is_highlighted: true,
   },
-  { id: 3, name: 'Семейный', device_limit: 7, prices: [75000, 148000, 215000] },
+  { id: 3, name: 'Семейный комфорт', device_limit: 7, prices: [75000, 148000, 215000] },
   {
     id: 4,
     name: 'Роскошный максимум',
@@ -43,6 +43,7 @@ const tariffs = [
     has_premium_servers: true,
   },
 ].map(({ prices, ...fields }) => ({
+  tier_level: fields.id + 2,
   tagline: 'Для всей семьи',
   description: 'Описание для бота',
   speed_limit_mbps: fields.id === 4 ? 500 : 50,
@@ -97,9 +98,9 @@ it('opens current tariff instead of highlighted and replaces its popular badge',
     })),
     { currentTariffId: 3 },
   );
-  expect(expanded()).toEqual([header('Семейный')]);
-  expect(within(cardFor('Семейный')).getByText('Текущий тариф')).toBeTruthy();
-  expect(within(cardFor('Семейный')).queryByText('Чаще всего выбирают')).toBeNull();
+  expect(expanded()).toEqual([header('Семейный комфорт')]);
+  expect(within(cardFor('Семейный комфорт')).getByText('Текущий тариф')).toBeTruthy();
+  expect(within(cardFor('Семейный комфорт')).queryByText('Чаще всего выбирают')).toBeNull();
 });
 
 it('only one open; tapping open closes it', () => {
@@ -216,14 +217,77 @@ it('actions unchanged: current extends through select, other switches by id', ()
   expect(onSelectTariff).toHaveBeenCalledTimes(1);
 });
 
-it('switch selection keeps its accessible label and callback', () => {
-  const onSwitchTariff = vi.fn();
-  const onSelectTariff = vi.fn();
-  render(tariffs, { currentTariffId: 3, switchSelection: true, onSwitchTariff, onSelectTariff });
-  toggle('Уверенный стандарт');
-  fireEvent.click(screen.getByRole('button', { name: 'Уверенный стандарт: Выбрать' }));
-  expect(onSwitchTariff).toHaveBeenCalledExactlyOnceWith(2);
-  expect(onSelectTariff).not.toHaveBeenCalled();
+it.each([false, true])(
+  'switch selection includes current and opens the next tier (multi=%s)',
+  (isMultiTariff) => {
+    const onSwitchTariff = vi.fn();
+    const onSelectTariff = vi.fn();
+    render(
+      tariffs.map((tariff) => ({ ...tariff, is_purchased: tariff.id === 3 })),
+      {
+        subscription: { id: 42, tariff_id: 3, is_active: true, is_trial: false },
+        subscriptionId: 42,
+        isMultiTariff,
+        switchSelection: true,
+        onSwitchTariff,
+        onSelectTariff,
+      },
+    );
+    const current = cardFor('Семейный комфорт');
+    expect(document.querySelector('article')).toBe(current);
+    expect(within(current).getByText('Текущий тариф')).toBeTruthy();
+    expect(header('Семейный комфорт').getAttribute('aria-expanded')).toBe('false');
+    expect(current.className).toContain('border-success-500/40');
+    expect(expanded()).toEqual([header('Роскошный максимум')]);
+    toggle('Семейный комфорт');
+    expect(within(current).getByText('Это ваш тариф сейчас')).toBeTruthy();
+    expect(within(current).getAllByRole('button')).toEqual([header('Семейный комфорт')]);
+    expect(current.className).toContain('!border-accent-500');
+    expect(onSwitchTariff).not.toHaveBeenCalled();
+    expect(onSelectTariff).not.toHaveBeenCalled();
+    toggle('Уверенный стандарт');
+    fireEvent.click(screen.getByRole('button', { name: 'Уверенный стандарт: Выбрать' }));
+    expect(onSwitchTariff).toHaveBeenCalledExactlyOnceWith(2);
+    expect(onSelectTariff).not.toHaveBeenCalled();
+  },
+);
+
+it.each([false, true])(
+  'default follows fresh tariffs until a manual choice (switch=%s)',
+  (switchSelection) => {
+    const initial = tariffs.map((tariff) => ({ ...tariff, is_highlighted: false }));
+    const view = render(initial, { switchSelection });
+    expect(expanded()).toEqual([header('Базовый')]);
+    view.rerenderTariffs(tariffs);
+    expect(expanded()).toEqual([header('Уверенный стандарт')]);
+
+    toggle('Семейный комфорт');
+    view.rerenderTariffs(tariffs.map((tariff) => ({ ...tariff, is_highlighted: tariff.id === 4 })));
+    expect(expanded()).toEqual([header('Семейный комфорт')]);
+    toggle('Семейный комфорт');
+    view.rerenderTariffs(initial);
+    expect(screen.queryAllByRole('button', { expanded: true })).toHaveLength(0);
+  },
+);
+
+it('recomputes the upgrade default when refetch supplies current tier data', () => {
+  const view = render(
+    tariffs.filter((tariff) => tariff.id !== 3),
+    {
+      currentTariffId: 3,
+      switchSelection: true,
+    },
+  );
+  expect(expanded()).toEqual([header('Уверенный стандарт')]);
+  view.rerenderTariffs(tariffs);
+  expect(expanded()).toEqual([header('Роскошный максимум')]);
+});
+
+it('falls back to the computed default if a manually opened tariff disappears', () => {
+  const view = render(tariffs, { currentTariffId: 3, switchSelection: true });
+  toggle('Базовый');
+  view.rerenderTariffs(tariffs.filter((tariff) => tariff.id !== 1));
+  expect(expanded()).toEqual([header('Роскошный максимум')]);
 });
 
 it('current daily has no action button; flexible tariff has no monthly savings', () => {

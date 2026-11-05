@@ -58,12 +58,29 @@ export function bestPerDeviceTariff(
 export function initialOpenTariffId(
   tariffs: Tariff[],
   currentTariffId: number | null | undefined,
+  options?: { preferUpgrade?: boolean },
 ): number | null {
+  const isCurrent = (tariff: Tariff) => tariff.is_current || tariff.id === currentTariffId;
+  const current = tariffs.find(isCurrent);
+  if (options?.preferUpgrade) {
+    const alternatives = tariffs.filter((tariff) => !isCurrent(tariff));
+    const upgrade = current
+      ? alternatives
+          .filter((tariff) => tariff.tier_level > current.tier_level)
+          .reduce<Tariff | undefined>(
+            (best, tariff) => (!best || tariff.tier_level < best.tier_level ? tariff : best),
+            undefined,
+          )
+      : undefined;
+    return (
+      upgrade?.id ??
+      alternatives.find((tariff) => tariff.is_highlighted)?.id ??
+      alternatives[0]?.id ??
+      null
+    );
+  }
   return (
-    tariffs.find((tariff) => tariff.is_current || tariff.id === currentTariffId)?.id ??
-    tariffs.find((tariff) => tariff.is_highlighted)?.id ??
-    tariffs[0]?.id ??
-    null
+    current?.id ?? tariffs.find((tariff) => tariff.is_highlighted)?.id ?? tariffs[0]?.id ?? null
   );
 }
 

@@ -41,7 +41,12 @@ export function TariffPickerGrid({
   const { applyPromoDiscount } = usePromoDiscount();
   const visible = [...tariffs]
     .filter((tariff) => {
-      if (isMultiTariff && tariff.is_purchased) return false;
+      if (
+        isMultiTariff &&
+        tariff.is_purchased &&
+        !(switchSelection && (tariff.is_current || tariff.id === subscription?.tariff_id))
+      )
+        return false;
       if (subscription?.is_trial && tariff.name.toLowerCase().includes('trial')) return false;
       return true;
     })
@@ -52,10 +57,12 @@ export function TariffPickerGrid({
       if (!aIsCurrent && bIsCurrent) return 1;
       return 0;
     });
-  const [openId, setOpenId] = useState(() => initialOpenTariffId(visible, subscription?.tariff_id));
-  if (openId !== null && !visible.some((tariff) => tariff.id === openId)) {
-    setOpenId(initialOpenTariffId(visible, subscription?.tariff_id));
-  }
+  const [manualOpenId, setManualOpenId] = useState<number | null | undefined>(undefined);
+  const openId =
+    manualOpenId === undefined ||
+    (manualOpenId !== null && !visible.some((tariff) => tariff.id === manualOpenId))
+      ? initialOpenTariffId(visible, subscription?.tariff_id, { preferUpgrade: switchSelection })
+      : manualOpenId;
   const best = bestPerDeviceTariff(visible, applyPromoDiscount);
 
   return (
@@ -119,7 +126,7 @@ export function TariffPickerGrid({
             key={tariff.id}
             tariff={tariff}
             open={openId === tariff.id}
-            onToggle={() => setOpenId(openId === tariff.id ? null : tariff.id)}
+            onToggle={() => setManualOpenId(openId === tariff.id ? null : tariff.id)}
             isCurrent={Boolean(tariff.is_current || tariff.id === subscription?.tariff_id)}
             isBestPerDevice={best?.tariffId === tariff.id ? best : null}
             action={tariffAction({

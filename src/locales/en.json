@@ -657,6 +657,7 @@
       "title": "Switch Tariff",
       "preview": "Preview",
       "currentTariff": "Current tariff",
+      "currentTariffNote": "This is your current plan",
       "newTariff": "New tariff",
       "remainingDays": "Days remaining",
       "upgradeCost": "Upgrade cost",

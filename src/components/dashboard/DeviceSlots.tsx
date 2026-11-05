@@ -106,10 +106,14 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
 
       <MultiAppNotes devices={devices} />
 
+      {/* У триала при занятом слоте большой кнопки нет: его главное действие —
+          «Выбрать тариф» в карточке; управлять устройством — «Управлять» в слоте. */}
       {status.isFull ? (
-        <Button size="lg" fullWidth className="h-[52px] font-bold" onClick={manage}>
-          {subscription.is_trial ? t('dashboard.slots.freeUp') : t('dashboard.slots.freeUpOrAdd')}
-        </Button>
+        subscription.is_trial ? null : (
+          <Button size="lg" fullWidth className="h-[52px] font-bold" onClick={manage}>
+            {t('dashboard.slots.freeUpOrAdd')}
+          </Button>
+        )
       ) : (
         <Button size="lg" fullWidth className="h-[52px] font-bold" onClick={connect}>
           <PlusIcon className="h-5 w-5" />

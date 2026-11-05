@@ -13,7 +13,13 @@ import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 import { getGlassColors } from '../../utils/glassTheme';
 import { getInsufficientBalanceError } from '../../utils/subscriptionHelpers';
 import { needsTariff, tariffSelectionPath } from '../../utils/legacySubscription';
-import { ClockIcon, ExclamationIcon, PlusIcon, SubscriptionIcon } from '@/components/icons';
+import {
+  ChatIcon,
+  ClockIcon,
+  ExclamationIcon,
+  PlusIcon,
+  SubscriptionIcon,
+} from '@/components/icons';
 
 interface SubscriptionCardExpiredProps {
   subscription: Subscription;
@@ -48,6 +54,9 @@ export default function SubscriptionCardExpired({
   // Detect daily subscription (disabled or expired)
   const isDaily = subscription.is_daily;
   const isDisabledDaily = subscription.status === 'disabled' && isDaily;
+  // Отключена админом (у нас суточной нет): бот её не продлит и тариф не сменит —
+  // «Подписка отключена» и «Написать в поддержку», как на странице подписки.
+  const isDisabledByAdmin = subscription.status === 'disabled' && !isDaily;
 
   /*
    * Списывать с баланса прямо из карточки можно только там, где выбирать нечего:
@@ -204,9 +213,11 @@ export default function SubscriptionCardExpired({
             ? t('subscription.trafficLimitedTitle')
             : isDisabledDaily
               ? t('dashboard.suspended.title')
-              : subscription.is_trial
-                ? t('dashboard.expired.trialTitle')
-                : t('dashboard.expired.title')}
+              : isDisabledByAdmin
+                ? t('dashboard.disabled.title')
+                : subscription.is_trial
+                  ? t('dashboard.expired.trialTitle')
+                  : t('dashboard.expired.title')}
         </h2>
       </div>
 
@@ -232,9 +243,11 @@ export default function SubscriptionCardExpired({
           <div className="mb-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-dark-400">
             {isLimited
               ? t('dashboard.expired.activeUntil')
-              : t('dashboard.expired.expiredDate', {
-                  context: subscription.is_trial ? 'trial' : '',
-                })}
+              : isDisabledByAdmin
+                ? t('dashboard.disabled.paidUntil')
+                : t('dashboard.expired.expiredDate', {
+                    context: subscription.is_trial ? 'trial' : '',
+                  })}
           </div>
           <div className="text-base font-bold tracking-tight text-dark-50/50">{formattedDate}</div>
         </div>
@@ -264,7 +277,19 @@ export default function SubscriptionCardExpired({
 
       {/* Action buttons */}
       <div className="flex gap-2.5">
-        {isLimited ? (
+        {isDisabledByAdmin ? (
+          <Link
+            to="/support"
+            className="flex flex-1 items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-semibold tracking-tight text-white transition-all duration-300"
+            style={{
+              background: accent.gradient,
+              boxShadow: `0 4px 20px rgba(${accent.r},${accent.g},${accent.b},0.2)`,
+            }}
+          >
+            <ChatIcon className="h-4 w-4" />
+            {t('subscription.noOptionsContactSupport')}
+          </Link>
+        ) : isLimited ? (
           <Link
             to={
               requiresTariff

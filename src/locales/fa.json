@@ -343,6 +343,10 @@
       "expiredDate_trial": "منقضی شده"
     },
     "deviceLimitReached": "برای افزودن دستگاه جدید، دستگاه‌های فعلی را قطع کنید",
+    "disabled": {
+      "title": "اشتراک غیرفعال شد",
+      "paidUntil": "پرداخت‌شده تا"
+    },
     "suspended": {
       "title": "اشتراک معلق شده",
       "resume": "از سرگیری"

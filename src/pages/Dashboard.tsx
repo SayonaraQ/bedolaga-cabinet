@@ -395,9 +395,9 @@ export default function Dashboard() {
               <Skeleton className="h-12 w-full rounded-xl" />
             </div>
           </SkeletonGroup>
-        ) : subscription?.is_expired ||
-          subscription?.status === 'disabled' ||
-          subscription?.is_limited ? (
+        ) : // Кончился трафик белых списков — VPN работает, карточка обычная (с
+        // предупреждением сверху), а не «истекла» (владелец 05.11.2026).
+        subscription?.is_expired || subscription?.status === 'disabled' ? (
           <SubscriptionCardExpired
             subscription={subscription}
             balanceKopeks={balanceData?.balance_kopeks ?? 0}

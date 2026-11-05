@@ -26,15 +26,28 @@ export default function ManagedTrafficSummary({
   const remaining = latest('traffic_remaining_gb');
   const base = latest('base_traffic_remaining_gb');
   const next = latest('next_traffic_refresh_at');
-  if (latest('traffic_accounting_mode') !== 'managed') return null;
-  const nextDate = next ? new Date(next) : null;
+  const managed = latest('traffic_accounting_mode') === 'managed';
+  // У legacy остатков по частям нет, но дату сброса бот считает и для неё
+  // (панель обнуляет расход по стратегии тарифа). Ответ обновления трафика у
+  // legacy несёт null — не затираем им дату из подписки.
+  const legacyNext = refreshed?.next_traffic_refresh_at ?? subscription.next_traffic_refresh_at;
+  const nextDate = (managed ? next : legacyNext)
+    ? new Date((managed ? next : legacyNext) as string)
+    : null;
+  if (!managed) {
+    if (hideNextRefresh || !nextDate || !Number.isFinite(nextDate.getTime())) return null;
+  }
   const rows = [
-    {
-      key: 'available',
-      value: isBalance(remaining) ? formatTraffic(remaining) : '—',
-      prominent: true,
-    },
-    ...(isBalance(base)
+    ...(managed
+      ? [
+          {
+            key: 'available',
+            value: isBalance(remaining) ? formatTraffic(remaining) : '—',
+            prominent: true,
+          },
+        ]
+      : []),
+    ...(managed && isBalance(base)
       ? [{ key: 'baseRemaining', value: formatTraffic(base), prominent: false }]
       : []),
     ...(!hideNextRefresh && nextDate && Number.isFinite(nextDate.getTime())

@@ -332,6 +332,10 @@
       "expiredDate_trial": "已到期"
     },
     "deviceLimitReached": "断开设备以添加新设备",
+    "disabled": {
+      "title": "订阅已停用",
+      "paidUntil": "已付费至"
+    },
     "suspended": {
       "title": "订阅已暂停",
       "resume": "恢复"

@@ -8,6 +8,15 @@ export type CardCtaAction =
   | 'getSubscription'
   | 'support';
 
+/** Подпись главной кнопки — одна и та же на странице подписки, главной и плашке. */
+export const CARD_CTA_LABEL: Record<CardCtaAction, string> = {
+  renew: 'subscription.extend',
+  chooseTariff: 'subscription.cardCta.chooseTariff',
+  moveToTariff: 'subscription.cta.moveToTariff',
+  getSubscription: 'subscription.getSubscription',
+  support: 'subscription.noOptionsContactSupport',
+};
+
 export interface CardCta {
   action: CardCtaAction;
   to: string;

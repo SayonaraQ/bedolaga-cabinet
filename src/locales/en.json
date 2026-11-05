@@ -374,6 +374,10 @@
       "expiredDate_trial": "Expired",
       "activeUntil": "Active until"
     },
+    "disabled": {
+      "title": "Subscription disabled",
+      "paidUntil": "Paid until"
+    },
     "suspended": {
       "title": "Subscription Suspended",
       "resume": "Resume"

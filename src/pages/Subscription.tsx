@@ -17,6 +17,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
 import {
+  CARD_CTA_LABEL,
   subscriptionCardCta,
   tariffSwitchLink,
   type CardCtaAction,
@@ -207,15 +208,6 @@ const CountdownTimer = memo(function CountdownTimer({
     </div>
   );
 });
-
-/** Подпись главной кнопки в карточке срока — по действию из subscriptionCardCta. */
-const CARD_CTA_LABEL: Record<CardCtaAction, string> = {
-  renew: 'subscription.extend',
-  chooseTariff: 'subscription.cardCta.chooseTariff',
-  moveToTariff: 'subscription.cta.moveToTariff',
-  getSubscription: 'subscription.getSubscription',
-  support: 'subscription.noOptionsContactSupport',
-};
 
 function CardCtaIcon({ action, className }: { action: CardCtaAction; className: string }) {
   if (action === 'renew') return <RefreshIcon className={className} />;

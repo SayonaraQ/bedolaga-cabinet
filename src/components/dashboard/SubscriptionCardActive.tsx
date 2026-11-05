@@ -12,7 +12,21 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTrafficZone } from '../../hooks/useTrafficZone';
 import { formatTraffic } from '../../utils/formatTraffic';
 import { getGlassColors } from '../../utils/glassTheme';
-import { CalendarIcon, RefreshIcon, SparklesIcon } from '@/components/icons';
+import {
+  ArrowsLeftRightIcon,
+  CalendarIcon,
+  ChatIcon,
+  RefreshIcon,
+  SparklesIcon,
+  SubscriptionIcon,
+  WarningIcon,
+} from '@/components/icons';
+import { needsTariff, planTitle } from '../../utils/legacySubscription';
+import {
+  CARD_CTA_LABEL,
+  subscriptionCardCta,
+  type CardCtaAction,
+} from '../../utils/subscriptionCta';
 import type { Subscription } from '../../types';
 import type { SlotDevice } from '../../utils/deviceSlots';
 
@@ -53,6 +67,13 @@ export default function SubscriptionCardActive({
 
   const formattedDate = new Date(subscription.end_date).toLocaleDateString(uiLocale());
   const daysLeft = subscription.days_left;
+
+  // Главная кнопка — по тому же правилу, что в карточке срока на странице подписки.
+  // У активной подписки «Продлить» появляется, только когда до конца ≤ 3 дней:
+  // пока далеко, главное действие главной — подключать устройства.
+  const cta = subscriptionCardCta(subscription);
+  const showCta =
+    cta !== null && (cta.action !== 'renew' || subscription.is_limited || daysLeft <= 3);
 
   // Sparkline placeholder data (hidden until API provides daily usage)
   const dailyUsage: number[] = [];
@@ -140,6 +161,47 @@ export default function SubscriptionCardActive({
         </div>
       </div>
 
+      {/* ─── Кончился трафик белых списков: VPN работает, поэтому карточка обычная,
+          а предупреждение и «Докупить трафик» — сверху (как на странице подписки). ─── */}
+      {subscription.is_limited && (
+        <div
+          data-testid="traffic-limited"
+          className="mb-6 rounded-[14px] p-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,184,0,0.08), rgba(255,184,0,0.03))',
+            border: '1px solid rgba(255,184,0,0.2)',
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
+              style={{ background: 'rgba(255,184,0,0.12)' }}
+            >
+              <WarningIcon className="h-4 w-4 text-urgent-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p
+                className="text-sm font-semibold"
+                style={{ color: 'rgb(var(--color-urgent-400))' }}
+              >
+                {t('subscription.trafficLimitedTitle')}
+              </p>
+              <p className="mt-1 text-xs text-dark-400">
+                {t('subscription.trafficLimitedDescription')}
+              </p>
+            </div>
+          </div>
+          {!needsTariff(subscription) && (
+            <Link
+              to={`/subscriptions/${subscription.id}`}
+              className="cta-shine cta-shine-late mt-3 inline-flex h-9 w-full items-center justify-center whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-3 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+            >
+              {t('subscription.buyTrafficButton')}
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* ─── Progress Bar ─── */}
       <div className="mb-6">
         {unknownTraffic ? (
@@ -184,7 +246,7 @@ export default function SubscriptionCardActive({
               и «🟡 Компания - 10 устройств» превращалось в «🟡 Компани…» —
               пользователь переставал понимать, какой у него тариф. */}
           <div className="line-clamp-2 min-w-0 break-words text-base font-bold leading-tight tracking-tight text-dark-50">
-            {subscription.tariff_name || t('subscription.currentPlan')}
+            {subscription.is_trial ? t('subscription.trialStatus') : planTitle(subscription, t)}
           </div>
           <div className="mt-0.5 font-mono text-[10px] text-dark-400">
             {t('dashboard.validUntil', { date: formattedDate })}
@@ -232,6 +294,17 @@ export default function SubscriptionCardActive({
         </div>
       </div>
 
+      {/* ─── Главная кнопка состояния (как в карточке срока на странице подписки) ─── */}
+      {showCta && cta && (
+        <Link
+          to={cta.to}
+          className="cta-pulse mb-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-accent-500 px-4 text-center text-base font-bold leading-tight text-on-accent transition-colors hover:bg-accent-600 max-[359px]:px-2"
+        >
+          <CtaIcon action={cta.action} className="h-[18px] w-[18px] shrink-0 max-[359px]:hidden" />
+          {t(CARD_CTA_LABEL[cta.action])}
+        </Link>
+      )}
+
       {/* ─── Traffic Refresh ─── */}
       <div className="mb-5 flex items-center justify-between px-0.5">
         <button
@@ -272,4 +345,11 @@ export default function SubscriptionCardActive({
       )}
     </div>
   );
+}
+
+function CtaIcon({ action, className }: { action: CardCtaAction; className: string }) {
+  if (action === 'renew') return <RefreshIcon className={className} />;
+  if (action === 'moveToTariff') return <ArrowsLeftRightIcon className={className} />;
+  if (action === 'support') return <ChatIcon className={className} />;
+  return <SubscriptionIcon className={className} />;
 }

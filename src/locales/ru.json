@@ -382,6 +382,10 @@
       "expiredDate_trial": "Истёк",
       "activeUntil": "Активна до"
     },
+    "disabled": {
+      "title": "Подписка отключена",
+      "paidUntil": "Оплачена до"
+    },
     "suspended": {
       "title": "Подписка приостановлена",
       "resume": "Возобновить"

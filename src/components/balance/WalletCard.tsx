@@ -7,6 +7,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useTopUpPayment } from '@/hooks/useTopUpPayment';
 import type { PaymentMethod, RenewalOption, Subscription } from '@/types';
 import { buildQuickTopUps, buildRenewalPlan, type RenewalPlan } from '@/utils/balance/renewalPlan';
+import { getPreferredOptionId, sortOptionsWithSbpFirst } from '@/utils/paymentOptions';
 import { PaymentReadyPanel } from './PaymentReadyPanel';
 import { RenewalStatus } from './RenewalStatus';
 
@@ -72,7 +73,8 @@ function WalletTopUp({
   const { pay, isPending, error, paymentUrl, qrPayload } = useTopUpPayment(method);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const selectedOption =
-    method.options?.find((option) => option.id === selectedOptionId)?.id ?? method.options?.[0]?.id;
+    method.options?.find((option) => option.id === selectedOptionId)?.id ??
+    getPreferredOptionId(method.options);
   const quickTopUps = buildQuickTopUps(plan, method);
   const [selectedAmount, setSelectedAmount] = useState<number | null | undefined>(undefined);
   const [customAmount, setCustomAmount] = useState('');
@@ -149,7 +151,7 @@ function WalletTopUp({
           role="group"
           aria-label={t('balance.wallet.paymentOption')}
         >
-          {method.options.map((option) => (
+          {sortOptionsWithSbpFirst(method.options).map((option) => (
             <Button
               key={option.id}
               size="sm"

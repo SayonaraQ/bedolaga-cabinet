@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter, useLocation } from 'react-router';
@@ -180,6 +180,19 @@ it('без подписки показывает четыре обычные с�
   }
 });
 
+it('СБП стоит первым и выбран по умолчанию, хотя бот отдаёт «Карта, СБП»', async () => {
+  renderWallet();
+  const group = screen.getByRole('group', { name: 'Вариант оплаты' });
+  const options = within(group).getAllByRole('button');
+  expect(options.map((button) => button.textContent)).toEqual(['🏦 СБП', '💳 Карта']);
+  expect(options[0].getAttribute('aria-pressed')).toBe('true');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Пополнить на 600 ₽' }));
+  await waitFor(() =>
+    expect(balanceApi.createTopUp).toHaveBeenCalledWith(60000, 'yookassa', 'sbp'),
+  );
+});
+
 it('два последовательных нажатия создают один счёт с выбранным СБП', async () => {
   let resolvePayment!: (result: typeof payment) => void;
   vi.mocked(balanceApi.createTopUp).mockReturnValue(
@@ -188,6 +201,7 @@ it('два последовательных нажатия создают оди
     }),
   );
   renderWallet();
+  fireEvent.click(screen.getByRole('button', { name: '💳 Карта' }));
   fireEvent.click(screen.getByRole('button', { name: '🏦 СБП' }));
   const submit = screen.getByRole('button', { name: 'Пополнить на 600 ₽' });
   act(() => {

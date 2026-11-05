@@ -13,8 +13,8 @@ import { PaymentReadyPanel } from '../components/balance/PaymentReadyPanel';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import { useHaptic, usePlatform } from '@/platform';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
-import type { PaymentMethod, PaymentMethodOption } from '../types';
 import BentoCard from '../components/ui/BentoCard';
+import { getPreferredOptionId, sortOptionsWithSbpFirst } from '../utils/paymentOptions';
 import { getSafeRedirectPath } from '../utils/safeRedirect';
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { CardIcon, CryptoIcon, ExclamationIcon, SparklesIcon, StarIcon } from '@/components/icons';
@@ -24,44 +24,6 @@ const getMethodIcon = (methodId: string) => {
   if (id.includes('stars')) return <StarIcon />;
   if (id.includes('crypto') || id.includes('ton') || id.includes('usdt')) return <CryptoIcon />;
   return <CardIcon />;
-};
-
-const getPreferredOptionId = (options?: PaymentMethod['options']) => {
-  if (!options || options.length === 0) return null;
-
-  const sbpOption = options.find((option) => {
-    const normalizedId = option.id.toLowerCase();
-    const normalizedName = option.name.toLowerCase();
-    return (
-      normalizedId.includes('sbp') ||
-      normalizedName.includes('сбп') ||
-      normalizedName.includes('sbp')
-    );
-  });
-
-  return sbpOption?.id ?? options[0].id;
-};
-
-const sortOptionsWithSbpFirst = (options?: PaymentMethod['options']) => {
-  if (!options || options.length <= 1) return options ?? [];
-
-  const isPreferredOption = (option: PaymentMethodOption) => {
-    const normalizedId = option.id.toLowerCase();
-    const normalizedName = option.name.toLowerCase();
-    return (
-      normalizedId.includes('sbp') ||
-      normalizedName.includes('сбп') ||
-      normalizedName.includes('sbp')
-    );
-  };
-
-  return [...options].sort((left, right) => {
-    const leftIsPreferred = isPreferredOption(left);
-    const rightIsPreferred = isPreferredOption(right);
-
-    if (leftIsPreferred === rightIsPreferred) return 0;
-    return leftIsPreferred ? -1 : 1;
-  });
 };
 
 export default function TopUpAmount() {

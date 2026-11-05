@@ -41,6 +41,9 @@ export default function AdminTariffCreate() {
   // Form state - matches bot fields
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [tagline, setTagline] = useState('');
+  const [speedLimitMbps, setSpeedLimitMbps] = useState<number | ''>('');
+  const [hasPremiumServers, setHasPremiumServers] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [trafficLimitGb, setTrafficLimitGb] = useState<number | ''>(100);
   const [deviceLimit, setDeviceLimit] = useState<number | ''>(1);
@@ -121,6 +124,9 @@ export default function AdminTariffCreate() {
       setTariffType(data.is_daily ? 'daily' : 'period');
       setName(data.name);
       setDescription(data.description || '');
+      setTagline(data.tagline ?? '');
+      setSpeedLimitMbps(data.speed_limit_mbps ?? '');
+      setHasPremiumServers(data.has_premium_servers ?? false);
       setIsActive(data.is_active ?? true);
       setTrafficLimitGb(data.traffic_limit_gb ?? 100);
       setDeviceLimit(data.device_limit || 1);
@@ -177,6 +183,9 @@ export default function AdminTariffCreate() {
     const data: TariffCreateRequest | TariffUpdateRequest = {
       name,
       description: isEdit ? description : description || undefined,
+      tagline: tagline.trim() || null,
+      speed_limit_mbps: speedLimitMbps === '' ? null : speedLimitMbps,
+      has_premium_servers: hasPremiumServers,
       is_active: isActive,
       show_in_gift: showInGift,
       is_highlighted: isTariffHighlighted,
@@ -465,6 +474,67 @@ export default function AdminTariffCreate() {
               className="input min-h-[80px] resize-none"
               placeholder={t('admin.tariffs.descriptionPlaceholder')}
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="tariff-tagline"
+              className="mb-2 block text-sm font-medium text-dark-300"
+            >
+              {t('admin.tariffs.taglineLabel')}
+            </label>
+            <input
+              id="tariff-tagline"
+              type="text"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              maxLength={160}
+              aria-describedby="tariff-tagline-hint"
+              className="input w-full"
+            />
+            <p id="tariff-tagline-hint" className="mt-1 text-xs text-dark-500">
+              {t('admin.tariffs.taglineHint')}
+            </p>
+          </div>
+          <div>
+            <label htmlFor="tariff-speed" className="mb-2 block text-sm font-medium text-dark-300">
+              {t('admin.tariffs.speedLimitLabel')}
+            </label>
+            <input
+              id="tariff-speed"
+              type="number"
+              value={speedLimitMbps}
+              onChange={createNumberInputHandler(
+                (value) => setSpeedLimitMbps(value === '' ? '' : Math.trunc(value)),
+                1,
+                100000,
+              )}
+              min={1}
+              max={100000}
+              step={1}
+              aria-describedby="tariff-speed-hint"
+              className="input w-full"
+            />
+            <p id="tariff-speed-hint" className="mt-1 text-xs text-dark-500">
+              {t('admin.tariffs.speedLimitHint')}
+            </p>
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-dark-800 p-3">
+            <span className="text-sm font-medium text-dark-200">
+              {t('admin.tariffs.premiumServersLabel')}
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-label={t('admin.tariffs.premiumServersLabel')}
+              aria-checked={hasPremiumServers}
+              onClick={() => setHasPremiumServers(!hasPremiumServers)}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${hasPremiumServers ? 'bg-urgent-400' : 'bg-dark-600'}`}
+            >
+              <span
+                className={`absolute top-1 h-4 w-4 rounded-full bg-dark-50 transition-transform ${hasPremiumServers ? 'left-6' : 'left-1'}`}
+              />
+            </button>
           </div>
 
           {/* Daily Price (only for daily tariff) */}

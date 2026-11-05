@@ -57,6 +57,9 @@ export interface TariffDetail {
   id: number;
   name: string;
   description: string | null;
+  tagline?: string | null;
+  speed_limit_mbps?: number | null;
+  has_premium_servers?: boolean;
   is_active: boolean;
   is_trial_available: boolean;
   show_in_gift: boolean;
@@ -110,6 +113,9 @@ export interface TariffDetail {
 export interface TariffCreateRequest {
   name: string;
   description?: string;
+  tagline?: string | null;
+  speed_limit_mbps?: number | null;
+  has_premium_servers?: boolean;
   is_active?: boolean;
   show_in_gift?: boolean;
   traffic_limit_gb?: number;
@@ -163,6 +169,9 @@ export interface ExternalSquadInfo {
 export interface TariffUpdateRequest {
   name?: string;
   description?: string;
+  tagline?: string | null;
+  speed_limit_mbps?: number | null;
+  has_premium_servers?: boolean;
   is_active?: boolean;
   show_in_gift?: boolean;
   traffic_limit_gb?: number;

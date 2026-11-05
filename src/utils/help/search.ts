@@ -111,7 +111,12 @@ function snippet(text: string, stems: string[]): Segments {
       text.length > SNIPPET_LENGTH ? `${text.slice(0, SNIPPET_LENGTH).trimEnd()}…` : text;
     return [{ text: head, mark: false }];
   }
-  const start = Math.max(0, match.index - SNIPPET_BEFORE);
+  let start = Math.max(0, match.index - SNIPPET_BEFORE);
+  // Окно не начинаем с обрубка слова: сдвигаемся к началу следующего.
+  if (start > 0 && !/\s/.test(text[start - 1])) {
+    const space = text.indexOf(' ', start);
+    if (space >= 0 && space < match.index) start = space + 1;
+  }
   const end = Math.min(text.length, start + SNIPPET_LENGTH);
   const window = `${start > 0 ? '…' : ''}${text.slice(start, end).trim()}${end < text.length ? '…' : ''}`;
   return highlight(window, stems);

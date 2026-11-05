@@ -122,6 +122,15 @@ describe('search', () => {
     expect(searchHelp('андроид', FAQ, label, []).faq.map((h) => h.key)).toEqual(['faq-45']);
   });
 
+  it('cuts the snippet at a word boundary', () => {
+    // 66 знаков перед совпадением: окно (60 знаков назад) начиналось бы внутри первого слова.
+    const long = faq(70, 'Q', `<p>${'абвгдежзик '.repeat(6)}банки замечают VPN.</p>`);
+    const text = searchHelp('банки', [long], label, [])
+      .faq[0].snippet.map((s) => s.text)
+      .join('');
+    expect(text).toMatch(/^…абвгдежзик /);
+  });
+
   it('returns nothing for a one-character query', () => {
     expect(searchHelp('б', FAQ, label, SECTIONS)).toEqual({ faq: [], docs: [] });
   });

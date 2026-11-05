@@ -100,6 +100,7 @@ export interface Subscription extends TrafficAccountingSummary {
   servers: ServerInfo[];
   autopay_enabled: boolean;
   autopay_days_before: number;
+  autopay_period_days?: number | null;
   subscription_url: string | null;
   hide_subscription_link: boolean;
   is_active: boolean;

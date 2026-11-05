@@ -161,16 +161,14 @@ export default function SubscriptionPurchase() {
             <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
               {t('subscription.switchTariff.title')}
             </h1>
-            <p className="mt-2 break-words text-sm text-dark-400">
-              {t('subscription.switchTariff.sourceContext', { name: subscription.tariff_name })}
-              {!subscription.is_daily && subscription.end_date && (
-                <span className="mt-1 block">
-                  {t('subscription.switchTariff.validUntil', {
-                    date: formatLiteDate(subscription.end_date),
-                  })}
-                </span>
-              )}
-            </p>
+            {/* Текущий тариф виден первой карточкой списка — здесь только срок. */}
+            {!subscription.is_daily && subscription.end_date && (
+              <p className="mt-2 break-words text-sm text-dark-400">
+                {t('subscription.switchTariff.validUntil', {
+                  date: formatLiteDate(subscription.end_date),
+                })}
+              </p>
+            )}
           </div>
         </header>
         <div

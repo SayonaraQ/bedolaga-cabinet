@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { PiCaretDown, PiCheck, PiLink } from 'react-icons/pi';
@@ -29,6 +29,8 @@ export function FaqItem({ page, open, onToggle, compact = false }: FaqItemProps)
   const onContentClick = useInternalLinks();
   const [copied, setCopied] = useState(false);
   const [branchIndex, setBranchIndex] = useState(0);
+  const headerRef = useRef<HTMLButtonElement>(null);
+  const headerTopBeforeToggle = useRef<number | null>(null);
 
   // Сначала очищаем, потом режем на ветки: ветки собираются из уже чистого DOM.
   const html = useMemo(() => formatContent(page.content), [page.content]);
@@ -39,6 +41,24 @@ export function FaqItem({ page, open, onToggle, compact = false }: FaqItemProps)
     const timer = window.setTimeout(() => setCopied(false), 2000);
     return () => window.clearTimeout(timer);
   }, [copied]);
+
+  // Открыт один вопрос: тап по вопросу ниже открытого сворачивает верхний, всё
+  // над пальцем сжимается, а прокрутка остаётся прежней — заголовок уезжал за
+  // экран, под пальцем оказывался низ страницы. Держим заголовок на месте:
+  // запоминаем, где он был, и после перестройки (до отрисовки) докручиваем.
+  const toggle = () => {
+    headerTopBeforeToggle.current = headerRef.current?.getBoundingClientRect().top ?? null;
+    onToggle();
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: open — триггер: сверяем позицию после своего переключения
+  useLayoutEffect(() => {
+    const before = headerTopBeforeToggle.current;
+    headerTopBeforeToggle.current = null;
+    if (before === null || !headerRef.current) return;
+    const shift = Math.round(headerRef.current.getBoundingClientRect().top - before);
+    if (shift !== 0) window.scrollBy({ top: shift, behavior: 'instant' });
+  }, [open]);
 
   const copy = async () => {
     try {
@@ -57,8 +77,9 @@ export function FaqItem({ page, open, onToggle, compact = false }: FaqItemProps)
   return (
     <div id={faqAnchorId(page.id)} className={`scroll-mt-24 ${shell}`}>
       <button
+        ref={headerRef}
         type="button"
-        onClick={onToggle}
+        onClick={toggle}
         aria-expanded={open}
         className={`flex min-h-[52px] w-full items-center justify-between gap-3 px-4 py-3 text-left ${
           compact ? 'text-sm font-semibold' : 'text-[15px] font-semibold'

@@ -177,9 +177,6 @@ export default function SubscriptionPurchase() {
         >
           {switchTariffId === null ? (
             <>
-              <p className="mb-5 text-sm text-dark-400">
-                {t('subscription.switchTariff.chooseHint')}
-              </p>
               {tariffs.some(
                 (tariff) => tariff.id !== subscription.tariff_id && !tariff.is_purchased,
               ) ? (

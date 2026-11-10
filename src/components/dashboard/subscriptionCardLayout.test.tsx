@@ -2,9 +2,23 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PlatformProvider } from '@/platform/PlatformProvider';
 import type { Subscription } from '@/types';
+import type { Season } from '@/theme/appearance';
+
+const appearance = vi.hoisted(() => ({ season: null as Season | null }));
+vi.mock('@/hooks/useTheme', () => ({
+  useTheme: () => ({
+    isDark: true,
+    isLight: false,
+    season: appearance.season,
+    seasonalActive: appearance.season !== null,
+  }),
+}));
+beforeEach(() => {
+  appearance.season = null;
+});
 
 /**
  * Вёрстка карточки подписки на телефоне.
@@ -147,3 +161,18 @@ describe('слоты устройств', () => {
     expect(screen.queryByText('dashboard.slots.free')).toBeNull();
   });
 });
+
+it.each(['winter', 'spring', 'summer', 'autumn'] as const)(
+  'renders the %s home main-card and connect slots without wrapping the slot grid',
+  async (season) => {
+    appearance.season = season;
+    const container = await renderCard(subscription());
+    const corner = container.querySelector('[data-seasonal-slot="corner"]');
+    expect(corner?.firstElementChild?.className).toContain('glass-card');
+    const connect = screen.getByRole('button', { name: 'dashboard.connectDevice' });
+    expect(connect.parentElement?.getAttribute('data-seasonal-slot')).toBe('connect');
+    expect(connect.className).toContain('h-[52px]');
+    expect(connect.parentElement?.parentElement?.className).toContain('flex-col');
+    expect(container.querySelectorAll('[data-seasonal-slot]')).toHaveLength(2);
+  },
+);

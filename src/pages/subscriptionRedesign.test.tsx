@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PlatformProvider } from '@/platform/PlatformProvider';
 import { ToastProvider } from '@/components/Toast';
+import type { Season } from '@/theme/appearance';
 
 /**
  * Страница «Подписка» по макету, утверждённому 05.11.2026:
@@ -18,7 +19,16 @@ import { ToastProvider } from '@/components/Toast';
 const state = vi.hoisted(() => ({
   subscription: {} as Record<string, unknown>,
   paused: false,
+  season: null as Season | null,
   copy: vi.fn(async () => {}),
+}));
+vi.mock('@/hooks/useTheme', () => ({
+  useTheme: () => ({
+    isDark: true,
+    isLight: false,
+    season: state.season,
+    seasonalActive: state.season !== null,
+  }),
 }));
 vi.mock('@/hooks/useAnimationLoop', () => ({ useAnimationPause: () => state.paused }));
 vi.mock('@/utils/clipboard', () => ({ copyToClipboard: state.copy }));
@@ -109,6 +119,7 @@ function renderPage() {
 
 beforeEach(() => {
   state.paused = false;
+  state.season = null;
   state.copy.mockClear();
   state.subscription = {
     id: 42,
@@ -376,4 +387,34 @@ it('pauses and disables the subscription contour at the device limit', async () 
   expect(connect.hasAttribute('disabled')).toBe(true);
   fireEvent.click(connect);
   expect(screen.queryByTestId('destination')).toBeNull();
+});
+
+it.each(['winter', 'spring', 'summer', 'autumn'] as const)(
+  'places all three %s slots outside the subscription card and actions',
+  async (season) => {
+    state.season = season;
+    const { container } = renderPage();
+    const connect = await screen.findByRole('button', { name: /dashboard\.connectDevice/ });
+    const renew = screen.getByRole('link', { name: 'subscription.extend' });
+    expect(
+      [...container.querySelectorAll('[data-seasonal-slot]')].map((node) =>
+        node.getAttribute('data-seasonal-slot'),
+      ),
+    ).toEqual(['corner', 'connect', 'renew']);
+    const corner = container.querySelector('[data-seasonal-slot="corner"]');
+    expect(corner?.firstElementChild?.className).toContain('glass-card');
+    expect(connect.parentElement?.getAttribute('data-seasonal-slot')).toBe('connect');
+    expect(connect.className).not.toContain('mb-5');
+    expect(connect.parentElement?.parentElement?.className).toBe('mb-5');
+    expect(renew.parentElement?.getAttribute('data-seasonal-slot')).toBe('renew');
+  },
+);
+
+it('does not put renewal decor on the trial choose-tariff action', async () => {
+  state.season = 'winter';
+  Object.assign(state.subscription, { status: 'trial', is_trial: true, tariff_id: null });
+  const { container } = renderPage();
+  await screen.findByTestId('countdown-card');
+  expect(container.querySelector('[data-seasonal-slot="corner"]')).toBeTruthy();
+  expect(container.querySelector('[data-seasonal-slot="renew"]')).toBeNull();
 });

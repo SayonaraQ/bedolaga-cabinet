@@ -1,3 +1,4 @@
+import { SeasonalDecorSlot } from '@/components/seasonal/SeasonalDecorSlot';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -93,12 +94,14 @@ export default function Balance() {
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('balance.title')}</h1>
       </motion.div>
       <motion.div variants={staggerItem}>
-        <WalletCard
-          balanceKopeks={balanceData?.balance_kopeks ?? 0}
-          subscription={subscription}
-          renewalOptions={renewalOptions}
-          methods={paymentMethods ?? []}
-        />
+        <SeasonalDecorSlot slot="corner">
+          <WalletCard
+            balanceKopeks={balanceData?.balance_kopeks ?? 0}
+            subscription={subscription}
+            renewalOptions={renewalOptions}
+            methods={paymentMethods ?? []}
+          />
+        </SeasonalDecorSlot>
       </motion.div>
       <motion.div variants={staggerItem}>
         <PromoCodeRow onActivated={() => setTransactionsPage(1)} />

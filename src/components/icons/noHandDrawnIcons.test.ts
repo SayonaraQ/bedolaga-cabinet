@@ -31,6 +31,11 @@ const ALLOWED = new Set([
   'components/admin/dpichecker/DpiRegionMap.tsx', // карта регионов, не иконка
   'components/ui/backgrounds/background-beams.tsx',
   'components/ui/backgrounds/background-gradient-animation.tsx',
+  'components/ui/backgrounds/seasonal.tsx', // сезонная сцена: луна и листья
+  'components/seasonal/art/winter.tsx', // утверждённый SVG-декор, не иконки интерфейса
+  'components/seasonal/art/spring.tsx',
+  'components/seasonal/art/summer.tsx',
+  'components/seasonal/art/autumn.tsx',
 ]);
 
 function sourceFiles(dir: string): string[] {

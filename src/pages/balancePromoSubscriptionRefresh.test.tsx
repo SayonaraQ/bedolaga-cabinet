@@ -5,8 +5,13 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, expect, it, vi } from 'vitest';
 import { PlatformProvider } from '@/platform/PlatformProvider';
 import Balance from './Balance';
+import type { Season } from '@/theme/appearance';
 
-const state = vi.hoisted(() => ({ end: 'old-date', refreshUser: async () => {} }));
+const state = vi.hoisted(() => ({
+  end: 'old-date',
+  refreshUser: async () => {},
+  season: null as Season | null,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'ru' } }),
   initReactI18next: { type: '3rdParty', init: () => {} },
@@ -17,7 +22,14 @@ vi.mock('../store/auth', () => ({
 vi.mock('../hooks/useCurrency', () => ({
   useCurrency: () => ({ formatAmount: String, currencySymbol: 'RUB' }),
 }));
-vi.mock('../hooks/useTheme', () => ({ useTheme: () => ({ isDark: true }) }));
+vi.mock('../hooks/useTheme', () => ({
+  useTheme: () => ({
+    isDark: true,
+    isLight: false,
+    season: state.season,
+    seasonalActive: state.season !== null,
+  }),
+}));
 vi.mock('../api/balance', () => ({
   balanceApi: {
     getBalance: async () => ({ balance_kopeks: 0, balance_rubles: 0 }),
@@ -36,7 +48,10 @@ vi.mock('../api/balance', () => ({
   },
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  state.season = null;
+});
 
 function SubscriptionConsumer() {
   const { data } = useQuery({
@@ -71,3 +86,26 @@ it('refreshes an already cached subscription after granting promo days', async (
   expect(await screen.findByText('granted-date')).toBeTruthy();
   client.clear();
 });
+
+it.each(['winter', 'spring', 'summer', 'autumn'] as const)(
+  'decorates only the balance main card in %s',
+  async (season) => {
+    state.season = season;
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { container } = render(
+      <QueryClientProvider client={client}>
+        <PlatformProvider>
+          <MemoryRouter>
+            <Balance />
+          </MemoryRouter>
+        </PlatformProvider>
+      </QueryClientProvider>,
+    );
+    await screen.findByText('balance.wallet.onBalance');
+    const slots = container.querySelectorAll('[data-seasonal-slot]');
+    expect(slots).toHaveLength(1);
+    expect(slots[0].getAttribute('data-seasonal-slot')).toBe('corner');
+    expect(slots[0].firstElementChild?.textContent).toContain('balance.wallet.onBalance');
+    client.clear();
+  },
+);

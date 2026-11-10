@@ -22,6 +22,16 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
+vi.mock('@/hooks/useTheme', () => ({
+  useTheme: () => ({
+    isDark: true,
+    isLight: false,
+    season: 'winter',
+    seasonalActive: true,
+    appearanceId: 'winter-night',
+  }),
+}));
+
 const getSubscription = vi.fn();
 const getPurchaseOptions = vi.fn();
 const getSubscriptions = vi.fn();
@@ -137,4 +147,12 @@ describe('витрина тарифов на странице покупки', (
     expect(screen.getByText('Премиум')).toBeTruthy();
     expect(screen.queryByText('subscription.noOptionsTitle')).toBeNull();
   });
+});
+
+it.each([false, true])('keeps the tariffs page free of seasonal decor, lite=%s', async (lite) => {
+  getLiteModeEnabled.mockResolvedValue({ enabled: lite });
+  const { container } = renderPage();
+  await screen.findByText('Базовый');
+  expect(container.querySelector('[data-seasonal-slot]')).toBeNull();
+  expect(container.querySelector('.seasonal-decor-layer')).toBeNull();
 });

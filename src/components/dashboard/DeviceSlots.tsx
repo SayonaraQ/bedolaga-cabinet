@@ -1,3 +1,4 @@
+import { SeasonalDecorSlot } from '@/components/seasonal/SeasonalDecorSlot';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useHaptic } from '@/platform';
@@ -116,13 +117,15 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
           </Button>
         )
       ) : (
-        <ConnectDeviceButton
-          className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl px-6 text-base font-bold"
-          onClick={connect}
-        >
-          <PlusIcon className="h-5 w-5" />
-          {t('dashboard.connectDevice')}
-        </ConnectDeviceButton>
+        <SeasonalDecorSlot slot="connect">
+          <ConnectDeviceButton
+            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl px-6 text-base font-bold"
+            onClick={connect}
+          >
+            <PlusIcon className="h-5 w-5" />
+            {t('dashboard.connectDevice')}
+          </ConnectDeviceButton>
+        </SeasonalDecorSlot>
       )}
     </section>
   );

@@ -32,6 +32,9 @@ vi.mock('../store/auth', () => ({
 vi.mock('../hooks/useCurrency', () => ({
   useCurrency: () => ({ formatAmount: String, currencySymbol: '¤' }),
 }));
+vi.mock('../hooks/useTheme', () => ({
+  useTheme: () => ({ isDark: true, isLight: false, season: null, seasonalActive: false }),
+}));
 vi.mock('../api/balance', () => ({
   balanceApi: {
     getBalance: async () => ({ balance_kopeks: 0, balance_rubles: 0 }),

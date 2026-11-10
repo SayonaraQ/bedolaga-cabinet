@@ -8,7 +8,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
 import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
-import { HoverBorderGradient } from '../components/ui/hover-border-gradient';
+import { ConnectDeviceButton } from '../components/ui/ConnectDeviceButton';
 import { useTrafficZone } from '../hooks/useTrafficZone';
 import { formatTraffic } from '../utils/formatTraffic';
 import { getGlassColors } from '../utils/glassTheme';
@@ -344,7 +344,7 @@ export default function Subscription() {
   // Devices query
   // Счётчик подключённых устройств в шапке. Сам список живёт в <DevicesPanel>
   // и ходит по тому же ключу, так что второго запроса не возникает.
-  const { data: devicesData } = useQuery({
+  const { data: devicesData, isLoading: isDevicesLoading } = useQuery({
     queryKey: ['devices', subscriptionId],
     queryFn: () => subscriptionApi.getDevices(subscriptionId),
     enabled: !!subscription,
@@ -534,7 +534,7 @@ export default function Subscription() {
 
           return (
             <div
-              className="relative overflow-hidden rounded-3xl lg:backdrop-blur-xl"
+              className="glass-card relative overflow-hidden rounded-3xl lg:backdrop-blur-xl"
               style={{
                 background: g.cardBg,
                 border: subscription.is_trial
@@ -569,7 +569,7 @@ export default function Subscription() {
                   {switchLink && (
                     <Link
                       to={switchLink}
-                      className="cta-shine mt-2.5 inline-flex h-[34px] items-center gap-1.5 rounded-full border border-accent-500/35 bg-accent-500/10 px-3.5 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                      className="subscription-action-neutral cta-shine mt-2.5 inline-flex h-[34px] items-center gap-1.5 rounded-full px-3.5 text-[13px] font-bold transition-colors"
                     >
                       <ArrowsLeftRightIcon className="h-3.5 w-3.5" />
                       {t('subscription.switchTariff.title')}
@@ -579,24 +579,15 @@ export default function Subscription() {
 
                 {/* Status badge */}
                 <span
-                  className="max-w-[55%] shrink-0 rounded-full px-3 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-wider"
-                  style={{
-                    background: subscription.is_active
-                      ? `${zone.mainHex}15`
+                  className={`max-w-[55%] shrink-0 rounded-full border px-3 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-wider ${
+                    subscription.is_active
+                      ? subscription.is_trial
+                        ? 'border-accent-500/[0.32] bg-accent-500/[0.12] text-accent-400'
+                        : 'border-success-500/[0.32] bg-success-500/[0.12] text-success-400 light:text-success-700'
                       : subscription.is_limited
-                        ? 'rgba(255,184,0,0.12)'
-                        : 'rgba(255,59,92,0.12)',
-                    border: subscription.is_active
-                      ? `1px solid ${zone.mainHex}30`
-                      : subscription.is_limited
-                        ? '1px solid rgba(255,184,0,0.25)'
-                        : '1px solid rgba(255,59,92,0.25)',
-                    color: subscription.is_active
-                      ? zone.mainHex
-                      : subscription.is_limited
-                        ? 'rgb(var(--color-urgent-400))'
-                        : 'rgb(var(--color-critical-500))',
-                  }}
+                        ? 'border-warning-500/25 bg-warning-500/[0.12] text-urgent-400'
+                        : 'border-critical-500/25 bg-critical-500/[0.12] text-critical-500'
+                  }`}
                 >
                   {subscription.is_active
                     ? subscription.is_trial
@@ -649,7 +640,7 @@ export default function Subscription() {
                     <button
                       type="button"
                       onClick={() => setShowTrafficTopup((open) => !open)}
-                      className="cta-shine cta-shine-late mt-3 inline-flex h-9 w-full items-center justify-center whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-3 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                      className="subscription-action-neutral cta-shine cta-shine-late mt-3 inline-flex h-9 w-full items-center justify-center whitespace-nowrap rounded-[10px] px-3 text-[13px] font-bold transition-colors"
                     >
                       {t('subscription.buyTrafficButton')}
                     </button>
@@ -815,7 +806,7 @@ export default function Subscription() {
                       <button
                         type="button"
                         onClick={() => setShowTrafficTopup((open) => !open)}
-                        className="cta-shine cta-shine-late inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-[10px] border border-accent-500/35 bg-accent-500/10 px-2.5 text-[13px] font-bold text-accent-400 transition-colors hover:bg-accent-500/15"
+                        className="subscription-action-neutral cta-shine cta-shine-late inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-[10px] px-2.5 text-[13px] font-bold transition-colors"
                       >
                         {t('subscription.buyTrafficButton')}
                       </button>
@@ -846,9 +837,8 @@ export default function Subscription() {
 
               {/* ─── Connect Device Button ─── */}
               {subscription.subscription_url && (
-                <HoverBorderGradient
-                  as="button"
-                  accentColor={zone.mainHex}
+                <ConnectDeviceButton
+                  loading={isConnectionLinkLoading || isDevicesLoading}
                   disabled={isAtDeviceLimit}
                   onClick={() => {
                     if (isAtDeviceLimit) {
@@ -857,7 +847,7 @@ export default function Subscription() {
                     }
                     navigate(subscriptionId ? `/connection?sub=${subscriptionId}` : '/connection');
                   }}
-                  className={`mb-5 flex w-full items-center gap-3.5 rounded-[14px] p-3.5 text-left transition-shadow duration-300${isAtDeviceLimit ? 'cursor-not-allowed opacity-50' : ''}`}
+                  className="mb-5 flex w-full items-center gap-3.5 rounded-[14px] p-3.5 text-left transition-shadow duration-300"
                   style={{ fontFamily: 'inherit' }}
                 >
                   <div
@@ -939,7 +929,7 @@ export default function Subscription() {
                       </div>
                     </div>
                   )}
-                </HoverBorderGradient>
+                </ConnectDeviceButton>
               )}
 
               {/* ─── Subscription URL ─── */}
@@ -957,14 +947,9 @@ export default function Subscription() {
                   </code>
                   <button
                     onClick={copyUrl}
-                    className={`flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300${
+                    className={`subscription-action-neutral flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300${
                       copied ? '' : ' copy-link-attention'
                     }`}
-                    style={{
-                      background: 'rgba(var(--color-accent-400), 0.12)',
-                      border: '1px solid rgba(var(--color-accent-400), 0.28)',
-                      color: 'rgb(var(--color-accent-400))',
-                    }}
                     aria-label={t('subscription.copyLink')}
                     title={t('subscription.copyLink')}
                   >
@@ -1106,7 +1091,7 @@ export default function Subscription() {
         })()
       ) : (
         <div
-          className="relative overflow-hidden rounded-3xl py-12 text-center"
+          className="glass-card relative overflow-hidden rounded-3xl py-12 text-center"
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,
@@ -1128,7 +1113,7 @@ export default function Subscription() {
       {subscription && (
         <div
           id="devices"
-          className="relative scroll-mt-24 overflow-hidden rounded-3xl"
+          className="glass-card relative scroll-mt-24 overflow-hidden rounded-3xl"
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,
@@ -1192,7 +1177,7 @@ export default function Subscription() {
       {/* Daily Subscription Pause */}
       {subscription && subscription.is_daily && !subscription.is_trial && (
         <div
-          className="relative overflow-hidden rounded-3xl"
+          className="glass-card relative overflow-hidden rounded-3xl"
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,
@@ -1239,7 +1224,7 @@ export default function Subscription() {
           стоит у полосы трафика, устройства — в разделе «Устройства». */}
       {subscription && !isTariffsMode && showsAddonOptions(subscription) && (
         <div
-          className="relative overflow-hidden rounded-3xl"
+          className="glass-card relative overflow-hidden rounded-3xl"
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,
@@ -1317,7 +1302,7 @@ export default function Subscription() {
       {/* Reissue Subscription — standalone block, not dependent on device_limit */}
       {subscription && canReissueLink(subscription) && (
         <div
-          className="relative overflow-hidden rounded-3xl"
+          className="glass-card relative overflow-hidden rounded-3xl"
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,

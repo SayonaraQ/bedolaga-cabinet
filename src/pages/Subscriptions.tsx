@@ -22,7 +22,7 @@ function EmptyState({ onBuy }: { onBuy: () => void }) {
 
   return (
     <div
-      className="rounded-2xl border p-10 text-center"
+      className="glass-card rounded-2xl border p-10 text-center"
       style={{ background: g.cardBg, borderColor: g.cardBorder }}
     >
       <div

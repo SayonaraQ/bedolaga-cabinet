@@ -56,6 +56,24 @@ afterEach(() => {
   cleanup();
 });
 
+it('uses the success role and readable light text for the active badge', async () => {
+  await renderCard(item());
+  const badge = screen.getByText('subscription.statusActive');
+  expect(badge.className).toContain('bg-success-500/[0.12]');
+  expect(badge.className).toContain('border-success-500/[0.32]');
+  expect(badge.className).toContain('text-success-400');
+  expect(badge.className).toContain('light:text-success-700');
+});
+
+it.each([
+  ['limited', false, 'subscription.statusLimited', 'warning'],
+  ['expired', false, 'subscription.statusExpired', 'error'],
+  ['trial', true, 'subscription.statusTrial', 'warning'],
+] as const)('keeps the %s badge role', async (status, is_trial, label, role) => {
+  await renderCard(item({ status, is_trial }));
+  expect(screen.getByText(label).className).toContain(`text-${role}-400`);
+});
+
 async function renderCard(sub: SubscriptionListItem) {
   const Card = (await import('./SubscriptionListCard')).default;
   render(

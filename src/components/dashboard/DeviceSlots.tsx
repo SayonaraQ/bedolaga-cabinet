@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useHaptic } from '@/platform';
 import { Button } from '@/components/primitives/Button';
+import { ConnectDeviceButton } from '@/components/ui/ConnectDeviceButton';
 import { PlusIcon } from '@/components/icons';
 import { useTheme } from '../../hooks/useTheme';
 import { getGlassColors } from '../../utils/glassTheme';
@@ -115,10 +116,13 @@ export default function DeviceSlots({ subscription, devices }: DeviceSlotsProps)
           </Button>
         )
       ) : (
-        <Button size="lg" fullWidth className="h-[52px] font-bold" onClick={connect}>
+        <ConnectDeviceButton
+          className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl px-6 text-base font-bold"
+          onClick={connect}
+        >
           <PlusIcon className="h-5 w-5" />
           {t('dashboard.connectDevice')}
-        </Button>
+        </ConnectDeviceButton>
       )}
     </section>
   );

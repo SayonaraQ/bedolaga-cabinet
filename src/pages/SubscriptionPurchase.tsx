@@ -122,7 +122,7 @@ export default function SubscriptionPurchase() {
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('subscription.extend')}</h1>
         <div
-          className="rounded-3xl p-6 text-center"
+          className="glass-card rounded-3xl p-6 text-center"
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,
@@ -172,7 +172,7 @@ export default function SubscriptionPurchase() {
           </div>
         </header>
         <div
-          className="relative overflow-hidden rounded-3xl p-5 sm:px-7 sm:py-6"
+          className="glass-card relative overflow-hidden rounded-3xl p-5 sm:px-7 sm:py-6"
           style={{ background: g.cardBg, border: `1px solid ${g.cardBorder}`, boxShadow: g.shadow }}
         >
           {switchTariffId === null ? (
@@ -245,7 +245,7 @@ export default function SubscriptionPurchase() {
       {/* Tariffs Section */}
       {isTariffsMode && tariffs.length > 0 && (
         <div
-          className={`relative overflow-hidden rounded-3xl ${lite ? '' : 'px-3 py-6 sm:px-7'}`}
+          className={`glass-card relative overflow-hidden rounded-3xl ${lite ? '' : 'px-3 py-6 sm:px-7'}`}
           style={{
             background: g.cardBg,
             border: `1px solid ${g.cardBorder}`,
@@ -438,7 +438,7 @@ export default function SubscriptionPurchase() {
         !(isTariffsMode && tariffs.length > 0) &&
         !(classicOptions && classicOptions.periods.length > 0) && (
           <div
-            className="rounded-3xl p-6 text-center"
+            className="glass-card rounded-3xl p-6 text-center"
             style={{
               background: g.cardBg,
               border: `1px solid ${g.cardBorder}`,

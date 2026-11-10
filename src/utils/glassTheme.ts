@@ -10,13 +10,13 @@ export function getGlassColors(isDark: boolean) {
   return {
     // Card container
     cardBg: isDark
-      ? 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)'
-      : 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.88) 100%)',
-    cardBorder: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.1)',
+      ? 'linear-gradient(160deg, rgba(var(--color-dark-800), 0.84) 0%, rgba(var(--color-dark-900), 0.9) 100%)'
+      : 'linear-gradient(145deg, rgba(var(--color-champagne-50), 0.95) 0%, rgba(var(--color-champagne-50), 0.88) 100%)',
+    cardBorder: isDark ? 'rgba(var(--color-accent-400), 0.18)' : 'rgba(0,0,0,0.1)',
 
     // Inner sections (cards within cards)
-    innerBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-    innerBorder: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
+    innerBg: isDark ? 'rgba(var(--color-dark-950), 0.42)' : 'rgba(0,0,0,0.03)',
+    innerBorder: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
 
     // Hover states
     hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PlatformProvider } from '@/platform/PlatformProvider';
 import { ToastProvider } from '@/components/Toast';
@@ -15,7 +15,13 @@ import { ToastProvider } from '@/components/Toast';
  *   разделом «Устройства» сразу под карточкой подписки.
  */
 
-const state = vi.hoisted(() => ({ subscription: {} as Record<string, unknown> }));
+const state = vi.hoisted(() => ({
+  subscription: {} as Record<string, unknown>,
+  paused: false,
+  copy: vi.fn(async () => {}),
+}));
+vi.mock('@/hooks/useAnimationLoop', () => ({ useAnimationPause: () => state.paused }));
+vi.mock('@/utils/clipboard', () => ({ copyToClipboard: state.copy }));
 const api = vi.hoisted(() => ({
   getSubscription: async () => ({ has_subscription: true, subscription: state.subscription }),
   getSubscriptions: async () => ({ subscriptions: [], multi_tariff_enabled: false }),
@@ -76,6 +82,11 @@ if (!window.matchMedia) {
 
 import Subscription from './Subscription';
 
+function Destination() {
+  const location = useLocation();
+  return <div data-testid="destination">{location.pathname + location.search}</div>;
+}
+
 function renderPage() {
   return render(
     <QueryClientProvider
@@ -86,6 +97,8 @@ function renderPage() {
           <MemoryRouter initialEntries={['/subscriptions/42']}>
             <Routes>
               <Route path="/subscriptions/:subscriptionId" element={<Subscription />} />
+              <Route path="/subscription/purchase" element={<Destination />} />
+              <Route path="/connection" element={<Destination />} />
             </Routes>
           </MemoryRouter>
         </ToastProvider>
@@ -95,6 +108,8 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  state.paused = false;
+  state.copy.mockClear();
   state.subscription = {
     id: 42,
     status: 'active',
@@ -135,6 +150,7 @@ it('puts «change tariff» under the plan name and «renew» inside the countdow
 
   const change = await screen.findByRole('link', { name: 'subscription.switchTariff.title' });
   expect(change.className).toContain('cta-shine');
+  expect(change.className).toContain('subscription-action-neutral');
 
   const renew = screen.getAllByRole('link', { name: 'subscription.extend' });
   expect(renew).toHaveLength(1);
@@ -142,6 +158,9 @@ it('puts «change tariff» under the plan name and «renew» inside the countdow
   expect(
     within(screen.getByTestId('countdown-card')).getByRole('link', { name: 'subscription.extend' }),
   ).toBe(renew[0]);
+  const destination = change.getAttribute('href');
+  fireEvent.click(change);
+  expect(screen.getByTestId('destination').textContent).toBe(destination);
 });
 
 it('shows the next traffic reset beside «buy traffic», which opens the purchase form', async () => {
@@ -150,6 +169,7 @@ it('shows the next traffic reset beside «buy traffic», which opens the purchas
   expect(await screen.findByText('subscription.nextTrafficReset.line1')).toBeTruthy();
   const buy = screen.getByRole('button', { name: /subscription\.buyTraffic/ });
   expect(buy.className).toContain('cta-shine');
+  expect(buy.className).toContain('subscription-action-neutral');
 
   fireEvent.click(buy);
   expect(screen.getByText('subscription.additionalOptions.buyTrafficTitle')).toBeTruthy();
@@ -224,6 +244,7 @@ it('traffic ran out: «buy traffic» is in the warning that says so, once', asyn
   const warning = await screen.findByTestId('traffic-limited');
   const buy = await within(warning).findByRole('button', { name: /subscription\.buyTraffic/ });
   expect(buy.className).toContain('cta-shine');
+  expect(buy.className).toContain('subscription-action-neutral');
   expect(screen.getAllByRole('button', { name: /subscription\.buyTraffic/ })).toHaveLength(1);
 
   fireEvent.click(buy);
@@ -299,9 +320,60 @@ it('the copy-link button keeps pulsing even after the link was copied before', a
 
   const copy = await screen.findByRole('button', { name: 'subscription.copyLink' });
   expect(copy.className).toContain('copy-link-attention');
+  expect(copy.className).toContain('subscription-action-neutral');
+  expect(copy.title).toBe('subscription.copyLink');
 
   fireEvent.click(copy);
+  expect(state.copy).toHaveBeenCalledWith('https://speed.example/sub/abc');
   // Пока горит галочка «скопировано», ореол не нужен.
   expect(copy.className).not.toContain('copy-link-attention');
   localStorage.removeItem('sub_link_copied_42');
+});
+
+it.each([
+  [{}, 'subscription.active', 'success'],
+  [{ is_trial: true, status: 'trial' }, 'subscription.trialStatus', 'accent'],
+  [
+    { is_active: false, is_limited: true, status: 'limited' },
+    'subscription.trafficLimited',
+    'warning',
+  ],
+  [{ is_active: false, is_expired: true, status: 'expired' }, 'subscription.expired', 'critical'],
+])('preserves the %s status role without using the traffic zone', async (over, label, role) => {
+  Object.assign(state.subscription, over);
+  // A high traffic zone must not turn an active badge orange/red.
+  state.subscription.traffic_used_percent = 95;
+  renderPage();
+  await screen.findByTestId('countdown-card');
+  const badge = screen.getAllByText(label as string).find((element) => element.tagName === 'SPAN');
+  expect(badge?.className).toContain(`bg-${role}-500/[0.12]`);
+  expect(badge?.className).toContain(`border-${role}-500/`);
+  if (role === 'success') {
+    expect(badge?.className).toContain('border-success-500/[0.32]');
+    expect(badge?.className).toContain('text-success-400');
+    expect(badge?.className).toContain('light:text-success-700');
+  }
+});
+
+it.each([false, true])('renders the subscription contour with page paused=%s', async (paused) => {
+  state.paused = paused;
+  renderPage();
+  const connect = await screen.findByRole('button', { name: /dashboard\.connectDevice/ });
+  await waitFor(() => expect(connect.hasAttribute('disabled')).toBe(false));
+  expect(connect.className).toContain('connect-device-contour');
+  expect(connect.getAttribute('data-paused')).toBe(String(paused));
+  fireEvent.click(connect);
+  expect(screen.getByTestId('destination').textContent).toBe('/connection?sub=42');
+});
+
+it('pauses and disables the subscription contour at the device limit', async () => {
+  state.subscription.device_limit = 1;
+  renderPage();
+  await screen.findByText('Happ');
+  const connect = screen.getByRole('button', { name: /dashboard\.connectDevice/ });
+  expect(connect.className).toContain('connect-device-contour');
+  expect(connect.getAttribute('data-paused')).toBe('true');
+  expect(connect.hasAttribute('disabled')).toBe(true);
+  fireEvent.click(connect);
+  expect(screen.queryByTestId('destination')).toBeNull();
 });

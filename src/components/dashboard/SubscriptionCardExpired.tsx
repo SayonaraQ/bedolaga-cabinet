@@ -152,7 +152,7 @@ export default function SubscriptionCardExpired({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl ${className ?? ''}`}
+      className={`glass-card relative overflow-hidden rounded-3xl ${className ?? ''}`}
       style={{
         background: g.cardBg,
         border: isDark

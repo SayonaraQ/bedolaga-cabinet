@@ -78,7 +78,12 @@ it('draws the slots with the app and the phone name', async () => {
   expect(screen.getByText('Happ')).toBeTruthy();
   expect(screen.getAllByText('POCO F8 Ultra')).toHaveLength(2);
   expect(screen.getAllByText('dashboard.slots.free')).toHaveLength(1);
-  expect(screen.getByText(/dashboard\.slots\.multiApp/)).toBeTruthy();
+  const note = screen.getByText(/dashboard\.slots\.multiApp/);
+  expect(note.parentElement?.className).toContain('border-info/40');
+  expect(note.parentElement?.className).toContain('bg-info/10');
+  for (const app of ['INCY', 'Happ']) {
+    expect(screen.getByText(app).closest('button')?.style.border).toContain('--color-info');
+  }
 });
 
 it('opens a device in place and disconnects it after confirmation', async () => {

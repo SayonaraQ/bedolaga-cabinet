@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PaletteIcon } from '@/components/icons';
 import { useTheme } from '@/hooks/useTheme';
 import { useHaptic } from '@/platform';
 import { seasonFor } from '@/theme/appearance';
@@ -28,22 +29,7 @@ export function SeasonalThemeButton({ onToggle }: { onToggle?: () => void }) {
           : 'border-dark-700/50 bg-dark-800/50 text-dark-400 hover:bg-dark-700 hover:text-accent-400',
       )}
     >
-      <svg
-        aria-hidden="true"
-        className="h-5 w-5"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 1.8-4.2 1 1 0 0 1 .7-1.8h1a4 4 0 0 0 4-4c0-4.4-4-8-9-8Z" />
-        <circle cx="7.5" cy="10" r=".75" />
-        <circle cx="10.5" cy="6.5" r=".75" />
-        <circle cx="15" cy="7" r=".75" />
-        <circle cx="17.5" cy="10.5" r=".75" />
-      </svg>
+      <PaletteIcon className="h-5 w-5" />
       {seasonalActive && (
         <span
           aria-hidden="true"

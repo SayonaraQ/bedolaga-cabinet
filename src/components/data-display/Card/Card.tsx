@@ -24,8 +24,8 @@ const cardVariants = cva(
         xl: 'p-6 sm:p-8',
       },
       variant: {
-        default: '',
-        glass: 'backdrop-blur-linear bg-dark-900/50',
+        default: 'bento-surface',
+        glass: 'bento-surface backdrop-blur-linear bg-dark-900/50',
         solid: 'bg-dark-900',
         outline: 'bg-transparent',
       },

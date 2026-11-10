@@ -92,7 +92,7 @@ export function TariffPickerGrid({
         'all_tariffs_purchased' in purchaseOptions &&
         purchaseOptions.all_tariffs_purchased && (
           <div
-            className="rounded-2xl border p-6 text-center"
+            className="glass-card rounded-2xl border p-6 text-center"
             style={{ background: g.cardBg, borderColor: g.cardBorder }}
           >
             <div className="mb-2 text-3xl">✅</div>

@@ -51,6 +51,7 @@ export default {
         'on-success': withOpacity('--color-on-success'),
         'on-warning': withOpacity('--color-on-warning'),
         'on-error': withOpacity('--color-on-error'),
+        info: withOpacity('--color-info'),
         // Accent - dynamic color scheme
         accent: {
           50: withOpacity('--color-accent-50'),

@@ -57,7 +57,7 @@ function StatusBadge({
   // подложка из того же 400 темнела вместе с текстом: контраст надписи падал до
   // 4.2. Шейд 500 в ремап не входит, поэтому плашка остаётся светлой подкраской.
   const color = isActive
-    ? 'bg-success-500/15 text-success-400 border-success-500/20'
+    ? 'bg-success-500/[0.12] text-success-400 light:text-success-700 border-success-500/[0.32]'
     : isLimited
       ? 'bg-warning-500/15 text-warning-400 border-warning-500/20'
       : 'bg-error-500/15 text-error-400 border-error-500/20';
@@ -162,7 +162,7 @@ export default function SubscriptionListCard({
   // вложенные кнопки невалидны и ведут себя в браузерах непредсказуемо.
   return (
     <div
-      className="overflow-hidden rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+      className="glass-card overflow-hidden rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
       style={{ background: bgColor, borderColor }}
     >
       <button onClick={handleClick} className="w-full p-4 text-left">

@@ -12,6 +12,26 @@ import { getGlassColors } from './glassTheme';
  * контрасту токены dark-400 / dark-500.
  */
 describe('getGlassColors', () => {
+  it('uses the dark surface palette for glass instead of a white overlay', () => {
+    expect(getGlassColors(true)).toMatchObject({
+      cardBg:
+        'linear-gradient(160deg, rgba(var(--color-dark-800), 0.84) 0%, rgba(var(--color-dark-900), 0.9) 100%)',
+      cardBorder: 'rgba(var(--color-accent-400), 0.18)',
+      innerBg: 'rgba(var(--color-dark-950), 0.42)',
+      innerBorder: 'rgba(255,255,255,0.07)',
+    });
+  });
+
+  it('uses the champagne surface palette for light glass', () => {
+    expect(getGlassColors(false)).toMatchObject({
+      cardBg:
+        'linear-gradient(145deg, rgba(var(--color-champagne-50), 0.95) 0%, rgba(var(--color-champagne-50), 0.88) 100%)',
+      cardBorder: 'rgba(0,0,0,0.1)',
+      innerBg: 'rgba(0,0,0,0.03)',
+      innerBorder: 'rgba(0,0,0,0.06)',
+    });
+  });
+
   it.each([true, false])('текстовые токены берут цвет из темы (isDark=%s)', (isDark) => {
     const g = getGlassColors(isDark);
     for (const token of [g.text, g.textSecondary, g.textMuted, g.textFaint, g.textGhost]) {

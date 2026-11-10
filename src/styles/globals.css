@@ -87,6 +87,74 @@
   }
 }
 
+/* Device connection contour. Only transform rotates; appearance tokens come
+   from ThemeColorsProvider for both base themes and every season. */
+.connect-device-contour {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 0;
+  color: rgb(var(--color-dark-50));
+  box-shadow: 0 0 21px rgba(var(--color-accent-500), 0.24);
+}
+
+.connect-device-contour::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  top: 50%;
+  left: 50%;
+  width: max(560px, 110%);
+  aspect-ratio: 1;
+  background: conic-gradient(
+    from 0deg,
+    rgba(var(--color-accent-500), 0.3) 0deg 225deg,
+    rgb(var(--color-accent-400)) 285deg,
+    var(--nc-glint) 316deg,
+    rgba(var(--color-accent-500), 0.3) 334deg 360deg
+  );
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: connect-device-rotate 4.8s linear infinite;
+  pointer-events: none;
+}
+
+.connect-device-contour::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--nc-cta-a), var(--nc-cta-b));
+  pointer-events: none;
+}
+
+.connect-device-contour[data-paused="true"]::before,
+.connect-device-contour:disabled::before {
+  animation-play-state: paused;
+}
+
+.connect-device-contour:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.connect-device-contour:focus-visible {
+  outline: 2px solid rgb(var(--color-accent-500));
+  outline-offset: 3px;
+}
+
+@keyframes connect-device-rotate {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connect-device-contour::before {
+    animation: none;
+  }
+}
+
 /* Ореол на кнопке копирования ссылки подписки.
 
    Ссылка живёт под плиткой «Подключить устройство» с вращающейся рамкой и
@@ -95,8 +163,8 @@
    Subscription.tsx снимает класс насовсем (флаг в safeLocal).
 
    Анимируется только box-shadow (композитор), размеры не трогаются, поэтому
-   соседние элементы не пересчитываются. Акцентные цвет и рамка приходят
-   инлайн-стилем и от анимации не зависят: при prefers-reduced-motion
+   соседние элементы не пересчитываются. Нейтральные цвет и рамка
+   от анимации не зависят: при prefers-reduced-motion
    глобальное правило ниже гасит пульс, а подсветка кнопки остаётся. */
 .copy-link-attention {
   animation: copy-link-halo 2.2s ease-out infinite;
@@ -225,6 +293,7 @@
     --spacing-spacious: 24px;
 
     /* Theme colors - RGB format for opacity support */
+    --color-info: 125, 211, 252;
     /* Dark palette (RGB values) */
     --color-dark-50: 248, 250, 252;
     --color-dark-100: 241, 245, 249;
@@ -461,6 +530,7 @@
      Uses var() to reference values set by applyThemeColors().
      !important overrides inline styles from applyThemeColors on :root. */
   .light {
+    --color-info: 2, 132, 199;
     --color-dark-50: var(--color-champagne-950) !important;
     --color-dark-100: var(--color-champagne-900) !important;
     --color-dark-200: var(--color-champagne-800) !important;
@@ -559,6 +629,57 @@ img.twemoji {
 }
 
 @layer components {
+  /* Explicit card classes keep the highlight tied to the rendered component. */
+  .glass-card {
+    position: relative;
+  }
+
+  .dark .glass-card::before,
+  .dark .bento-card::before,
+  .dark .card::before,
+  .dark .bento-surface::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 14%;
+    right: 14%;
+    height: 1px;
+    z-index: 1;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(var(--color-accent-300), 0.75),
+      rgba(var(--color-accent-500), 0.5),
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .subscription-action-neutral {
+    border: 1px solid rgba(var(--color-dark-50), 0.14);
+    background: rgba(var(--color-dark-50), 0.05);
+    color: rgb(var(--color-dark-100));
+  }
+
+  .subscription-action-neutral:hover {
+    background: rgba(var(--color-dark-50), 0.08);
+  }
+
+  .subscription-action-neutral:focus-visible {
+    outline: 2px solid rgb(var(--color-accent-500));
+    outline-offset: 2px;
+  }
+
+  .light .subscription-action-neutral {
+    border-color: rgba(var(--color-dark-50), 0.16);
+    background: rgba(var(--color-dark-50), 0.04);
+    color: rgb(var(--color-dark-50));
+  }
+
+  .light .subscription-action-neutral:hover {
+    background: rgba(var(--color-dark-50), 0.08);
+  }
+
   /* ========== BENTO DESIGN SYSTEM ========== */
 
   .bento-card {
@@ -699,6 +820,7 @@ img.twemoji {
   /* Cards - Dark (unified style) */
   .card {
     @apply border border-dark-700/40 bg-dark-900/70 p-5 transition-colors duration-200 sm:p-6;
+    position: relative;
     border-radius: var(--bento-radius);
     box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   }
@@ -707,6 +829,17 @@ img.twemoji {
     .card {
       @apply bg-dark-900/60;
     }
+  }
+
+  .dark .bento-card,
+  .dark .card,
+  .dark .bento-surface {
+    background: linear-gradient(
+      160deg,
+      rgba(var(--color-dark-800), 0.84) 0%,
+      rgba(var(--color-dark-900), 0.9) 100%
+    );
+    border-color: rgba(var(--color-accent-400), 0.18);
   }
 
   .card-hover {
@@ -932,7 +1065,7 @@ img.twemoji {
   }
 
   .light .btn-primary {
-    @apply bg-champagne-700 text-white shadow-lg shadow-champagne-500/20 hover:bg-champagne-600 hover:shadow-xl hover:shadow-champagne-500/30 focus-visible:ring-champagne-500 active:bg-champagne-800;
+    @apply bg-accent-600 text-white shadow-lg shadow-accent-500/20 hover:bg-accent-500 hover:shadow-xl hover:shadow-accent-500/30 focus-visible:ring-accent-500 active:bg-accent-700;
   }
 
   .light .btn-secondary {

@@ -31,7 +31,7 @@ export default function TrialOfferCard({
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl text-center"
+      className="glass-card relative overflow-hidden rounded-3xl text-center"
       style={{
         background: g.cardBg,
         border: isDark

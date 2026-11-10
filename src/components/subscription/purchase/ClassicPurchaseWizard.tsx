@@ -207,7 +207,7 @@ export function ClassicPurchaseWizard({
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl"
+      className="glass-card relative overflow-hidden rounded-3xl"
       style={{
         background: g.cardBg,
         border: `1px solid ${g.cardBorder}`,

@@ -1,8 +1,14 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import DeviceSlots from './DeviceSlots';
+
+const animation = vi.hoisted(() => ({ paused: false }));
+vi.mock('@/hooks/useAnimationLoop', () => ({ useAnimationPause: () => animation.paused }));
+beforeEach(() => {
+  animation.paused = false;
+});
 
 // Слот на главной = приложение на устройстве. Один телефон с подпиской и в
 // INCY, и в Happ — два слота, и человеку это должно быть видно без поддержки.
@@ -40,7 +46,7 @@ const dev = (hwid: string, platform: string, device_model: string, app: string |
   created_at: null,
 });
 
-function renderSlots(deviceLimit: number, devices: ReturnType<typeof dev>[]) {
+function renderSlots(deviceLimit: number, devices: ReturnType<typeof dev>[], isTrial = false) {
   return render(
     <MemoryRouter initialEntries={['/']}>
       <Routes>
@@ -48,7 +54,12 @@ function renderSlots(deviceLimit: number, devices: ReturnType<typeof dev>[]) {
           path="/"
           element={
             <DeviceSlots
-              subscription={{ id: 9, device_limit: deviceLimit, subscription_url: 'https://x' }}
+              subscription={{
+                id: 9,
+                device_limit: deviceLimit,
+                subscription_url: 'https://x',
+                is_trial: isTrial,
+              }}
               devices={devices}
             />
           }
@@ -88,6 +99,11 @@ it('explains a phone that takes two slots through two apps', () => {
   expect(note.textContent).toContain('Xiaomi 14');
   expect(note.textContent).toContain('INCY');
   expect(note.textContent).toContain('Happ');
+  expect(note.parentElement?.className).toContain('border-info/40');
+  expect(note.parentElement?.className).toContain('bg-info/10');
+  for (const app of ['INCY', 'Happ']) {
+    expect(screen.getByText(app).closest('button')?.style.border).toContain('--color-info');
+  }
 });
 
 it('connects a new device while a slot is free', () => {
@@ -95,6 +111,22 @@ it('connects a new device while a slot is free', () => {
 
   fireEvent.click(screen.getByRole('button', { name: 'dashboard.connectDevice' }));
   expect(screen.getByText('connection-page')).toBeTruthy();
+});
+
+it.each([false, true])('renders the shared 52px contour, paused=%s', (paused) => {
+  animation.paused = paused;
+  renderSlots(3, []);
+  const connect = screen.getByRole('button', { name: 'dashboard.connectDevice' });
+  expect(connect.className).toContain('connect-device-contour');
+  expect(connect.className).toContain('h-[52px]');
+  expect(connect.getAttribute('data-paused')).toBe(String(paused));
+  expect(connect.querySelector('svg')).toBeTruthy();
+});
+
+it('keeps the connect action hidden for a trial with every slot taken', () => {
+  renderSlots(1, [dev('a', 'iOS', 'iPhone 15', 'Happ')], true);
+  expect(screen.queryByRole('button', { name: 'dashboard.connectDevice' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'dashboard.slots.freeUpOrAdd' })).toBeNull();
 });
 
 it('leads to device management instead of a dead button when every slot is taken', () => {

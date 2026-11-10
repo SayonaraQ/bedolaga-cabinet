@@ -1664,6 +1664,8 @@
       "starfieldDesc": "Stars flying toward the viewer",
       "matrixRain": "Matrix Rain",
       "matrixRainDesc": "Falling columns of glyphs",
+      "liquidLight": "Liquid Light",
+      "liquidLightDesc": "Slowly drifting violet and lilac glows",
       "liquidGradient": "Liquid Gradient",
       "liquidGradientDesc": "Blurred mesh gradient blobs",
       "constellation": "Constellation",

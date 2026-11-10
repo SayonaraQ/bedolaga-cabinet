@@ -5,14 +5,29 @@ import { brandingApi } from '@/api/branding';
 import { themeColorsApi } from '@/api/themeColors';
 import { DEFAULT_THEME_COLORS } from '@/types/theme';
 import { useTheme } from '@/hooks/useTheme';
-import type { AnimationConfig, BackgroundType } from '@/components/ui/backgrounds/types';
+import type { AnimationConfig } from '@/components/ui/backgrounds/types';
 import { DEFAULT_ANIMATION_CONFIG } from '@/components/ui/backgrounds/types';
-import { backgroundComponents, prefetchBackground } from '@/components/ui/backgrounds/registry';
+import {
+  backgroundComponents,
+  prefetchBackground,
+  prefetchSeasonalBackground,
+  SeasonalBackground,
+} from '@/components/ui/backgrounds/registry';
+import { useReducedSceneMotion } from '@/components/ui/backgrounds/use-scene-motion';
+import { isSeasonalAppearance } from '@/theme/appearance';
 import { validateConfig, getCachedConfig, setCachedConfig } from '@/utils/backgroundConfig';
 
-// Prefetch the background JS chunk immediately based on localStorage cache.
+// The first-paint script resolves cached appearance flags/preferences before app JS runs.
+const cachedAppearance =
+  typeof document !== 'undefined' ? document.documentElement.dataset.appearance : undefined;
 const cachedConfig = getCachedConfig();
-if (cachedConfig?.enabled && cachedConfig.type && cachedConfig.type !== 'none') {
+if (cachedAppearance && isSeasonalAppearance(cachedAppearance)) {
+  prefetchSeasonalBackground();
+} else if (
+  cachedConfig &&
+  (cachedConfig.enabled || cachedConfig.type === 'liquid-light') &&
+  cachedConfig.type !== 'none'
+) {
   prefetchBackground(cachedConfig.type);
 }
 
@@ -65,12 +80,11 @@ export function applyThemeGround(
 }
 
 function RenderBackground({ config }: { config: AnimationConfig }) {
-  const prefersReducedMotion = useMemo(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    [],
-  );
+  const prefersReducedMotion = useReducedSceneMotion();
 
-  const { isLight } = useTheme();
+  const { isLight, appearanceId } = useTheme();
+  const seasonal = isSeasonalAppearance(appearanceId);
+  const supportsStaticScene = seasonal || config.type === 'liquid-light';
 
   // Тот же ключ, что у ThemeColorsProvider — берём из кэша, лишнего запроса нет.
   const { data: themeColors } = useQuery({
@@ -89,33 +103,39 @@ function RenderBackground({ config }: { config: AnimationConfig }) {
     return applyThemeGround(base, isLight, (themeColors ?? DEFAULT_THEME_COLORS).lightBackground);
   }, [config.reducedOnMobile, config.settings, isLight, themeColors]);
 
-  if (!config.enabled || config.type === 'none' || prefersReducedMotion) {
+  if (!supportsStaticScene && (!config.enabled || config.type === 'none' || prefersReducedMotion)) {
     return null;
   }
 
-  const bgType = config.type as Exclude<BackgroundType, 'none'>;
-  const Component = backgroundComponents[bgType];
+  const Component = config.type !== 'none' ? backgroundComponents[config.type] : undefined;
 
-  if (!Component) return null;
+  if (!seasonal && !Component) return null;
 
   const isMobile = window.innerWidth < 768;
 
   // On mobile, cap blur to 4px max — full blur is extremely GPU-heavy
-  const effectiveBlur = isMobile ? Math.min(config.blur, 4) : config.blur;
+  const effectiveBlur = seasonal ? 0 : isMobile ? Math.min(config.blur, 4) : config.blur;
 
   return createPortal(
     <div
       className="pointer-events-none fixed inset-0"
       style={{
         zIndex: -2,
-        opacity: config.opacity,
+        opacity: seasonal ? 1 : config.opacity,
         filter: effectiveBlur > 0 ? `blur(${effectiveBlur}px)` : undefined,
         contain: 'strict',
         backfaceVisibility: 'hidden',
       }}
     >
       <Suspense fallback={null}>
-        <Component settings={settings} />
+        {seasonal ? (
+          <SeasonalBackground
+            appearance={appearanceId}
+            paused={!config.enabled || config.type === 'none'}
+          />
+        ) : Component ? (
+          <Component settings={settings} paused={!config.enabled} />
+        ) : null}
       </Suspense>
     </div>,
     document.body,

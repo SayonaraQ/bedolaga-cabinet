@@ -1,0 +1,182 @@
+.scene-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.scene-blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.scene-drift-1 {
+  animation-name: scene-drift-1;
+}
+.scene-drift-2 {
+  animation-name: scene-drift-2;
+}
+.scene-drift-3 {
+  animation-name: scene-drift-3;
+}
+
+@keyframes scene-drift-1 {
+  from {
+    transform: translate(-14%, -8%) scale(1);
+  }
+  to {
+    transform: translate(26%, 18%) scale(1.18);
+  }
+}
+@keyframes scene-drift-2 {
+  from {
+    transform: translate(12%, -10%) scale(1.1);
+  }
+  to {
+    transform: translate(-30%, 22%) scale(0.92);
+  }
+}
+@keyframes scene-drift-3 {
+  from {
+    transform: translate(-10%, 10%) scale(0.95);
+  }
+  to {
+    transform: translate(24%, -26%) scale(1.12);
+  }
+}
+
+.scene-aurora {
+  position: absolute;
+  inset: -10% -10% 30%;
+  animation: scene-aurora 14s ease-in-out infinite alternate;
+}
+@keyframes scene-aurora {
+  from {
+    transform: translateX(-5%) scaleY(1);
+  }
+  to {
+    transform: translateX(5%) scaleY(1.18);
+  }
+}
+
+.scene-particle {
+  position: absolute;
+  top: -40px;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+.scene-fall-a {
+  animation-name: scene-fall-a;
+}
+.scene-fall-b {
+  animation-name: scene-fall-b;
+}
+@keyframes scene-fall-a {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(34px, calc(100vh + 40px));
+  }
+}
+@keyframes scene-fall-b {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-30px, calc(100vh + 40px));
+  }
+}
+.scene-spin-a {
+  animation-name: scene-spin-a;
+}
+.scene-spin-b {
+  animation-name: scene-spin-b;
+}
+@keyframes scene-spin-a {
+  from {
+    transform: translate(0, 0) rotate(0);
+  }
+  25% {
+    transform: translate(40px, 25vh) rotate(130deg);
+  }
+  50% {
+    transform: translate(-10px, 50vh) rotate(260deg);
+  }
+  75% {
+    transform: translate(50px, 75vh) rotate(390deg);
+  }
+  to {
+    transform: translate(10px, calc(100vh + 60px)) rotate(520deg);
+  }
+}
+@keyframes scene-spin-b {
+  from {
+    transform: translate(0, 0) rotate(0);
+  }
+  25% {
+    transform: translate(-36px, 25vh) rotate(-120deg);
+  }
+  50% {
+    transform: translate(14px, 50vh) rotate(-240deg);
+  }
+  75% {
+    transform: translate(-44px, 75vh) rotate(-360deg);
+  }
+  to {
+    transform: translate(-6px, calc(100vh + 60px)) rotate(-470deg);
+  }
+}
+.scene-fly {
+  animation-name: scene-fly;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+}
+@keyframes scene-fly {
+  from {
+    transform: translate(0, 0);
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(22px, -30px);
+    opacity: 0.4;
+  }
+}
+
+.scene-sea {
+  position: absolute;
+  left: -15%;
+  right: -15%;
+  height: 2px;
+  border-radius: 2px;
+  animation: scene-sea 9s ease-in-out infinite alternate;
+}
+@keyframes scene-sea {
+  from {
+    transform: translateX(-7%);
+  }
+  to {
+    transform: translateX(7%);
+  }
+}
+.scene-orb {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* Keep the negative-delay particle positions when freezing a scene. */
+.scene-paused * {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-background * {
+    animation-play-state: paused !important;
+  }
+}

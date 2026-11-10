@@ -24,6 +24,7 @@ const VALID_TYPES: ReadonlySet<string> = new Set<BackgroundType>([
   'starfield',
   'matrix-rain',
   'liquid-gradient',
+  'liquid-light',
   'constellation',
   'none',
 ]);

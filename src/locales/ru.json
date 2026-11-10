@@ -1711,6 +1711,8 @@
       "starfieldDesc": "Полёт сквозь звёздное небо",
       "matrixRain": "Matrix Rain",
       "matrixRainDesc": "Падающие колонки символов",
+      "liquidLight": "Жидкий свет",
+      "liquidLightDesc": "Плавно дрейфующие фиолетовые и лиловые свечения",
       "liquidGradient": "Liquid Gradient",
       "liquidGradientDesc": "Жидкий mesh-градиент из размытых блобов",
       "constellation": "Constellation",

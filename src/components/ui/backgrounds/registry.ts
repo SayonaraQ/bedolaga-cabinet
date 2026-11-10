@@ -23,6 +23,7 @@ const backgroundImports: Record<Exclude<BackgroundType, 'none'>, () => Promise<u
   starfield: () => import('./starfield'),
   'matrix-rain': () => import('./matrix-rain'),
   'liquid-gradient': () => import('./liquid-gradient'),
+  'liquid-light': () => import('./liquid-light'),
   constellation: () => import('./constellation'),
 };
 
@@ -36,7 +37,7 @@ export function prefetchBackground(type: BackgroundType): void {
 // Lazy-loaded components — only the selected type is fetched
 export const backgroundComponents: Record<
   Exclude<BackgroundType, 'none'>,
-  ComponentType<{ settings: Record<string, unknown> }>
+  ComponentType<{ settings: Record<string, unknown>; paused?: boolean }>
 > = {
   aurora: lazy(() => import('./aurora-background')),
   sparkles: lazy(() => import('./sparkles')),
@@ -58,8 +59,16 @@ export const backgroundComponents: Record<
   starfield: lazy(() => import('./starfield')),
   'matrix-rain': lazy(() => import('./matrix-rain')),
   'liquid-gradient': lazy(() => import('./liquid-gradient')),
+  'liquid-light': lazy(() => import('./liquid-light')),
   constellation: lazy(() => import('./constellation')),
 };
+
+const importSeasonalBackground = () => import('./seasonal');
+export const SeasonalBackground = lazy(importSeasonalBackground);
+
+export function prefetchSeasonalBackground(): void {
+  void importSeasonalBackground();
+}
 
 // Registry of all background definitions with settings for the editor
 // labelKey/descriptionKey are under "admin.backgrounds.*"
@@ -723,6 +732,28 @@ export const backgroundRegistry: BackgroundDefinition[] = [
           { label: 'Katakana', value: 'katakana' },
           { label: 'Latin', value: 'latin' },
           { label: 'Binary', value: 'binary' },
+        ],
+      },
+    ],
+  },
+  {
+    type: 'liquid-light',
+    labelKey: 'admin.backgrounds.liquidLight',
+    descriptionKey: 'admin.backgrounds.liquidLightDesc',
+    category: 'css',
+    settings: [
+      { key: 'color1', label: 'admin.backgrounds.color1', type: 'color', default: '#9333EA' },
+      { key: 'color2', label: 'admin.backgrounds.color2', type: 'color', default: '#D68CFF' },
+      { key: 'color3', label: 'admin.backgrounds.color3', type: 'color', default: '#7E22CE' },
+      {
+        key: 'speed',
+        label: 'admin.backgrounds.speed',
+        type: 'select',
+        default: 'normal',
+        options: [
+          { label: 'admin.backgrounds.slow', value: 'slow' },
+          { label: 'admin.backgrounds.normal', value: 'normal' },
+          { label: 'admin.backgrounds.fast', value: 'fast' },
         ],
       },
     ],

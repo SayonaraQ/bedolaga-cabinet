@@ -1604,6 +1604,8 @@
       "starfieldDesc": "向观察者飞来的星星",
       "matrixRain": "黑客帝国雨",
       "matrixRainDesc": "下落的字符列",
+      "liquidLight": "流光",
+      "liquidLightDesc": "缓缓漂移的紫色与淡紫色光晕",
       "liquidGradient": "流体渐变",
       "liquidGradientDesc": "模糊的网格渐变色块",
       "constellation": "星座",

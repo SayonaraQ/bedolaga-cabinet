@@ -257,7 +257,7 @@ export default function SubscriptionCardActive({
 
           {/* Days remaining */}
           <div
-            className="min-w-0 flex-1 rounded-[14px] p-3.5 transition-colors duration-300"
+            className="flex min-w-0 flex-1 flex-col rounded-[14px] p-3.5 transition-colors duration-300"
             style={{
               background: g.innerBg,
               border:
@@ -284,14 +284,19 @@ export default function SubscriptionCardActive({
               </div>
               {t('dashboard.remaining')}
             </div>
-            <div className="flex items-baseline gap-1">
+            {/* Число по центру свободного места плитки и крупно: плитка тянется по высоте
+              соседней «Тариф», и мелкие 22px у верхнего края оставляли пустоту (владелец 11.11). */}
+            <div
+              className="flex flex-1 items-baseline justify-center gap-1 pt-1"
+              data-testid="days-left-value"
+            >
               <span
-                className="text-[22px] font-bold tracking-tight transition-colors duration-300"
+                className="self-center text-[40px] font-bold leading-none tracking-tight tabular-nums transition-colors duration-300"
                 style={{ color: daysLeft <= 3 ? 'rgb(var(--color-warning-400))' : g.text }}
               >
                 {daysLeft}
               </span>
-              <span className="text-xs font-medium text-dark-400">
+              <span className="self-center pt-2 text-sm font-medium text-dark-400">
                 {t('subscription.daysShort')}
               </span>
             </div>

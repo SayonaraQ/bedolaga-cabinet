@@ -1,5 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { InfoIcon, MonitorIcon, PhoneIcon, PlusIcon, TabletIcon, TvIcon } from '@/components/icons';
+import {
+  ExclamationIcon,
+  MonitorIcon,
+  PhoneIcon,
+  PlusIcon,
+  TabletIcon,
+  TvIcon,
+} from '@/components/icons';
 import { useTheme } from '../../hooks/useTheme';
 import { getGlassColors } from '../../utils/glassTheme';
 import {
@@ -54,7 +61,8 @@ interface SlotGridProps {
 
 /**
  * Сетка слотов: ячейка = приложение на устройстве. До трёх слотов в ряд, дальше
- * по четыре; ячейки одного телефона в разных приложениях выделены цветом информации.
+ * по четыре; ячейки одного телефона в разных приложениях подсвечены жёлтым
+ * (цвет предупреждения: владелец 11.11 — голубой не бросается в глаза).
  * Общая для главной (нажатие уводит к устройствам) и страницы подписки
  * (нажатие открывает устройство на месте).
  */
@@ -114,7 +122,7 @@ export function SlotGrid({
               border: selected
                 ? '1.5px solid rgb(var(--color-accent-500))'
                 : twin
-                  ? '1.5px solid rgba(var(--color-info), 0.55)'
+                  ? '1.5px solid rgba(var(--color-warning-500), 0.55)'
                   : `1px solid ${g.innerBorder}`,
             }}
           >
@@ -156,9 +164,9 @@ export function MultiAppNotes({ devices }: { devices: SlotDevice[] }) {
       {findMultiAppDevices(devices).map((group) => (
         <div
           key={group.hwids.join(',')}
-          className="flex items-start gap-2.5 rounded-[14px] border border-info/40 bg-info/10 p-3"
+          className="flex items-start gap-2.5 rounded-[14px] border border-warning-500/40 bg-warning-500/10 p-3"
         >
-          <InfoIcon className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+          <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-warning-400" />
           <p className="text-xs leading-relaxed text-dark-100">
             {t('dashboard.slots.multiApp', {
               model: group.model,

@@ -99,10 +99,10 @@ it('explains a phone that takes two slots through two apps', () => {
   expect(note.textContent).toContain('Xiaomi 14');
   expect(note.textContent).toContain('INCY');
   expect(note.textContent).toContain('Happ');
-  expect(note.parentElement?.className).toContain('border-info/40');
-  expect(note.parentElement?.className).toContain('bg-info/10');
+  expect(note.parentElement?.className).toContain('border-warning-500/40');
+  expect(note.parentElement?.className).toContain('bg-warning-500/10');
   for (const app of ['INCY', 'Happ']) {
-    expect(screen.getByText(app).closest('button')?.style.border).toContain('--color-info');
+    expect(screen.getByText(app).closest('button')?.style.border).toContain('--color-warning-500');
   }
 });
 

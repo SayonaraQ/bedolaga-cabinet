@@ -31,6 +31,8 @@ export interface EnabledThemes {
   dark: boolean;
   light: boolean;
   seasonal: boolean;
+  /** Seasonal appearance for admins only — a preview before enabling it for everyone. */
+  seasonalAdminsOnly: boolean;
   seasonalDefault: boolean;
 }
 
@@ -38,6 +40,7 @@ export const DEFAULT_ENABLED_THEMES: EnabledThemes = {
   dark: true,
   light: true,
   seasonal: false,
+  seasonalAdminsOnly: false,
   seasonalDefault: true,
 };
 

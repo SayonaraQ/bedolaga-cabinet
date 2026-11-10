@@ -3,6 +3,7 @@ import { DEFAULT_ENABLED_THEMES, DEFAULT_THEME_COLORS } from '@/types/theme';
 import {
   APPEARANCE_TOKENS,
   buildSeasonalColors,
+  isSeasonalAvailable,
   resolveAppearance,
   SEASONAL_PALETTES,
   seasonFor,
@@ -33,6 +34,24 @@ describe('seasonFor: Moscow calendar independently of device timezone', () => {
     vi.stubEnv('TZ', 'America/Los_Angeles');
     expect(seasonFor(new Date('2026-11-30T20:59:59Z'))).toBe('autumn');
     expect(seasonFor(new Date('2026-11-30T21:30:00Z'))).toBe('winter');
+  });
+});
+
+describe('admins-only seasonal preview', () => {
+  const now = new Date('2026-12-01T00:00:00Z');
+  const flags = { ...DEFAULT_ENABLED_THEMES, seasonalAdminsOnly: true };
+  it('is available to admins only while it is off for everyone', () => {
+    expect(isSeasonalAvailable(flags, true)).toBe(true);
+    expect(isSeasonalAvailable(flags, false)).toBe(false);
+    expect(isSeasonalAvailable({ ...flags, seasonal: true }, false)).toBe(true);
+    expect(isSeasonalAvailable(DEFAULT_ENABLED_THEMES, true)).toBe(false);
+  });
+  it('admins get the season, other users keep the base theme', () => {
+    expect(resolveAppearance({ base: 'dark', flags, now, isAdmin: true }).id).toBe('winter-night');
+    expect(resolveAppearance({ base: 'dark', flags, now, isAdmin: false }).id).toBe('dark');
+    expect(resolveAppearance({ base: 'light', flags, now, isAdmin: true, pref: 'off' }).id).toBe(
+      'light',
+    );
   });
 });
 

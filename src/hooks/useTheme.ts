@@ -1,10 +1,12 @@
-import { useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { normalizeEnabledThemes, type EnabledThemes } from '../types/theme';
 import { themeColorsApi } from '../api/themeColors';
 import { STORAGE_KEYS } from '../config/constants';
 import { safeLocal } from '../utils/safeStorage';
 import { getTelegramColorScheme } from './useTelegramSDK';
+import { useAuthStore } from '@/store/auth';
 import {
+  isSeasonalAvailable,
   resolveAppearance,
   seasonFor,
   type BaseTheme,
@@ -198,26 +200,37 @@ function setSeasonal(active: boolean) {
   window.dispatchEvent(new Event(SEASONAL_CHANGED_EVENT));
 }
 
-function toggleSeasonal() {
+function toggleSeasonal(isAdmin = false) {
   const current = getSnapshot();
   const appearance = resolveAppearance({
     base: current.theme,
     flags: current.enabledThemes,
     pref: current.pref,
     now: current.now,
+    isAdmin,
   });
   setSeasonal(!appearance.seasonalActive);
 }
 
 export function useTheme() {
   const current = useSyncExternalStore(subscribe, getSnapshot);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
   const { theme, enabledThemes, isLoading } = current;
   const appearance = resolveAppearance({
     base: theme,
     flags: enabledThemes,
     pref: current.pref,
     now: current.now,
+    isAdmin,
   });
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const toggleSeasonalForUser = useCallback(() => toggleSeasonal(isAdmin), [isAdmin]);
+  // Lets the first-paint script apply the admins-only preview without a flash;
+  // forgotten on logout so the next account on this device starts clean.
+  useEffect(() => {
+    if (isAdmin) safeLocal.setItem(STORAGE_KEYS.SEASONAL_ADMIN, '1');
+    else if (!isAuthenticated) safeLocal.removeItem(STORAGE_KEYS.SEASONAL_ADMIN);
+  }, [isAdmin, isAuthenticated]);
   return {
     theme,
     setTheme,
@@ -231,8 +244,8 @@ export function useTheme() {
     appearanceId: appearance.id,
     season: appearance.season,
     seasonalActive: appearance.seasonalActive,
-    seasonalAvailable: enabledThemes.seasonal,
-    toggleSeasonal,
+    seasonalAvailable: isSeasonalAvailable(enabledThemes, isAdmin),
+    toggleSeasonal: toggleSeasonalForUser,
     setSeasonal,
   };
 }

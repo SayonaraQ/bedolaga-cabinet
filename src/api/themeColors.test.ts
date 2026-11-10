@@ -23,12 +23,19 @@ describe('enabled themes compatibility', () => {
   });
   it('retains new flags and defaults missing or malformed fields', async () => {
     client.get.mockResolvedValue({
-      data: { dark: true, light: false, seasonal: true, seasonalDefault: false },
+      data: {
+        dark: true,
+        light: false,
+        seasonal: true,
+        seasonalAdminsOnly: false,
+        seasonalDefault: false,
+      },
     });
     expect(await themeColorsApi.getEnabledThemes()).toEqual({
       dark: true,
       light: false,
       seasonal: true,
+      seasonalAdminsOnly: false,
       seasonalDefault: false,
     });
     client.get.mockResolvedValue({ data: { seasonal: 'true', seasonalDefault: null } });

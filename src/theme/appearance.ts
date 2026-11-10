@@ -19,19 +19,30 @@ export function seasonFor(date: Date): Season {
   return 'winter';
 }
 
+type SeasonalFlags = Pick<EnabledThemes, 'seasonal' | 'seasonalDefault'> &
+  Partial<Pick<EnabledThemes, 'seasonalAdminsOnly'>>;
+
+/** Seasonal appearance is offered to everyone, or only to admins while it is being checked. */
+export function isSeasonalAvailable(flags: SeasonalFlags, isAdmin = false): boolean {
+  return flags.seasonal || (Boolean(flags.seasonalAdminsOnly) && isAdmin);
+}
+
 export function resolveAppearance({
   base,
   flags,
   pref,
   now,
+  isAdmin = false,
 }: {
   base: BaseTheme;
-  flags: Pick<EnabledThemes, 'seasonal' | 'seasonalDefault'>;
+  flags: SeasonalFlags;
   pref?: SeasonalPreference;
   now: Date;
+  isAdmin?: boolean;
 }): { id: AppearanceId; base: BaseTheme; season: Season | null; seasonalActive: boolean } {
   const seasonalActive =
-    flags.seasonal && (pref ?? (flags.seasonalDefault ? 'on' : 'off')) === 'on';
+    isSeasonalAvailable(flags, isAdmin) &&
+    (pref ?? (flags.seasonalDefault ? 'on' : 'off')) === 'on';
   const season = seasonalActive ? seasonFor(now) : null;
   return {
     id: season ? `${season}-${base === 'dark' ? 'night' : 'day'}` : base,

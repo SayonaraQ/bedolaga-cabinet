@@ -163,6 +163,18 @@ describe('ThemeTab: сезонные настройки', () => {
     }
   });
 
+  it('patches only seasonalAdminsOnly when its switch is clicked', async () => {
+    await renderThemeTab();
+    const adminsOnly = screen.getByRole('switch', {
+      name: ru('admin.settings.seasonalAdminsOnly'),
+    });
+    expect(adminsOnly.getAttribute('aria-checked')).toBe('false');
+    expect(screen.getByText(ru('admin.settings.seasonalAdminsOnlyHint'))).toBeTruthy();
+    fireEvent.click(adminsOnly);
+    await waitFor(() => expect(state.enabledPatches).toEqual([{ seasonalAdminsOnly: true }]));
+    await waitFor(() => expect(adminsOnly.getAttribute('aria-checked')).toBe('true'));
+  });
+
   it('patches only seasonalDefault when its switch is clicked', async () => {
     state.enabled = { ...DEFAULT_ENABLED_THEMES, seasonal: true };
     await renderThemeTab();

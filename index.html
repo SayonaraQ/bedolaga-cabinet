@@ -83,7 +83,7 @@
       // Telegram фон и так задаёт клиент.
       (function () {
         try {
-          var enabled = { dark: true, light: true, seasonal: false, seasonalDefault: true };
+          var enabled = { dark: true, light: true, seasonal: false, seasonalAdminsOnly: false, seasonalDefault: true };
           try {
             var rawEnabled = localStorage.getItem('cabinet-enabled-themes');
             if (rawEnabled) {
@@ -93,6 +93,7 @@
                   dark: parsed.dark !== false,
                   light: parsed.light !== false,
                   seasonal: parsed.seasonal === true,
+                  seasonalAdminsOnly: parsed.seasonalAdminsOnly === true,
                   seasonalDefault: parsed.seasonalDefault !== false
                 };
               }
@@ -120,7 +121,9 @@
           root.setAttribute('data-appearance', theme);
           var pref = null;
           try { pref = localStorage.getItem('cabinet-seasonal'); } catch (e) {}
-          var seasonalActive = enabled.seasonal &&
+          var adminHint = false;
+          try { adminHint = localStorage.getItem('cabinet-seasonal-admin') === '1'; } catch (e) {}
+          var seasonalActive = (enabled.seasonal || (enabled.seasonalAdminsOnly && adminHint)) &&
             (pref === 'on' || (pref !== 'off' && enabled.seasonalDefault));
           if (seasonalActive) {
             var month = Number(new Intl.DateTimeFormat('en-US', {

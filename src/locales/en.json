@@ -3472,6 +3472,8 @@
       "autoFullscreenDesc": "Auto expand in Telegram",
       "availableThemes": "Available themes",
       "seasonalDefault": "Enable by default",
+      "seasonalAdminsOnly": "Admins only",
+      "seasonalAdminsOnlyHint": "\"Admins only\" shows the seasonal appearance to administrators while it is off for everyone, so you can check it first.",
       "seasonalHint": "The season follows the Moscow calendar. Users can turn the appearance off with the palette button.",
       "colors": {
         "background": "Background",
@@ -8629,7 +8631,12 @@
   },
   "theme": {
     "seasonal": "Seasonal appearance",
-    "seasons": { "winter": "Winter", "spring": "Spring", "summer": "Summer", "autumn": "Autumn" },
+    "seasons": {
+      "winter": "Winter",
+      "spring": "Spring",
+      "summer": "Summer",
+      "autumn": "Autumn"
+    },
     "colors": "Theme Colors",
     "reset": "Reset",
     "quickPresets": "Quick Presets",

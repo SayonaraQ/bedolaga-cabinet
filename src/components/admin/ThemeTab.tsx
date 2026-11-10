@@ -253,7 +253,7 @@ export function ThemeTab() {
             />
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           <div className="flex items-center justify-between gap-3 rounded-xl bg-dark-700/30 p-3 sm:p-4">
             <span className="text-sm font-medium text-dark-200 sm:text-base">
               {t('theme.seasonal')}
@@ -264,6 +264,21 @@ export function ThemeTab() {
               onChange={() =>
                 updateEnabledThemesMutation.mutate({
                   seasonal: !(enabledThemes?.seasonal ?? false),
+                })
+              }
+              disabled={updateEnabledThemesMutation.isPending}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-dark-700/30 p-3 sm:p-4">
+            <span className="text-sm font-medium text-dark-200 sm:text-base">
+              {t('admin.settings.seasonalAdminsOnly')}
+            </span>
+            <Toggle
+              aria-label={t('admin.settings.seasonalAdminsOnly')}
+              checked={enabledThemes?.seasonalAdminsOnly ?? false}
+              onChange={() =>
+                updateEnabledThemesMutation.mutate({
+                  seasonalAdminsOnly: !(enabledThemes?.seasonalAdminsOnly ?? false),
                 })
               }
               disabled={updateEnabledThemesMutation.isPending}
@@ -286,6 +301,7 @@ export function ThemeTab() {
           </div>
         </div>
         <p className="mt-3 text-sm text-dark-400">{t('admin.settings.seasonalHint')}</p>
+        <p className="mt-1 text-sm text-dark-400">{t('admin.settings.seasonalAdminsOnlyHint')}</p>
       </div>
 
       {/* Quick Presets */}

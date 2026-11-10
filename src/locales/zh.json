@@ -2620,6 +2620,8 @@
       "autoFullscreenDesc": "在Telegram中自动展开",
       "availableThemes": "可用主题",
       "seasonalDefault": "默认启用",
+      "seasonalAdminsOnly": "仅管理员",
+      "seasonalAdminsOnlyHint": "“仅管理员”会在季节外观对所有人关闭时向管理员显示，便于提前检查。",
       "seasonalHint": "季节按莫斯科日历变化。用户可通过调色板按钮关闭季节外观。",
       "colors": {
         "background": "背景",
@@ -8211,7 +8213,12 @@
   },
   "theme": {
     "seasonal": "季节外观",
-    "seasons": { "winter": "冬季", "spring": "春季", "summer": "夏季", "autumn": "秋季" },
+    "seasons": {
+      "winter": "冬季",
+      "spring": "春季",
+      "summer": "夏季",
+      "autumn": "秋季"
+    },
     "colors": "主题颜色",
     "reset": "重置",
     "quickPresets": "快速预设",

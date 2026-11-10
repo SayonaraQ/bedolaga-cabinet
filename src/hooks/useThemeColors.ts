@@ -9,7 +9,14 @@ import {
   type ShadeLevel,
 } from '../types/theme';
 import { hexToRgb, hexToHsl, hslToRgb } from '../utils/colorConversion';
-import { writeThemeColorsHint } from '../utils/themeColorsHint';
+import { writeThemeColorsHint, writeSeasonalColorsHint } from '../utils/themeColorsHint';
+import {
+  APPEARANCE_TOKENS,
+  buildSeasonalColors,
+  isSeasonalAppearance,
+  type AppearanceId,
+} from '@/theme/appearance';
+import { useTheme } from './useTheme';
 
 // Convert RGB to string format for CSS variable
 function rgbToString(r: number, g: number, b: number): string {
@@ -355,35 +362,60 @@ export function computeThemeCssVars(themeColors: ThemeColors): Record<string, st
 }
 
 // Apply theme colors as CSS variables on :root and remember them for the next first paint.
-export function applyThemeColors(themeColors: ThemeColors): void {
-  const colors: ThemeColors = { ...DEFAULT_THEME_COLORS, ...themeColors };
-  const vars = computeThemeCssVars(colors);
+export function applyThemeColors(themeColors: ThemeColors, appearanceId?: AppearanceId): void {
+  const admin: ThemeColors = { ...DEFAULT_THEME_COLORS, ...themeColors };
   const root = document.documentElement;
+  // Startup and admin previews also call this function directly. Preserve the
+  // resolved appearance even when those admin colours arrive after the provider.
+  const currentId = root.dataset.appearance;
+  const id =
+    appearanceId ??
+    (currentId && isSeasonalAppearance(currentId)
+      ? currentId
+      : root.classList.contains('light')
+        ? 'light'
+        : 'dark');
+  const colors = isSeasonalAppearance(id) ? buildSeasonalColors(id, admin) : admin;
+  const vars = computeThemeCssVars(colors);
   for (const [name, value] of Object.entries(vars)) {
     root.style.setProperty(name, value);
   }
+  root.style.removeProperty('--color-urgent-400');
+  for (const [name, value] of Object.entries(APPEARANCE_TOKENS[id])) {
+    root.style.setProperty(name, value);
+  }
+  root.dataset.appearance = id;
   // Следующая загрузка стартует с этой палитры, а не с дефолтной: инлайн-скрипт
   // index.html ставит переменные из подсказки до загрузки приложения.
-  writeThemeColorsHint({ colors, vars });
+  writeThemeColorsHint({
+    colors: admin,
+    vars: isSeasonalAppearance(id) ? computeThemeCssVars(admin) : vars,
+  });
+  if (isSeasonalAppearance(id)) {
+    writeSeasonalColorsHint(id, { ...vars, ...APPEARANCE_TOKENS[id] });
+  }
 }
 
 export function useThemeColors() {
   const queryClient = useQueryClient();
+  const { appearanceId } = useTheme();
 
   const { data: colors, isLoading, error } = useQuery(themeColorsQueryOptions());
 
   // Apply colors when loaded or changed
   useEffect(() => {
     const colorsToApply = colors || DEFAULT_THEME_COLORS;
-    applyThemeColors(colorsToApply);
-  }, [colors]);
+    applyThemeColors(colorsToApply, appearanceId);
+  }, [colors, appearanceId]);
 
   const invalidateColors = () => {
     queryClient.invalidateQueries({ queryKey: ['theme-colors'] });
   };
 
   return {
-    colors: colors || DEFAULT_THEME_COLORS,
+    colors: isSeasonalAppearance(appearanceId)
+      ? buildSeasonalColors(appearanceId, { ...DEFAULT_THEME_COLORS, ...colors })
+      : colors || DEFAULT_THEME_COLORS,
     isLoading,
     error,
     invalidateColors,

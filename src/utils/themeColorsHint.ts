@@ -14,6 +14,7 @@
 import { STORAGE_KEYS } from '@/config/constants';
 import { DEFAULT_THEME_COLORS, type ThemeColors } from '@/types/theme';
 import { safeLocal } from './safeStorage';
+import { isSeasonalAppearance, type SeasonalAppearanceId } from '@/theme/appearance';
 
 export interface ThemeColorsHint {
   colors: ThemeColors;
@@ -61,4 +62,21 @@ export function writeThemeColorsHint(hint: ThemeColorsHint): void {
   // Ответ бэкенда несёт служебные поля (id, updated_at) — в подсказку идут только цвета.
   const colors = Object.fromEntries(COLOR_KEYS.map((key) => [key, hint.colors[key]]));
   safeLocal.setJson(STORAGE_KEYS.THEME_COLORS_HINT, { colors, vars: hint.vars });
+}
+
+export function writeSeasonalColorsHint(
+  id: SeasonalAppearanceId,
+  vars: Record<string, string>,
+): void {
+  safeLocal.setJson(STORAGE_KEYS.SEASONAL_HINT, { id, vars: parseVars(vars) });
+}
+
+export function readSeasonalColorsHint(): {
+  id: SeasonalAppearanceId;
+  vars: Record<string, string>;
+} | null {
+  const raw = safeLocal.getJson<unknown>(STORAGE_KEYS.SEASONAL_HINT, null);
+  if (!isRecord(raw) || typeof raw.id !== 'string' || !isSeasonalAppearance(raw.id)) return null;
+  const vars = parseVars(raw.vars);
+  return vars ? { id: raw.id, vars } : null;
 }

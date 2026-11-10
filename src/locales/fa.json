@@ -2602,6 +2602,8 @@
       "autoFullscreen": "تمام صفحه خودکار",
       "autoFullscreenDesc": "باز شدن خودکار در تلگرام",
       "availableThemes": "پوسته‌های موجود",
+      "seasonalDefault": "فعال‌سازی پیش‌فرض",
+      "seasonalHint": "فصل بر اساس تقویم مسکو تغییر می‌کند. کاربران می‌توانند ظاهر فصلی را با دکمه پالت خاموش کنند.",
       "colors": {
         "background": "پس‌زمینه",
         "error": "خطا",
@@ -3830,6 +3832,7 @@
       "botStartVideoNone": "ویدیویی تنظیم نشده — منو از تصویر لوگو استفاده می‌کند",
       "botStartVideoError": "بارگذاری ویدیو ناموفق بود",
       "presets": {
+        "null-pulse": "Null Pulse",
         "standard": "استاندارد",
         "ocean": "اقیانوس",
         "forest": "جنگل",
@@ -8342,6 +8345,8 @@
     "emailMergeCodeInvalid": "کد نامعتبر یا منقضی‌شده"
   },
   "theme": {
+    "seasonal": "ظاهر فصلی",
+    "seasons": { "winter": "زمستان", "spring": "بهار", "summer": "تابستان", "autumn": "پاییز" },
     "colors": "رنگ‌های تم",
     "reset": "بازنشانی",
     "quickPresets": "پیش‌تنظیمات سریع",

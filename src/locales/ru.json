@@ -3543,6 +3543,8 @@
       "giftEnabled": "Подписка в подарок",
       "giftEnabledDesc": "Возможность отправить подписку в подарок другому пользователю",
       "availableThemes": "Доступные темы",
+      "seasonalDefault": "Включать по умолчанию",
+      "seasonalHint": "Сезон меняется по московскому календарю. Пользователи могут отключить оформление кнопкой с палитрой.",
       "darkTheme": "Тёмная",
       "lightTheme": "Светлая",
       "quickPresets": "Быстрые пресеты",
@@ -3656,6 +3658,7 @@
         "payments_cashera": "Cashera"
       },
       "presets": {
+        "null-pulse": "Null Pulse",
         "standard": "Стандарт",
         "ocean": "Океан",
         "forest": "Лес",
@@ -8756,6 +8759,8 @@
     "emailMergeCodeInvalid": "Неверный или просроченный код"
   },
   "theme": {
+    "seasonal": "Сезонное оформление",
+    "seasons": { "winter": "Зима", "spring": "Весна", "summer": "Лето", "autumn": "Осень" },
     "colors": "Цвета темы",
     "reset": "Сбросить",
     "quickPresets": "Быстрые пресеты",

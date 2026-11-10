@@ -206,6 +206,23 @@ export interface ThemePreset {
 export const THEME_PRESETS: ThemePreset[] = [
   { id: 'standard', colors: DEFAULT_THEME_COLORS },
   {
+    id: 'null-pulse',
+    colors: {
+      accent: '#9333EA',
+      darkBackground: '#07040C',
+      darkSurface: '#160D23',
+      darkText: '#F5F0FF',
+      darkTextSecondary: '#B2A7C6',
+      lightBackground: '#F4F1FA',
+      lightSurface: '#FFFFFF',
+      lightText: '#1C1528',
+      lightTextSecondary: '#5E5470',
+      success: '#22C55E',
+      warning: '#F59E0B',
+      error: '#EF4444',
+    },
+  },
+  {
     id: 'ocean',
     colors: {
       accent: '#0ea5e9',

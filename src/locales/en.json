@@ -3469,6 +3469,8 @@
       "autoFullscreen": "Auto fullscreen",
       "autoFullscreenDesc": "Auto expand in Telegram",
       "availableThemes": "Available themes",
+      "seasonalDefault": "Enable by default",
+      "seasonalHint": "The season follows the Moscow calendar. Users can turn the appearance off with the palette button.",
       "colors": {
         "background": "Background",
         "error": "Error",
@@ -4695,6 +4697,7 @@
       "botStartVideoNone": "No video — the menu uses the logo image",
       "botStartVideoError": "Could not upload the video",
       "presets": {
+        "null-pulse": "Null Pulse",
         "standard": "Standard",
         "ocean": "Ocean",
         "forest": "Forest",
@@ -8623,6 +8626,8 @@
     "emailMergeCodeInvalid": "Invalid or expired code"
   },
   "theme": {
+    "seasonal": "Seasonal appearance",
+    "seasons": { "winter": "Winter", "spring": "Spring", "summer": "Summer", "autumn": "Autumn" },
     "colors": "Theme Colors",
     "reset": "Reset",
     "quickPresets": "Quick Presets",

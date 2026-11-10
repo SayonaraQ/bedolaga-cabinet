@@ -30,12 +30,29 @@ export interface ThemeSettings extends ThemeColors {
 export interface EnabledThemes {
   dark: boolean;
   light: boolean;
+  seasonal: boolean;
+  seasonalDefault: boolean;
 }
 
 export const DEFAULT_ENABLED_THEMES: EnabledThemes = {
   dark: true,
   light: true,
+  seasonal: false,
+  seasonalDefault: true,
 };
+
+/** Old bots and old device caches only contain dark/light. */
+export function normalizeEnabledThemes(raw: unknown): EnabledThemes {
+  const data = raw && typeof raw === 'object' ? (raw as Partial<EnabledThemes>) : {};
+  return Object.fromEntries(
+    Object.entries(DEFAULT_ENABLED_THEMES).map(([key, fallback]) => [
+      key,
+      typeof data[key as keyof EnabledThemes] === 'boolean'
+        ? data[key as keyof EnabledThemes]
+        : fallback,
+    ]),
+  ) as unknown as EnabledThemes;
+}
 
 // Default theme colors
 export const DEFAULT_THEME_COLORS: ThemeColors = {

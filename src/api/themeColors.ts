@@ -6,6 +6,7 @@ import {
   DEFAULT_THEME_COLORS,
   type EnabledThemes,
   DEFAULT_ENABLED_THEMES,
+  normalizeEnabledThemes,
 } from '../types/theme';
 
 export const themeColorsApi = {
@@ -36,7 +37,7 @@ export const themeColorsApi = {
   getEnabledThemes: async (): Promise<EnabledThemes> => {
     try {
       const response = await apiClient.get<EnabledThemes>('/cabinet/branding/themes');
-      return response.data;
+      return normalizeEnabledThemes(response.data);
     } catch {
       return DEFAULT_ENABLED_THEMES;
     }
@@ -45,7 +46,7 @@ export const themeColorsApi = {
   // Update enabled themes (admin only)
   updateEnabledThemes: async (themes: Partial<EnabledThemes>): Promise<EnabledThemes> => {
     const response = await apiClient.patch<EnabledThemes>('/cabinet/branding/themes', themes);
-    return response.data;
+    return normalizeEnabledThemes(response.data);
   },
 };
 

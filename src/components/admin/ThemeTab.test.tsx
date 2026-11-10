@@ -3,7 +3,12 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ruLocale from '@/locales/ru.json';
-import { DEFAULT_THEME_COLORS, type ThemeColors } from '@/types/theme';
+import {
+  DEFAULT_THEME_COLORS,
+  DEFAULT_ENABLED_THEMES,
+  type ThemeColors,
+  type EnabledThemes,
+} from '@/types/theme';
 import { THEME_PRESETS } from './constants';
 
 /**
@@ -43,9 +48,16 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
-const state: { serverColors: ThemeColors; patches: Partial<ThemeColors>[] } = {
+const state: {
+  serverColors: ThemeColors;
+  patches: Partial<ThemeColors>[];
+  enabled: EnabledThemes;
+  enabledPatches: Partial<EnabledThemes>[];
+} = {
   serverColors: DEFAULT_THEME_COLORS,
   patches: [],
+  enabled: DEFAULT_ENABLED_THEMES,
+  enabledPatches: [],
 };
 
 vi.mock('@/api/themeColors', () => ({
@@ -60,9 +72,12 @@ vi.mock('@/api/themeColors', () => ({
       state.serverColors = DEFAULT_THEME_COLORS;
       return Promise.resolve(state.serverColors);
     },
-    getEnabledThemes: () => Promise.resolve({ dark: true, light: true }),
-    updateEnabledThemes: (themes: { dark?: boolean; light?: boolean }) =>
-      Promise.resolve({ dark: true, light: true, ...themes }),
+    getEnabledThemes: () => Promise.resolve(state.enabled),
+    updateEnabledThemes: (themes: Partial<EnabledThemes>) => {
+      state.enabledPatches.push(themes);
+      state.enabled = { ...state.enabled, ...themes };
+      return Promise.resolve(state.enabled);
+    },
   },
 }));
 
@@ -117,6 +132,47 @@ async function letDebounceFire() {
 
 beforeEach(() => {
   state.patches = [];
+  state.enabled = DEFAULT_ENABLED_THEMES;
+  state.enabledPatches = [];
+});
+
+describe('ThemeTab: сезонные настройки', () => {
+  it('renders availability and default switches, patches availability and updates cache/event', async () => {
+    const listener = vi.fn();
+    window.addEventListener('enabledThemesChanged', listener);
+    try {
+      await renderThemeTab();
+      const availability = screen.getByRole('switch', { name: ru('theme.seasonal') });
+      const defaultSwitch = screen.getByRole('switch', {
+        name: ru('admin.settings.seasonalDefault'),
+      });
+      expect(availability.getAttribute('aria-checked')).toBe('false');
+      expect(defaultSwitch.getAttribute('aria-checked')).toBe('true');
+      // The default can be prepared before the seasonal appearance is made available.
+      expect((defaultSwitch as HTMLButtonElement).disabled).toBe(false);
+      expect(screen.getByText(ru('admin.settings.seasonalHint'))).toBeTruthy();
+      fireEvent.click(availability);
+      await waitFor(() => expect(state.enabledPatches).toEqual([{ seasonal: true }]));
+      await waitFor(() => expect(availability.getAttribute('aria-checked')).toBe('true'));
+      expect(listener).toHaveBeenCalled();
+      expect(JSON.parse(localStorage.getItem('cabinet-enabled-themes') ?? '{}').seasonal).toBe(
+        true,
+      );
+    } finally {
+      window.removeEventListener('enabledThemesChanged', listener);
+    }
+  });
+
+  it('patches only seasonalDefault when its switch is clicked', async () => {
+    state.enabled = { ...DEFAULT_ENABLED_THEMES, seasonal: true };
+    await renderThemeTab();
+    const defaultSwitch = screen.getByRole('switch', {
+      name: ru('admin.settings.seasonalDefault'),
+    });
+    fireEvent.click(defaultSwitch);
+    await waitFor(() => expect(state.enabledPatches).toEqual([{ seasonalDefault: false }]));
+    await waitFor(() => expect(defaultSwitch.getAttribute('aria-checked')).toBe('false'));
+  });
 });
 
 afterEach(() => {

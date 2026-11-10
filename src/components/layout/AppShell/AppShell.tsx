@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
@@ -15,7 +14,6 @@ import { useLiteMode } from '@/hooks/useLiteMode';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { resetVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 import { useSupportUnreadCount } from '@/hooks/useSupportUnreadCount';
-import { themeColorsApi } from '@/api/themeColors';
 import { isLogoPreloaded } from '@/api/branding';
 import { cn } from '@/lib/utils';
 
@@ -45,6 +43,7 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { isMobileNavScreen, mobileNavItems } from './mobileNavRoutes';
 import { AppHeader } from './AppHeader';
 import { LogoutButton } from './LogoutButton';
+import { SeasonalThemeButton } from './SeasonalThemeButton';
 import { useBackgroundConsumer } from '@/components/backgrounds/BackgroundHost';
 
 interface AppShellProps {
@@ -60,7 +59,7 @@ export function AppShell({ children }: AppShellProps) {
     useTelegramSDK();
   const { mobileCss: headerHeight } = useHeaderHeight();
   const haptic = useHaptic();
-  const { toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark, canToggle: canToggleTheme } = useTheme();
 
   // Extracted hooks
   const { appName, logoLetter, hasCustomLogo, logoUrl } = useBranding();
@@ -70,14 +69,6 @@ export function AppShell({ children }: AppShellProps) {
   // Анимированный фон рендерит BackgroundHost в App (не перемонтируется при
   // смене роута) — здесь только регистрируем, что на этом роуте он нужен.
   useBackgroundConsumer();
-
-  // Theme toggle visibility
-  const { data: enabledThemes } = useQuery({
-    queryKey: ['enabled-themes'],
-    queryFn: themeColorsApi.getEnabledThemes,
-    staleTime: 1000 * 60 * 5,
-  });
-  const canToggleTheme = enabledThemes?.dark && enabledThemes?.light;
 
   // Only apply fullscreen UI adjustments on mobile Telegram (iOS/Android)
   const isMobileFullscreen = isFullscreen && isMobile;
@@ -234,6 +225,7 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Right side actions — правая колонка grid, прижата к краю, не сжимается */}
           <div className="flex shrink-0 items-center gap-2 justify-self-end">
+            <SeasonalThemeButton />
             <button
               onClick={() => {
                 haptic.impact('light');

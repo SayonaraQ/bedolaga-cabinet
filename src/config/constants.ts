@@ -1,6 +1,8 @@
 export const STORAGE_KEYS = {
   THEME: 'cabinet-theme',
   ENABLED_THEMES: 'cabinet-enabled-themes',
+  SEASONAL: 'cabinet-seasonal',
+  SEASONAL_HINT: 'cabinet-seasonal-hint',
   /** Подсказка первой отрисовки: имя, буква и иконка бренда для инлайн-скрипта index.html. */
   BRAND_HINT: 'cabinet-brand-hint',
   /** Подсказка первой отрисовки: палитра оператора (CSS-переменные) для инлайн-скрипта index.html. */

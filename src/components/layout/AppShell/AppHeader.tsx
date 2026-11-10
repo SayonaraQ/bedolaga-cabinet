@@ -16,12 +16,12 @@ import {
   preloadLogo,
   isLogoPreloaded,
 } from '@/api/branding';
-import { themeColorsApi } from '@/api/themeColors';
 import { cn } from '@/lib/utils';
 
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import TicketNotificationBell from '@/components/TicketNotificationBell';
 import { LogoutButton } from './LogoutButton';
+import { SeasonalThemeButton } from './SeasonalThemeButton';
 
 // Icons
 import {
@@ -86,7 +86,7 @@ export function AppHeader({
   const { user, logout, isAdmin } = useAuthStore(
     useShallow((state) => ({ user: state.user, logout: state.logout, isAdmin: state.isAdmin })),
   );
-  const { toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark, canToggle } = useTheme();
   const { haptic, platform } = usePlatform();
   const avatar = useUserAvatar(user);
   const [logoLoaded, setLogoLoaded] = useState(() => isLogoPreloaded());
@@ -111,14 +111,6 @@ export function AppHeader({
   const logoLetter = branding?.logo_letter || FALLBACK_LOGO;
   const hasCustomLogo = branding?.has_custom_logo || false;
   const logoUrl = branding ? brandingApi.getLogoUrl(branding) : null;
-
-  // Theme toggle visibility
-  const { data: enabledThemes } = useQuery({
-    queryKey: ['enabled-themes'],
-    queryFn: themeColorsApi.getEnabledThemes,
-    staleTime: 1000 * 60 * 5,
-  });
-  const canToggle = enabledThemes?.dark && enabledThemes?.light;
 
   // Lock scroll when menu is open (works in iframe/Telegram Mini App)
   useEffect(() => {
@@ -210,7 +202,7 @@ export function AppHeader({
                 )}
               </div>
               {appName && (
-                <span className="whitespace-nowrap text-base font-semibold text-dark-100">
+                <span className="hidden whitespace-nowrap text-base font-semibold text-dark-100 min-[360px]:inline">
                   {appName}
                 </span>
               )}
@@ -233,6 +225,7 @@ export function AppHeader({
               )}
 
               {/* Theme toggle */}
+              <SeasonalThemeButton onToggle={() => setMobileMenuOpen(false)} />
               {canToggle && (
                 <button
                   onClick={() => {

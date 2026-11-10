@@ -330,6 +330,7 @@
     "welcome": "Добро пожаловать, {{name}}!",
     "welcomeNoName": "Добро пожаловать!",
     "yourSubscription": "Ваша подписка",
+    "yourLevel": "Ваш уровень",
     "quickActions": "Быстрые действия",
     "viewSubscription": "Управление подпиской",
     "topUpBalance": "Пополнить баланс",

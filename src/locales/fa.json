@@ -313,6 +313,7 @@
     "welcome": "خوش آمدید، {{name}}!",
     "welcomeNoName": "خوش آمدید!",
     "yourSubscription": "اشتراک شما",
+    "yourLevel": "سطح شما",
     "quickActions": "دسترسی سریع",
     "viewSubscription": "مدیریت اشتراک",
     "topUpBalance": "شارژ موجودی",

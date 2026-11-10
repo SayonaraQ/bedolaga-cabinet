@@ -307,7 +307,11 @@ export default function Dashboard() {
           {userName ? t('dashboard.welcome', { name: userName }) : t('dashboard.welcomeNoName')}
         </h1>
         <div className="mt-1 flex flex-wrap items-center gap-2">
-          <p className="text-dark-400">{t('dashboard.yourSubscription')}</p>
+          {/* Рядом со значком промогруппы «Ваша подписка» читалось как название тарифа
+            («Новичок»); со значком подпись говорит об уровне (владелец 11.11). */}
+          <p className="text-dark-400">
+            {t(promoGroupData?.group_name ? 'dashboard.yourLevel' : 'dashboard.yourSubscription')}
+          </p>
           {promoGroupData?.group_name && (
             <span
               className="inline-flex max-w-[160px] items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"

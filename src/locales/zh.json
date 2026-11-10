@@ -302,6 +302,7 @@
     "welcome": "欢迎，{{name}}！",
     "welcomeNoName": "欢迎！",
     "yourSubscription": "您的订阅",
+    "yourLevel": "您的等级",
     "quickActions": "快捷操作",
     "viewSubscription": "管理订阅",
     "topUpBalance": "充值余额",

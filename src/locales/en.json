@@ -322,6 +322,7 @@
     "welcome": "Welcome, {{name}}!",
     "welcomeNoName": "Welcome!",
     "yourSubscription": "Your Subscription",
+    "yourLevel": "Your level",
     "quickActions": "Quick Actions",
     "viewSubscription": "Manage Subscription",
     "topUpBalance": "Top Up Balance",

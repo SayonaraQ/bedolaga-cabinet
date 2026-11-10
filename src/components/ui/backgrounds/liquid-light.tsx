@@ -12,13 +12,13 @@ interface Props {
 // Positions follow the viewport (designed at 390×844, scaled with vw/vh/vmax),
 // so the light reaches the whole screen on tablets and desktops too.
 const DARK_BLOBS = [
-  { drift: 1, left: '-44vw', top: '-17vh', size: '66vmax', opacity: 0.55, color: 0, duration: 46 },
-  { drift: 2, left: '36vw', top: '36vh', size: '57vmax', opacity: 0.32, color: 1, duration: 37 },
-  { drift: 3, left: '-31vw', top: '66vh', size: '62vmax', opacity: 0.48, color: 2, duration: 53 },
+  { drift: 1, left: '-44vw', top: '-17vh', size: '66vmax', opacity: 0.55, color: 0, duration: 24 },
+  { drift: 2, left: '36vw', top: '36vh', size: '57vmax', opacity: 0.32, color: 1, duration: 19 },
+  { drift: 3, left: '-31vw', top: '66vh', size: '62vmax', opacity: 0.48, color: 2, duration: 28 },
 ];
 const LIGHT_BLOBS = [
-  { drift: 1, left: '31vw', top: '-19vh', size: '62vmax', opacity: 0.13, color: 0, duration: 46 },
-  { drift: 3, left: '-46vw', top: '62vh', size: '62vmax', opacity: 0.16, color: 1, duration: 53 },
+  { drift: 1, left: '31vw', top: '-19vh', size: '62vmax', opacity: 0.13, color: 0, duration: 24 },
+  { drift: 3, left: '-46vw', top: '62vh', size: '62vmax', opacity: 0.16, color: 1, duration: 28 },
 ];
 const SPEED: Record<string, number> = { slow: 1.6, normal: 1, fast: 0.5 };
 const MASK = 'radial-gradient(circle, #000 0%, rgba(0,0,0,.32) 38%, transparent 70%)';

@@ -11,7 +11,6 @@
   will-change: transform;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
-  animation-direction: alternate;
 }
 
 .scene-drift-1 {
@@ -24,28 +23,51 @@
   animation-name: scene-drift-3;
 }
 
+/* Closed loops with a slight squash, about 30 px/s on a phone like the approved
+   prototype: the earlier straight back-and-forth at ~5 px/s read as a still image. */
 @keyframes scene-drift-1 {
-  from {
-    transform: translate(-14%, -8%) scale(1);
+  0%,
+  100% {
+    transform: translate(-14%, -8%) scale(1.1, 0.85);
   }
-  to {
-    transform: translate(26%, 18%) scale(1.18);
+  25% {
+    transform: translate(14%, 6%) scale(1.2, 1);
+  }
+  50% {
+    transform: translate(26%, 22%) scale(1, 1.15);
+  }
+  75% {
+    transform: translate(2%, 18%) scale(0.95, 0.9);
   }
 }
 @keyframes scene-drift-2 {
-  from {
-    transform: translate(12%, -10%) scale(1.1);
+  0%,
+  100% {
+    transform: translate(12%, -10%) scale(1.05, 0.9);
   }
-  to {
-    transform: translate(-30%, 22%) scale(0.92);
+  25% {
+    transform: translate(-8%, 4%) scale(0.95, 1.1);
+  }
+  50% {
+    transform: translate(-30%, 22%) scale(1.15, 0.95);
+  }
+  75% {
+    transform: translate(-6%, 26%) scale(1, 0.85);
   }
 }
 @keyframes scene-drift-3 {
-  from {
-    transform: translate(-10%, 10%) scale(0.95);
+  0%,
+  100% {
+    transform: translate(-10%, 10%) scale(0.95, 1);
   }
-  to {
-    transform: translate(24%, -26%) scale(1.12);
+  25% {
+    transform: translate(12%, -8%) scale(1.1, 0.85);
+  }
+  50% {
+    transform: translate(24%, -26%) scale(1.15, 1.05);
+  }
+  75% {
+    transform: translate(4%, -6%) scale(1, 1.15);
   }
 }
 

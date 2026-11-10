@@ -64,7 +64,7 @@ describe('LiquidLightBackground', () => {
     // Ground follows the palette background token, not a hard-coded colour.
     expect(scene?.style.background).toBe('rgb(var(--color-dark-950))');
     expect(blobs).toHaveLength(3);
-    expect(blobs.map((blob) => blob.style.animationDuration)).toEqual(['46s', '37s', '53s']);
+    expect(blobs.map((blob) => blob.style.animationDuration)).toEqual(['24s', '19s', '28s']);
     expect(blobs.map((blob) => blob.style.backgroundColor)).toEqual([
       'rgb(147, 51, 234)',
       'rgb(214, 140, 255)',
@@ -97,11 +97,11 @@ describe('LiquidLightBackground', () => {
     const blobs = () => [...container.querySelectorAll<HTMLElement>('.scene-blob')];
     expect(blobs()[0].style.backgroundColor).toBe('rgb(147, 51, 234)');
     expect(blobs()[1].style.backgroundColor).toBe('rgb(18, 52, 86)');
-    expect(blobs().map((blob) => blob.style.animationDuration)).toEqual(['23s', '18.5s', '26.5s']);
+    expect(blobs().map((blob) => blob.style.animationDuration)).toEqual(['12s', '9.5s', '14s']);
     rerender(<LiquidLightBackground settings={{ speed: 'invalid' }} />);
-    expect(blobs()[0].style.animationDuration).toBe('46s');
+    expect(blobs()[0].style.animationDuration).toBe('24s');
     rerender(<LiquidLightBackground settings={{ speed: 'slow' }} />);
-    expect(blobs()[0].style.animationDuration).toBe('73.6s');
+    expect(blobs()[0].style.animationDuration).toBe('38.4s');
   });
 });
 

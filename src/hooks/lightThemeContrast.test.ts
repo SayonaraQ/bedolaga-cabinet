@@ -1,17 +1,17 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { applyThemeColors } from './useThemeColors';
 import { DEFAULT_THEME_COLORS } from '../types/theme';
+import { SEASONAL_PALETTES, type SeasonalAppearanceId } from '../theme/appearance';
 
 /**
- * Контраст светлой темы. Держит два решения, которые иначе выглядят
+ * Контраст светлой темы. Держит решения, которые иначе выглядят
  * произвольными и однажды будут «упрощены» обратно.
  *
- * 1. `.light` подменяет текстовые оттенки статусов 300/400 → 800 (решение
- *    апстрима 1.71, `textContrast.test.ts` держит сам ремап). Здесь
- *    проверяется, что 800 читается на наших светлых палитрах: статусная
- *    шкала с 1.68 строится от выбранного цвета, и прежний расклад
- *    «зелёный и жёлтый не добирают на 700» больше не верен.
+ * 1. `.light` подменяет текстовые оттенки статусов 300/400 → 800; акцент
+ *    выбирает 700, если он читается и на поверхности, и на заливке 20 %.
+ *    Сам ремап держит `textContrast.test.ts`. Здесь проверяются операторские
+ *    и все сезонные дневные палитры, включая откат светлого акцента на 800.
  *
  * 2. Подпись на залитой кнопке берётся из `--color-on-*`, а не из шкалы
  *    dark-*. В светлой теме `dark-950` — это фон страницы, и на жёлтой
@@ -47,6 +47,22 @@ function contrast(a: Rgb, b: Rgb): number {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
+function accentFill(surface: Rgb): Rgb {
+  const accent = triplet('--color-accent-500');
+  return {
+    r: Math.round(surface.r * 0.8 + accent.r * 0.2),
+    g: Math.round(surface.g * 0.8 + accent.g * 0.2),
+    b: Math.round(surface.b * 0.8 + accent.b * 0.2),
+  };
+}
+
+function expectReadableAccentText(): void {
+  const text = triplet('--color-accent-text-light');
+  const surface = triplet('--color-champagne-50');
+  expect(contrast(text, surface)).toBeGreaterThanOrEqual(WCAG_BODY_TEXT);
+  expect(contrast(text, accentFill(surface))).toBeGreaterThanOrEqual(WCAG_BODY_TEXT);
+}
+
 /** Светлые палитры, между которыми оператор реально может выбирать. */
 const LIGHT_PALETTES: Record<string, Record<string, string>> = {
   'серый (дефолт апстрима)': {
@@ -77,11 +93,60 @@ const LIGHT_PALETTES: Record<string, Record<string, string>> = {
 
 const WCAG_BODY_TEXT = 4.5;
 
+const DAY_APPEARANCES = Object.keys(SEASONAL_PALETTES).filter((id): id is SeasonalAppearanceId =>
+  id.endsWith('-day'),
+);
+
+afterEach(() => {
+  document.documentElement.removeAttribute('style');
+  delete document.documentElement.dataset.appearance;
+  localStorage.clear();
+});
+
 function applyLight(light: Record<string, string>): void {
-  applyThemeColors({ ...DEFAULT_THEME_COLORS, ...light, accent: '#a855f7' });
+  applyThemeColors({ ...DEFAULT_THEME_COLORS, ...light, accent: '#a855f7' }, 'light');
 }
 
 describe('контраст светлой темы', () => {
+  it.each([
+    ['дефолт', DEFAULT_THEME_COLORS],
+    [
+      'прод',
+      {
+        ...DEFAULT_THEME_COLORS,
+        lightBackground: '#F4F1FA',
+        lightSurface: '#FFFFFF',
+        accent: '#9333EA',
+      },
+    ],
+  ] as const)('на палитре «%s» акцент читается на поверхности и заливке', (_label, colors) => {
+    applyThemeColors(colors, 'light');
+    expectReadableAccentText();
+  });
+
+  it.each(DAY_APPEARANCES)('%s: акцент читается на поверхности и заливке', (id) => {
+    applyThemeColors(DEFAULT_THEME_COLORS, id);
+    const palette = SEASONAL_PALETTES[id];
+    expect(document.documentElement.style.getPropertyValue('--color-light-surface')).toBe(
+      palette.surface,
+    );
+    expectReadableAccentText();
+  });
+
+  it('фиолетовый акцент использует более чистый 700', () => {
+    applyThemeColors({ ...DEFAULT_THEME_COLORS, accent: '#9333EA' }, 'light');
+    expect(triplet('--color-accent-text-light')).toEqual(triplet('--color-accent-700'));
+    expect(triplet('--color-accent-text-light')).not.toEqual(triplet('--color-accent-800'));
+    expectReadableAccentText();
+  });
+
+  it('светлый янтарный акцент откатывается на 800', () => {
+    applyThemeColors({ ...DEFAULT_THEME_COLORS, accent: '#F59E0B' }, 'light');
+    expect(triplet('--color-accent-text-light')).toEqual(triplet('--color-accent-800'));
+    expect(triplet('--color-accent-text-light')).not.toEqual(triplet('--color-accent-700'));
+    expectReadableAccentText();
+  });
+
   it.each(Object.entries(LIGHT_PALETTES))(
     'на палитре «%s» основной и вторичный текст читаются',
     (_label, light) => {

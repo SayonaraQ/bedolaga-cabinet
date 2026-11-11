@@ -49,7 +49,12 @@ describe('читаемость текста', () => {
 
   it('светлая тема держит статусный текст на тёмных шейдах', () => {
     const css = readFileSync(join(SRC, 'styles/globals.css'), 'utf8');
-    for (const name of ['accent', 'success', 'warning', 'error']) {
+    for (const shade of [300, 400]) {
+      expect(css).toContain(
+        `--color-accent-${shade}: var(--color-accent-text-light, var(--color-accent-800)) !important;`,
+      );
+    }
+    for (const name of ['success', 'warning', 'error']) {
       expect(css).toContain(`--color-${name}-400: var(--color-${name}-800) !important;`);
     }
   });

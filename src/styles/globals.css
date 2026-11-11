@@ -544,15 +544,11 @@
     --color-dark-900: var(--color-champagne-100) !important;
     --color-dark-950: var(--color-champagne-200) !important;
 
-    /* Статусные палитры генерируются под тёмную тему: текстовые оттенки
-       300/400 (зелёные суммы, жёлтая «Админка», бейджи) на светлом фоне
-       дают контраст 1.3–1.6. В светлой теме подменяем их тёмными шейдами (700
-       не хватало: ссылка «Управлять всеми» и бейдж «Активна» держались на
-       3.6–4.3, поэтому 800) —
-       зеркально ремапу серых выше. Фоновые употребления (bg-*-500/15 и т.п.)
-       используют 500+ и не затрагиваются. */
-    --color-accent-300: var(--color-accent-800) !important;
-    --color-accent-400: var(--color-accent-800) !important;
+    /* Статусный текст на светлом фоне требует тёмных шейдов. Для акцента
+       выбираем 700, если он даёт AA и на поверхности, и на мягкой заливке;
+       иначе 800. Старый кеш без нового токена тоже остаётся на 800. */
+    --color-accent-300: var(--color-accent-text-light, var(--color-accent-800)) !important;
+    --color-accent-400: var(--color-accent-text-light, var(--color-accent-800)) !important;
     --color-success-300: var(--color-success-800) !important;
     --color-success-400: var(--color-success-800) !important;
     --color-warning-300: var(--color-warning-800) !important;
@@ -583,6 +579,202 @@
   .light .text-dark-50\/50,
   .light .text-dark-50\/60 {
     color: rgb(var(--color-champagne-600));
+  }
+
+  /* Мягкие заливки на белом требуют большей плотности: ×2 до 40 %,
+     границы — ×1.6 до 90 %. .light добавляет специфичность поверх утилит;
+     hover указан явно, чтобы наведение не делало заливку бледнее. */
+  .light .bg-accent-500\/5 {
+    background-color: rgba(var(--color-accent-500), 0.1);
+  }
+
+  .light .bg-accent-500\/8 {
+    background-color: rgba(var(--color-accent-500), 0.16);
+  }
+
+  .light .bg-accent-500\/10,
+  .light .hover\:bg-accent-500\/10:hover {
+    background-color: rgba(var(--color-accent-500), 0.2);
+  }
+
+  .light .bg-accent-500\/15,
+  .light .hover\:bg-accent-500\/15:hover {
+    background-color: rgba(var(--color-accent-500), 0.3);
+  }
+
+  .light .bg-accent-500\/20,
+  .light .hover\:bg-accent-500\/20:hover,
+  .light .hover\:bg-accent-500\/25:hover,
+  .light .bg-accent-500\/30,
+  .light .hover\:bg-accent-500\/30:hover {
+    background-color: rgba(var(--color-accent-500), 0.4);
+  }
+
+  .light .bg-success-500\/5 {
+    background-color: rgba(var(--color-success-500), 0.1);
+  }
+
+  .light .bg-success-500\/10,
+  .light .hover\:bg-success-500\/10:hover {
+    background-color: rgba(var(--color-success-500), 0.2);
+  }
+
+  .light .bg-success-500\/15 {
+    background-color: rgba(var(--color-success-500), 0.3);
+  }
+
+  .light .bg-success-500\/20,
+  .light .bg-success-500\/30,
+  .light .hover\:bg-success-500\/30:hover {
+    background-color: rgba(var(--color-success-500), 0.4);
+  }
+
+  .light .bg-warning-500\/5 {
+    background-color: rgba(var(--color-warning-500), 0.1);
+  }
+
+  .light .bg-warning-500\/10,
+  .light .hover\:bg-warning-500\/10:hover {
+    background-color: rgba(var(--color-warning-500), 0.2);
+  }
+
+  .light .bg-warning-500\/15,
+  .light .hover\:bg-warning-500\/15:hover {
+    background-color: rgba(var(--color-warning-500), 0.3);
+  }
+
+  .light .bg-warning-500\/20,
+  .light .hover\:bg-warning-500\/20:hover,
+  .light .hover\:bg-warning-500\/25:hover,
+  .light .bg-warning-500\/30,
+  .light .hover\:bg-warning-500\/30:hover {
+    background-color: rgba(var(--color-warning-500), 0.4);
+  }
+
+  .light .bg-error-500\/5 {
+    background-color: rgba(var(--color-error-500), 0.1);
+  }
+
+  .light .bg-error-500\/10,
+  .light .hover\:bg-error-500\/10:hover {
+    background-color: rgba(var(--color-error-500), 0.2);
+  }
+
+  .light .bg-error-500\/15,
+  .light .hover\:bg-error-500\/15:hover {
+    background-color: rgba(var(--color-error-500), 0.3);
+  }
+
+  .light .bg-error-500\/20,
+  .light .hover\:bg-error-500\/20:hover,
+  .light .bg-error-500\/30,
+  .light .hover\:bg-error-500\/30:hover {
+    background-color: rgba(var(--color-error-500), 0.4);
+  }
+
+  .light .border-accent-500\/15 {
+    border-color: rgba(var(--color-accent-500), 0.24);
+  }
+
+  .light .border-accent-500\/20 {
+    border-color: rgba(var(--color-accent-500), 0.32);
+  }
+
+  .light .border-accent-500\/30,
+  .light .hover\:border-accent-500\/30:hover {
+    border-color: rgba(var(--color-accent-500), 0.48);
+  }
+
+  .light .border-accent-500\/35 {
+    border-color: rgba(var(--color-accent-500), 0.56);
+  }
+
+  .light .border-accent-500\/40,
+  .light .hover\:border-accent-500\/40:hover {
+    border-color: rgba(var(--color-accent-500), 0.64);
+  }
+
+  .light .border-accent-500\/50,
+  .light .hover\:border-accent-500\/50:hover {
+    border-color: rgba(var(--color-accent-500), 0.8);
+  }
+
+  .light .border-accent-500\/60,
+  .light .hover\:border-accent-500\/60:hover,
+  .light .border-accent-500\/70 {
+    border-color: rgba(var(--color-accent-500), 0.9);
+  }
+
+  .light .border-success-500\/20 {
+    border-color: rgba(var(--color-success-500), 0.32);
+  }
+
+  .light .border-success-500\/30 {
+    border-color: rgba(var(--color-success-500), 0.48);
+  }
+
+  .light .border-success-500\/40 {
+    border-color: rgba(var(--color-success-500), 0.64);
+  }
+
+  .light .border-success-500\/50,
+  .light .hover\:border-success-500\/50:hover {
+    border-color: rgba(var(--color-success-500), 0.8);
+  }
+
+  .light .border-success-500\/60 {
+    border-color: rgba(var(--color-success-500), 0.9);
+  }
+
+  .light .border-warning-500\/20 {
+    border-color: rgba(var(--color-warning-500), 0.32);
+  }
+
+  .light .border-warning-500\/25 {
+    border-color: rgba(var(--color-warning-500), 0.4);
+  }
+
+  .light .border-warning-500\/30 {
+    border-color: rgba(var(--color-warning-500), 0.48);
+  }
+
+  .light .border-warning-500\/40 {
+    border-color: rgba(var(--color-warning-500), 0.64);
+  }
+
+  .light .border-warning-500\/45 {
+    border-color: rgba(var(--color-warning-500), 0.72);
+  }
+
+  .light .hover\:border-warning-500\/50:hover {
+    border-color: rgba(var(--color-warning-500), 0.8);
+  }
+
+  .light .border-error-500\/20 {
+    border-color: rgba(var(--color-error-500), 0.32);
+  }
+
+  .light .border-error-500\/25 {
+    border-color: rgba(var(--color-error-500), 0.4);
+  }
+
+  .light .border-error-500\/30,
+  .light .hover\:border-error-500\/30:hover {
+    border-color: rgba(var(--color-error-500), 0.48);
+  }
+
+  .light .border-error-500\/35 {
+    border-color: rgba(var(--color-error-500), 0.56);
+  }
+
+  .light .border-error-500\/40,
+  .light .hover\:border-error-500\/40:hover {
+    border-color: rgba(var(--color-error-500), 0.64);
+  }
+
+  .light .border-error-500\/50,
+  .light .hover\:border-error-500\/50:hover {
+    border-color: rgba(var(--color-error-500), 0.8);
   }
 
   /* Custom scrollbar - Dark */

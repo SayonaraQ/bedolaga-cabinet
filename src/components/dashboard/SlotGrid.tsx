@@ -93,7 +93,7 @@ export function SlotGrid({
       type="button"
       onClick={onFreeClick}
       className="flex min-h-[86px] flex-col items-center justify-center gap-1.5 rounded-[14px] text-accent-400"
-      style={{ border: '1.5px dashed rgba(var(--color-accent-500), 0.4)' }}
+      style={{ border: `1.5px dashed rgba(var(--color-accent-500), ${isDark ? 0.4 : 0.6})` }}
     >
       <PlusIcon className="h-5 w-5" />
       <span className="text-[10px] font-semibold">{label}</span>

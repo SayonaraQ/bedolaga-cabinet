@@ -12,15 +12,17 @@ export function getGlassColors(isDark: boolean) {
     cardBg: isDark
       ? 'linear-gradient(160deg, rgba(var(--color-dark-800), 0.84) 0%, rgba(var(--color-dark-900), 0.9) 100%)'
       : 'linear-gradient(145deg, rgba(var(--color-champagne-50), 0.95) 0%, rgba(var(--color-champagne-50), 0.88) 100%)',
-    cardBorder: isDark ? 'rgba(var(--color-accent-400), 0.18)' : 'rgba(0,0,0,0.1)',
+    cardBorder: isDark
+      ? 'rgba(var(--color-accent-400), 0.18)'
+      : 'rgba(var(--color-accent-500), 0.14)',
 
     // Inner sections (cards within cards)
-    innerBg: isDark ? 'rgba(var(--color-dark-950), 0.42)' : 'rgba(0,0,0,0.03)',
-    innerBorder: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+    innerBg: isDark ? 'rgba(var(--color-dark-950), 0.42)' : 'rgba(var(--color-accent-500), 0.06)',
+    innerBorder: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(var(--color-accent-500), 0.16)',
 
     // Hover states
-    hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-    hoverBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
+    hoverBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(var(--color-accent-500), 0.09)',
+    hoverBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(var(--color-accent-500), 0.26)',
 
     // Text — из палитры оператора, а не зашитые белый/чёрный: иначе кастомный
     // цвет текста не доходил до дашборда и карточек подписок. Годится только
@@ -38,17 +40,19 @@ export function getGlassColors(isDark: boolean) {
     textGhost: `rgba(var(${TEXT_VAR}), ${isDark ? 0.08 : 0.06})`,
 
     // Progress bar track
-    trackBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-    trackBorder: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
+    trackBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(var(--color-accent-500), 0.10)',
+    trackBorder: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(var(--color-accent-500), 0.08)',
 
     // Code blocks
-    codeBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)',
-    codeBorder: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
+    codeBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(var(--color-accent-500), 0.06)',
+    codeBorder: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(var(--color-accent-500), 0.12)',
 
     // Glow effects — reduced in light mode
     glowAlpha: isDark ? '15' : '08',
 
     // Shadows for light mode depth
-    shadow: isDark ? 'none' : '0 2px 16px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03)',
+    shadow: isDark
+      ? 'none'
+      : '0 2px 18px rgba(var(--color-accent-800), 0.10), 0 0 0 1px rgba(var(--color-accent-800), 0.05)',
   };
 }

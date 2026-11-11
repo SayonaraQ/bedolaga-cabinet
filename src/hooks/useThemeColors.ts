@@ -211,7 +211,7 @@ const TEXT_SHADE_MIN_RATIO = 4.5;
 const LIGHT_TEXT_SHADE_MIN_RATIO = 5.5;
 
 // Текстовые шейды статусных палитр: 300/400 — текст в тёмной теме (ссылки,
-// суммы, бейджи), 700/800 — их замена в светлой (.light ремапит *-300/400 -> *-800).
+// суммы, бейджи), 700/800 — их замена в светлой (акцент выбирается отдельно).
 // Лестница привязана к базовому цвету, поэтому у тёмного акцента светлые шейды
 // сжимаются, у светлого — тёмные; здесь им гарантируется AA на поверхности
 // своей темы. Палитры, которые и так читаются, остаются нетронутыми.
@@ -328,6 +328,16 @@ export function computeThemeCssVars(themeColors: ThemeColors): Record<string, st
   const warning = withReadableTextShades(warningPalette, darkSurfaces, lightSurfaces);
   const error = withReadableTextShades(errorPalette, darkSurfaces, lightSurfaces);
 
+  // Исходный 700 сохраняет чистый оттенок без запаса 5.5 для статусной шкалы.
+  // Проверяем и плашку: AA на одной поверхности недостаточно для мягких кнопок.
+  const accentText700 = parseTriplet(accentPalette[700]);
+  const lightAccentFill = mixRgb(lightSurfaceRgb, parseTriplet(accent[500]), 0.2);
+  const accentTextLight =
+    contrastRatio(accentText700, lightSurfaceRgb) >= TEXT_SHADE_MIN_RATIO &&
+    contrastRatio(accentText700, lightAccentFill) >= TEXT_SHADE_MIN_RATIO
+      ? accentPalette[700]
+      : accent[800];
+
   const statusVars = Object.fromEntries(
     SHADE_LEVELS.flatMap((shade) => [
       [`--color-accent-${shade}`, accent[shade]],
@@ -358,7 +368,14 @@ export function computeThemeCssVars(themeColors: ThemeColors): Record<string, st
     '--color-light-text-secondary': colors.lightTextSecondary,
   };
 
-  return { ...darkVars, ...lightVars, ...statusVars, ...onColorVars, ...semanticVars };
+  return {
+    ...darkVars,
+    ...lightVars,
+    ...statusVars,
+    ...onColorVars,
+    ...semanticVars,
+    '--color-accent-text-light': accentTextLight,
+  };
 }
 
 // Apply theme colors as CSS variables on :root and remember them for the next first paint.

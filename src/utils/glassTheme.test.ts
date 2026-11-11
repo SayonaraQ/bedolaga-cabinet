@@ -12,23 +12,50 @@ import { getGlassColors } from './glassTheme';
  * контрасту токены dark-400 / dark-500.
  */
 describe('getGlassColors', () => {
-  it('uses the dark surface palette for glass instead of a white overlay', () => {
-    expect(getGlassColors(true)).toMatchObject({
+  it('keeps every dark glass token unchanged', () => {
+    expect(getGlassColors(true)).toEqual({
       cardBg:
         'linear-gradient(160deg, rgba(var(--color-dark-800), 0.84) 0%, rgba(var(--color-dark-900), 0.9) 100%)',
       cardBorder: 'rgba(var(--color-accent-400), 0.18)',
       innerBg: 'rgba(var(--color-dark-950), 0.42)',
       innerBorder: 'rgba(255,255,255,0.07)',
+      hoverBg: 'rgba(255,255,255,0.05)',
+      hoverBorder: 'rgba(255,255,255,0.08)',
+      text: 'rgb(var(--color-dark-50))',
+      textSecondary: 'rgb(var(--color-dark-400))',
+      textMuted: 'rgb(var(--color-dark-500))',
+      textFaint: 'rgb(var(--color-dark-500))',
+      textGhost: 'rgba(var(--color-dark-50), 0.08)',
+      trackBg: 'rgba(255,255,255,0.06)',
+      trackBorder: 'rgba(255,255,255,0.04)',
+      codeBg: 'rgba(255,255,255,0.03)',
+      codeBorder: 'rgba(255,255,255,0.04)',
+      glowAlpha: '15',
+      shadow: 'none',
     });
   });
 
-  it('uses the champagne surface palette for light glass', () => {
-    expect(getGlassColors(false)).toMatchObject({
+  it('tints light glass with the accent while preserving its surface and text', () => {
+    expect(getGlassColors(false)).toEqual({
       cardBg:
         'linear-gradient(145deg, rgba(var(--color-champagne-50), 0.95) 0%, rgba(var(--color-champagne-50), 0.88) 100%)',
-      cardBorder: 'rgba(0,0,0,0.1)',
-      innerBg: 'rgba(0,0,0,0.03)',
-      innerBorder: 'rgba(0,0,0,0.06)',
+      cardBorder: 'rgba(var(--color-accent-500), 0.14)',
+      innerBg: 'rgba(var(--color-accent-500), 0.06)',
+      innerBorder: 'rgba(var(--color-accent-500), 0.16)',
+      hoverBg: 'rgba(var(--color-accent-500), 0.09)',
+      hoverBorder: 'rgba(var(--color-accent-500), 0.26)',
+      text: 'rgb(var(--color-dark-50))',
+      textSecondary: 'rgb(var(--color-dark-400))',
+      textMuted: 'rgb(var(--color-dark-500))',
+      textFaint: 'rgb(var(--color-dark-500))',
+      textGhost: 'rgba(var(--color-dark-50), 0.06)',
+      trackBg: 'rgba(var(--color-accent-500), 0.10)',
+      trackBorder: 'rgba(var(--color-accent-500), 0.08)',
+      codeBg: 'rgba(var(--color-accent-500), 0.06)',
+      codeBorder: 'rgba(var(--color-accent-500), 0.12)',
+      glowAlpha: '08',
+      shadow:
+        '0 2px 18px rgba(var(--color-accent-800), 0.10), 0 0 0 1px rgba(var(--color-accent-800), 0.05)',
     });
   });
 

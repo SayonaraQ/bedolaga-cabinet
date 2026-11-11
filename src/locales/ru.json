@@ -359,6 +359,7 @@
     "usedSuffix": "израсходовано",
     "unlimited": "Безлимит",
     "tariff": "Тариф",
+    "switchTariffShort": "Сменить",
     "validUntil": "до {{date}}",
     "remaining": "Осталось",
     "daysRemaining": "Дней осталось",

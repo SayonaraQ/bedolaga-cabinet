@@ -2,6 +2,7 @@ import { SeasonalDecorSlot } from '@/components/seasonal/SeasonalDecorSlot';
 import { hasUnknownManagedTraffic } from '@/utils/trafficAccounting';
 import ManagedTrafficSummary from '@/components/subscription/ManagedTrafficSummary';
 import { uiLocale } from '@/utils/uiLocale';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { UseMutationResult } from '@tanstack/react-query';
@@ -17,6 +18,8 @@ import {
   ArrowsLeftRightIcon,
   CalendarIcon,
   ChatIcon,
+  ChevronRightIcon,
+  PackageIcon,
   RefreshIcon,
   SparklesIcon,
   SubscriptionIcon,
@@ -26,6 +29,7 @@ import { needsTariff, planTitle } from '../../utils/legacySubscription';
 import {
   CARD_CTA_LABEL,
   subscriptionCardCta,
+  tariffSwitchLink,
   type CardCtaAction,
 } from '../../utils/subscriptionCta';
 import type { Subscription } from '../../types';
@@ -75,6 +79,8 @@ export default function SubscriptionCardActive({
   const cta = subscriptionCardCta(subscription);
   const showCta =
     cta !== null && (cta.action !== 'renew' || subscription.is_limited || daysLeft <= 3);
+  // Плитка «Тариф» ведёт туда же, куда «Сменить тариф» на странице подписки.
+  const switchLink = tariffSwitchLink(subscription);
 
   // Sparkline placeholder data (hidden until API provides daily usage)
   const dailyUsage: number[] = [];
@@ -226,38 +232,49 @@ export default function SubscriptionCardActive({
         {/* Обеим плиткам нужен `min-w-0`: без него минимальная ширина флекс-элемента
           равна ширине неразрывного имени тарифа, и длинное имя («🟡 Компания -
           10 устройств») выпихивало плитку «Осталось» за правый край карточки. */}
+        {/* Обе плитки собраны по одному шаблону (макет 11.11.2026): значок с подписью,
+          значение, строка снизу. Дата окончания живёт под числом дней, а в «Тарифе»
+          снизу «Сменить тариф ›» — плитка ведёт прямо к смене. Где смены нет
+          (пробный период, limited), плитка, как раньше, открывает подписку. */}
         <div className="mb-5 flex gap-2.5">
           {/* Tariff badge — clickable. Neutral chrome: the tariff name has
             no traffic-zone semantics, so tinting it by the traffic zone
             (DESIGN.md Status-Hue Lockout) was wrong. */}
           <Link
-            to={`/subscriptions/${subscription.id}`}
-            className="min-w-0 flex-1 rounded-[14px] p-3.5 transition-colors"
+            to={switchLink ?? `/subscriptions/${subscription.id}`}
+            className="flex min-w-0 flex-1 flex-col rounded-[14px] p-3.5 transition-colors max-[359px]:p-3"
             style={{
               background: g.innerBg,
               border: `1px solid ${g.innerBorder}`,
             }}
           >
-            <div
-              className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider"
-              style={{ color: g.textFaint }}
+            <TileHeader
+              icon={<PackageIcon className="h-[13px] w-[13px]" />}
+              iconBg={g.hoverBg}
+              iconColor={g.textSecondary}
             >
               {t('dashboard.tariff')}
-            </div>
+            </TileHeader>
             {/* Две строки вместо обрезки в одну: на телефоне плитка шириной ~145px,
               и «🟡 Компания - 10 устройств» превращалось в «🟡 Компани…» —
-              пользователь переставал понимать, какой у него тариф. */}
-            <div className="line-clamp-2 min-w-0 break-words text-base font-bold leading-tight tracking-tight text-dark-50">
+              пользователь переставал понимать, какой у него тариф. Переносится по
+              слогам; разрыв посреди слова остаётся только для слова длиннее строки.
+              На 320 px шрифт на пиксель меньше — иначе «Семейны / й комфорт». */}
+            <div className="line-clamp-2 min-w-0 hyphens-auto break-words text-base font-bold leading-tight tracking-tight text-dark-50 max-[359px]:text-[15px]">
               {subscription.is_trial ? t('subscription.trialStatus') : planTitle(subscription, t)}
             </div>
-            <div className="mt-0.5 font-mono text-[10px] text-dark-400">
-              {t('dashboard.validUntil', { date: formattedDate })}
-            </div>
+            {switchLink && (
+              <TileFooter className="flex items-center gap-0.5 text-[13px] font-semibold text-accent-400">
+                <span className="max-[359px]:hidden">{t('subscription.switchTariff.title')}</span>
+                <span className="min-[360px]:hidden">{t('dashboard.switchTariffShort')}</span>
+                <ChevronRightIcon className="h-3.5 w-3.5 shrink-0" />
+              </TileFooter>
+            )}
           </Link>
 
           {/* Days remaining */}
           <div
-            className="min-w-0 flex-1 rounded-[14px] p-3.5 transition-colors duration-300"
+            className="flex min-w-0 flex-1 flex-col rounded-[14px] p-3.5 transition-colors duration-300 max-[359px]:p-3"
             style={{
               background: g.innerBg,
               border:
@@ -266,27 +283,16 @@ export default function SubscriptionCardActive({
                   : `1px solid ${g.innerBorder}`,
             }}
           >
-            <div className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-400">
-              <div
-                className="flex h-6 w-6 items-center justify-center rounded-[7px] transition-colors duration-300"
-                style={{
-                  background: daysLeft <= 3 ? 'rgba(var(--color-warning-400), 0.1)' : g.hoverBg,
-                }}
-              >
-                <span
-                  style={{
-                    color: daysLeft <= 3 ? 'rgb(var(--color-warning-400))' : g.textSecondary,
-                  }}
-                  aria-hidden="true"
-                >
-                  <CalendarIcon className="h-[13px] w-[13px]" />
-                </span>
-              </div>
+            <TileHeader
+              icon={<CalendarIcon className="h-[13px] w-[13px]" />}
+              iconBg={daysLeft <= 3 ? 'rgba(var(--color-warning-400), 0.1)' : g.hoverBg}
+              iconColor={daysLeft <= 3 ? 'rgb(var(--color-warning-400))' : g.textSecondary}
+            >
               {t('dashboard.remaining')}
-            </div>
+            </TileHeader>
             <div className="flex items-baseline gap-1">
               <span
-                className="text-[22px] font-bold tracking-tight transition-colors duration-300"
+                className="text-[22px] font-bold leading-tight tracking-tight transition-colors duration-300"
                 style={{ color: daysLeft <= 3 ? 'rgb(var(--color-warning-400))' : g.text }}
               >
                 {daysLeft}
@@ -295,6 +301,9 @@ export default function SubscriptionCardActive({
                 {t('subscription.daysShort')}
               </span>
             </div>
+            <TileFooter className="whitespace-nowrap font-mono text-[11px] text-dark-400 max-[359px]:text-[10px]">
+              {t('dashboard.validUntil', { date: formattedDate })}
+            </TileFooter>
           </div>
         </div>
 
@@ -352,6 +361,42 @@ export default function SubscriptionCardActive({
         )}
       </div>
     </SeasonalDecorSlot>
+  );
+}
+
+/** Верх плитки: значок в плашке и подпись капсом. Значок не сжимается на 320 px. */
+function TileHeader({
+  icon,
+  iconBg,
+  iconColor,
+  children,
+}: {
+  icon: ReactNode;
+  iconBg: string;
+  iconColor: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mb-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-400 max-[359px]:gap-1 max-[359px]:tracking-normal">
+      <div
+        data-testid="tile-icon"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] transition-colors duration-300"
+        style={{ background: iconBg, color: iconColor }}
+        aria-hidden="true"
+      >
+        {icon}
+      </div>
+      <span className="truncate">{children}</span>
+    </div>
+  );
+}
+
+/** Низ плитки прижат к низу: строки обеих плиток стоят на одной линии. */
+function TileFooter({ className, children }: { className: string; children: ReactNode }) {
+  return (
+    <div data-testid="tile-footer" className={`mt-auto pt-2 ${className}`}>
+      {children}
+    </div>
   );
 }
 

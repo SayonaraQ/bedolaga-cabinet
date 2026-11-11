@@ -88,6 +88,7 @@ import {
   PiGift,
   PiTimer,
   PiCircle,
+  PiPackage,
   PiTag,
   PiTelegramLogo,
   PiTicket,
@@ -486,6 +487,10 @@ export const StatUptimeIcon = ({ className }: IconProps) => (
 
 export const StatusIcon = ({ className }: IconProps) => (
   <PiCircle className={cn('h-5 w-5', className)} />
+);
+
+export const PackageIcon = ({ className }: IconProps) => (
+  <PiPackage className={cn('h-5 w-5', className)} />
 );
 
 export const TagIcon = ({ className }: IconProps) => <PiTag className={cn('h-5 w-5', className)} />;

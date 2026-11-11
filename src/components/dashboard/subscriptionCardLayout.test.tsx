@@ -132,12 +132,63 @@ describe('ряд «Тариф» + «Осталось»', () => {
     }
   });
 
-  it('имя тарифа переносится, а не обрезается в одну строку', async () => {
+  it('имя тарифа переносится по словам, а не обрезается в одну строку', async () => {
     await renderCard(subscription());
 
     const name = screen.getByText('🟡 Компания - 10 устройств');
     expect(name.className).toContain('line-clamp-2');
     expect(name.className).not.toContain('truncate');
+    // Перенос с дефисом по слогам; разрыв посреди слова — только если слово
+    // длиннее строки. На 320 px шрифт меньше, чтобы «Семейный» влезал целиком.
+    expect(name.className).toContain('hyphens-auto');
+    expect(name.className).toContain('max-[359px]:text-[15px]');
+  });
+
+  it('обе плитки по одному шаблону: значок с подписью, значение, строка снизу', async () => {
+    const container = await renderCard(subscription());
+
+    const plates = [...(container.querySelector('.mb-5.flex.gap-2\\.5')?.children ?? [])];
+    for (const plate of plates) {
+      expect(plate.className).toContain('flex-col');
+      const icon = plate.querySelector('[data-testid="tile-icon"]');
+      // Значок не сжимается на узком экране (раньше на 320 px превращался в полоску).
+      expect(icon?.className).toContain('shrink-0');
+      expect(plate.querySelector('[data-testid="tile-footer"]')?.className).toContain('mt-auto');
+    }
+  });
+
+  it('дата окончания — под числом дней, а не под названием тарифа', async () => {
+    const container = await renderCard(subscription());
+
+    const [tariff, days] = [...(container.querySelector('.mb-5.flex.gap-2\\.5')?.children ?? [])];
+    expect(days.textContent).toContain('dashboard.validUntil');
+    expect(tariff.textContent).not.toContain('dashboard.validUntil');
+  });
+
+  it('плитка «Тариф» ведёт к смене тарифа и подписывает это', async () => {
+    const container = await renderCard(subscription());
+
+    const tariff = container.querySelector('.mb-5.flex.gap-2\\.5')?.children[0] as HTMLElement;
+    expect(tariff.getAttribute('href')).toBe('/subscription/purchase?subscriptionId=42');
+    const footer = tariff.querySelector('[data-testid="tile-footer"]') as HTMLElement;
+    // Полная подпись от 360 px, короткая — уже.
+    expect(footer.textContent).toContain('subscription.switchTariff.title');
+    expect(footer.textContent).toContain('dashboard.switchTariffShort');
+    expect(screen.getByText('subscription.switchTariff.title').className).toContain(
+      'max-[359px]:hidden',
+    );
+    expect(screen.getByText('dashboard.switchTariffShort').className).toContain(
+      'min-[360px]:hidden',
+    );
+  });
+
+  it('где смена недоступна (пробный период), плитка ведёт на подписку без «Сменить»', async () => {
+    const container = await renderCard(subscription({ is_trial: true, tariff_id: undefined }));
+
+    const tariff = container.querySelector('.mb-5.flex.gap-2\\.5')?.children[0] as HTMLElement;
+    expect(tariff.getAttribute('href')).toBe('/subscriptions/42');
+    expect(tariff.querySelector('[data-testid="tile-footer"]')).toBeNull();
+    expect(screen.queryByText('dashboard.switchTariffShort')).toBeNull();
   });
 });
 

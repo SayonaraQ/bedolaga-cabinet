@@ -351,6 +351,7 @@
     "usedSuffix": "used",
     "unlimited": "Unlimited",
     "tariff": "Tariff",
+    "switchTariffShort": "Switch",
     "validUntil": "until {{date}}",
     "remaining": "Remaining",
     "daysRemaining": "Days left",

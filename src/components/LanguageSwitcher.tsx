@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { infoApi } from '@/api/info';
-import { ChevronDownIcon } from '@/components/icons';
 
 export default function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
@@ -45,20 +44,23 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Только флаг, квадрат 38 px как у соседних кнопок шапки: с кодом «RU» и
+        стрелкой кнопка была вдвое шире, и в шапке телефона не помещались палитра,
+        тема и колокольчик (11.11.2026). Код языка — в подсказке и списке. */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-sm transition-all ${
+        className={`flex items-center justify-center rounded-linear-lg border p-2 transition-all ${
           isOpen
             ? 'border-dark-600 bg-dark-700'
             : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600 hover:bg-dark-700'
         }`}
         aria-label={t('common.changeLanguage')}
+        aria-expanded={isOpen}
+        title={currentLang.name}
       >
-        <span>{currentLang.flag}</span>
-        <span className="font-medium text-dark-200">{currentLang.code.toUpperCase()}</span>
-        <ChevronDownIcon
-          className={`h-3.5 w-3.5 text-dark-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-        />
+        <span className="flex h-5 w-5 items-center justify-center text-base leading-none">
+          {currentLang.flag}
+        </span>
       </button>
 
       {isOpen && (

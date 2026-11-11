@@ -93,5 +93,6 @@ it('shows its pressed state, glint, season title and toggles with haptic feedbac
   expect(button.querySelector('span')).toBeNull();
   expect(safeLocal.getItem(STORAGE_KEYS.SEASONAL)).toBe('off');
   expect(backend.impact).toHaveBeenCalledWith('light');
-  expect(screen.getByText('Null Core').className).toContain('min-[360px]:inline');
+  // С палитрой, темой, колокольчиком и флагом имя до 385 px упиралось в палитру.
+  expect(screen.getByText('Null Core').className).toContain('min-[385px]:inline');
 });

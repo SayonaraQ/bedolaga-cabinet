@@ -202,7 +202,7 @@ export function AppHeader({
                 )}
               </div>
               {appName && (
-                <span className="hidden whitespace-nowrap text-base font-semibold text-dark-100 min-[360px]:inline">
+                <span className="hidden whitespace-nowrap text-base font-semibold text-dark-100 min-[385px]:inline">
                   {appName}
                 </span>
               )}

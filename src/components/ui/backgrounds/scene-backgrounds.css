@@ -193,6 +193,62 @@
   border-radius: 50%;
 }
 
+@keyframes scene-breathe {
+  from {
+    transform: scale(1);
+    opacity: 0.78;
+  }
+  to {
+    transform: scale(1.1, 1.06);
+    opacity: 1;
+  }
+}
+@keyframes scene-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes scene-corner-b {
+  0%,
+  100% {
+    transform: translate(6%, -6%) scale(1, 0.9);
+  }
+  33% {
+    transform: translate(-10%, 4%) scale(1.1, 1.05);
+  }
+  66% {
+    transform: translate(-2%, 10%) scale(0.92, 1.08);
+  }
+}
+@keyframes scene-corner-c {
+  0%,
+  100% {
+    transform: translate(-4%, 6%) scale(0.95, 1.05);
+  }
+  33% {
+    transform: translate(10%, -6%) scale(1.12, 0.9);
+  }
+  66% {
+    transform: translate(4%, -12%) scale(1.02, 1.1);
+  }
+}
+@keyframes scene-rise {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100vh);
+  }
+}
+@keyframes scene-twinkle {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Keep the negative-delay particle positions when freezing a scene. */
 .scene-paused * {
   animation-play-state: paused !important;

@@ -6,7 +6,7 @@ import { themeColorsApi } from '@/api/themeColors';
 import { DEFAULT_THEME_COLORS } from '@/types/theme';
 import { useTheme } from '@/hooks/useTheme';
 import type { AnimationConfig } from '@/components/ui/backgrounds/types';
-import { DEFAULT_ANIMATION_CONFIG } from '@/components/ui/backgrounds/types';
+import { DEFAULT_ANIMATION_CONFIG, isStaticSceneType } from '@/components/ui/backgrounds/types';
 import {
   backgroundComponents,
   prefetchBackground,
@@ -25,7 +25,7 @@ if (cachedAppearance && isSeasonalAppearance(cachedAppearance)) {
   prefetchSeasonalBackground();
 } else if (
   cachedConfig &&
-  (cachedConfig.enabled || cachedConfig.type === 'liquid-light') &&
+  (cachedConfig.enabled || isStaticSceneType(cachedConfig.type)) &&
   cachedConfig.type !== 'none'
 ) {
   prefetchBackground(cachedConfig.type);
@@ -84,7 +84,7 @@ function RenderBackground({ config }: { config: AnimationConfig }) {
 
   const { isLight, appearanceId } = useTheme();
   const seasonal = isSeasonalAppearance(appearanceId);
-  const supportsStaticScene = seasonal || config.type === 'liquid-light';
+  const supportsStaticScene = seasonal || isStaticSceneType(config.type);
 
   // Тот же ключ, что у ThemeColorsProvider — берём из кэша, лишнего запроса нет.
   const { data: themeColors } = useQuery({

@@ -2,7 +2,11 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_ANIMATION_CONFIG, type AnimationConfig } from '@/components/ui/backgrounds/types';
+import {
+  DEFAULT_ANIMATION_CONFIG,
+  STATIC_SCENE_TYPES,
+  type AnimationConfig,
+} from '@/components/ui/backgrounds/types';
 import type { AppearanceId } from '@/theme/appearance';
 import { DEFAULT_THEME_COLORS } from '@/types/theme';
 import { mockSceneMedia } from '@/test/sceneMedia';
@@ -117,13 +121,13 @@ describe('BackgroundRenderer appearance selection', () => {
 });
 
 describe('BackgroundRenderer static scenes', () => {
-  it.each(['seasonal', 'liquid-light'] as const)(
+  it.each(['seasonal', ...STATIC_SCENE_TYPES] as const)(
     'keeps %s rendered and paused under reduced motion',
     async (kind) => {
       if (kind === 'seasonal') theme.appearanceId = 'spring-night';
       window.matchMedia('(prefers-reduced-motion: reduce)');
       changeMedia('(prefers-reduced-motion: reduce)', true);
-      renderBackground({ type: kind === 'seasonal' ? 'vortex' : 'liquid-light' });
+      renderBackground({ type: kind === 'seasonal' ? 'vortex' : kind });
       await waitFor(() => expect(document.querySelector('.scene-paused')).not.toBeNull());
       const scene = document.querySelector('[data-scene]');
       act(() => changeMedia('(prefers-reduced-motion: reduce)', false));
@@ -132,10 +136,10 @@ describe('BackgroundRenderer static scenes', () => {
     },
   );
 
-  it('keeps disabled liquid-light visible as a static scene', async () => {
-    renderBackground({ type: 'liquid-light', enabled: false });
+  it.each(STATIC_SCENE_TYPES)('keeps disabled %s visible as a static scene', async (type) => {
+    renderBackground({ type, enabled: false });
     await waitFor(() =>
-      expect(document.querySelector('[data-scene="liquid-light-night"]')).not.toBeNull(),
+      expect(document.querySelector(`[data-scene="${type}-night"]`)).not.toBeNull(),
     );
     expect(document.querySelector('.scene-paused')).not.toBeNull();
   });

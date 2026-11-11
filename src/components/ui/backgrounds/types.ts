@@ -20,8 +20,16 @@ export type BackgroundType =
   | 'matrix-rain'
   | 'liquid-gradient'
   | 'liquid-light'
+  | 'halo'
+  | 'stardust'
   | 'constellation'
   | 'none';
+
+export const STATIC_SCENE_TYPES = ['liquid-light', 'halo', 'stardust'] as const;
+
+export function isStaticSceneType(type: BackgroundType): boolean {
+  return STATIC_SCENE_TYPES.some((scene) => scene === type);
+}
 
 export interface AnimationConfig {
   enabled: boolean;

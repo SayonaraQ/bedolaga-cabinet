@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { DEFAULT_ANIMATION_CONFIG } from '@/components/ui/backgrounds/types';
+import { DEFAULT_ANIMATION_CONFIG, STATIC_SCENE_TYPES } from '@/components/ui/backgrounds/types';
 import { setCachedConfig } from '@/utils/backgroundConfig';
 
 const prefetch = vi.hoisted(() => ({ background: vi.fn(), seasonal: vi.fn() }));
@@ -30,13 +30,13 @@ it('prefetches the cached active seasonal appearance before rendering, even with
   expect(prefetch.background).not.toHaveBeenCalled();
 });
 
-it.each([true, false])(
-  'prefetches cached liquid-light with enabled=%s for a base appearance',
-  async (enabled) => {
+it.each(STATIC_SCENE_TYPES.flatMap((type) => [true, false].map((enabled) => ({ type, enabled }))))(
+  'prefetches cached $type with enabled=$enabled for a base appearance',
+  async ({ type, enabled }) => {
     document.documentElement.dataset.appearance = 'dark';
-    setCachedConfig({ ...DEFAULT_ANIMATION_CONFIG, type: 'liquid-light', enabled });
+    setCachedConfig({ ...DEFAULT_ANIMATION_CONFIG, type, enabled });
     await import('./BackgroundRenderer');
-    expect(prefetch.background).toHaveBeenCalledWith('liquid-light');
+    expect(prefetch.background).toHaveBeenCalledWith(type);
     expect(prefetch.seasonal).not.toHaveBeenCalled();
   },
 );

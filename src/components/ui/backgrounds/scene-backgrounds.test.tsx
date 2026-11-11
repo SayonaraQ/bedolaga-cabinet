@@ -3,8 +3,11 @@ import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockSceneMedia } from '@/test/sceneMedia';
 import { SEASONAL_PALETTES, type SeasonalAppearanceId } from '@/theme/appearance';
+import HaloBackground from './halo';
 import LiquidLightBackground from './liquid-light';
 import SeasonalBackground from './seasonal';
+import StardustBackground from './stardust';
+import { STATIC_SCENE_TYPES } from './types';
 
 const theme = vi.hoisted(() => ({ isLight: false }));
 vi.mock('@/hooks/useTheme', () => ({ useTheme: () => theme }));
@@ -15,6 +18,18 @@ beforeEach(() => {
   vi.stubGlobal('innerWidth', 1024);
   vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
   changeMedia = mockSceneMedia();
+  // jsdom's CSS parser drops long shadow lists at its iteration limit.
+  const shadows = new WeakMap<CSSStyleDeclaration, string>();
+  const styles = Object.getPrototypeOf(document.createElement('div').style) as CSSStyleDeclaration;
+  vi.spyOn(styles, 'boxShadow', 'set').mockImplementation(function (
+    this: CSSStyleDeclaration,
+    value: string,
+  ) {
+    shadows.set(this, value);
+  });
+  vi.spyOn(styles, 'boxShadow', 'get').mockImplementation(function (this: CSSStyleDeclaration) {
+    return shadows.get(this) ?? '';
+  });
 });
 afterEach(() => {
   cleanup();
@@ -105,13 +120,123 @@ describe('LiquidLightBackground', () => {
   });
 });
 
-describe.each(['seasonal', 'liquid-light'] as const)('%s static scenes', (kind) => {
-  const scene = (paused = false) =>
-    kind === 'seasonal' ? (
-      <SeasonalBackground appearance="autumn-day" paused={paused} />
-    ) : (
-      <LiquidLightBackground settings={{}} paused={paused} />
+describe.each([
+  { kind: 'halo', Component: HaloBackground },
+  { kind: 'stardust', Component: StardustBackground },
+])('$kind scene', ({ kind, Component }) => {
+  it.each([false, true])('renders the theme palette with isLight=%s', (isLight) => {
+    theme.isLight = isLight;
+    const { container } = render(<Component settings={{}} />);
+    const root = container.querySelector<HTMLElement>('[data-scene]');
+    expect(root?.dataset.scene).toBe(`${kind}-${isLight ? 'day' : 'night'}`);
+    expect(root?.getAttribute('aria-hidden')).toBe('true');
+    expect(root?.classList.contains('scene-background')).toBe(true);
+    expect(root?.style.position).toBe('fixed');
+    expect(root?.style.background).toBe(isLight ? 'transparent' : 'rgb(var(--color-dark-950))');
+    const layers = [...container.querySelectorAll<HTMLElement>('[data-scene] > div')];
+    expect(
+      layers.every((layer) => layer.style.mixBlendMode === (isLight ? 'normal' : 'screen')),
+    ).toBe(true);
+    const first = layers[0];
+    if (kind === 'halo') {
+      expect(first.style.background).toContain(
+        isLight ? 'rgb(168, 85, 247) 26%' : 'rgb(147, 51, 234) 62%',
+      );
+      expect(layers).toHaveLength(3);
+    } else {
+      expect(first.style.backgroundColor).toBe(isLight ? 'rgb(168, 85, 247)' : 'rgb(147, 51, 234)');
+      expect(layers).toHaveLength(4);
+    }
+    expect(container.querySelector('canvas')).toBeNull();
+  });
+
+  it('sanitizes bad colours to the default palette', () => {
+    const { container, rerender } = render(<Component settings={{}} />);
+    const original = container.innerHTML;
+    rerender(
+      <Component
+        settings={{ color1: 'red; background:url(bad)', color2: 'url(bad)', color3: 'var(--bad)' }}
+      />,
     );
+    expect(container.innerHTML).toBe(original);
+    rerender(<Component settings={{ color1: '#123456', color2: '#654321', color3: '#abcdef' }} />);
+    expect(container.innerHTML).not.toBe(original);
+  });
+
+  it.each([
+    { speed: 'slow', multiplier: 1.6 },
+    { speed: 'normal', multiplier: 1 },
+    { speed: 'fast', multiplier: 0.5 },
+    { speed: 'invalid', multiplier: 1 },
+  ])('scales every animation duration for $speed', ({ speed, multiplier }) => {
+    const { container } = render(<Component settings={{ speed }} />);
+    const animations = [...container.querySelectorAll<HTMLElement>('[data-scene] > div')]
+      .flatMap((layer) => layer.style.animation.match(/\d+(?:\.\d+)?s\b/g) ?? [])
+      .map(Number.parseFloat);
+    const durations = kind === 'halo' ? [9, 48, 11] : [26, 32, 140, 90, 3.6];
+    expect(animations).toEqual(
+      durations.map((duration) => Number((duration * multiplier).toFixed(2))),
+    );
+  });
+});
+
+describe('StardustBackground star layers', () => {
+  const shadows = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>('[data-star-layer]')].map(
+      (layer) => layer.style.boxShadow,
+    );
+
+  it('renders two deterministic shadow layers across mounts', () => {
+    const first = render(<StardustBackground settings={{}} />);
+    const original = shadows(first.container);
+    expect(original).toHaveLength(2);
+    for (const shadow of original) {
+      expect(shadow).toContain('vw');
+      expect(shadow).toContain('vh');
+    }
+    first.unmount();
+    const second = render(<StardustBackground settings={{}} />);
+    expect(shadows(second.container)).toEqual(original);
+  });
+
+  it('changes star counts at 1024px and restores the same desktop sky', () => {
+    const { container } = render(<StardustBackground settings={{}} />);
+    const counts = () => shadows(container).map((shadow) => shadow.match(/vw/g)?.length);
+    expect(counts()).toEqual([120, 48]);
+    act(() => changeMedia('(min-width: 1024px)', true));
+    const desktop = shadows(container);
+    expect(counts()).toEqual([270, 114]);
+    act(() => changeMedia('(min-width: 1024px)', false));
+    expect(counts()).toEqual([120, 48]);
+    act(() => changeMedia('(min-width: 1024px)', true));
+    expect(shadows(container)).toEqual(desktop);
+  });
+
+  it('uses pale and tinted stars at night and violet dust in daylight', () => {
+    const { container, rerender } = render(<StardustBackground settings={{ color2: '#123456' }} />);
+    const night = shadows(container);
+    expect(night[0]).toContain('rgba(245,240,255,');
+    expect(night[0]).toContain('color-mix(in srgb, #123456 ');
+    theme.isLight = true;
+    rerender(<StardustBackground settings={{ color2: '#123456' }} />);
+    for (const shadow of shadows(container)) {
+      expect(shadow).toContain('rgba(147,51,234,');
+      expect(shadow).not.toContain('color-mix');
+    }
+  });
+});
+
+const staticScenes = {
+  'liquid-light': LiquidLightBackground,
+  halo: HaloBackground,
+  stardust: StardustBackground,
+};
+describe.each(['seasonal', ...STATIC_SCENE_TYPES] as const)('%s static scenes', (kind) => {
+  const scene = (paused = false) => {
+    if (kind === 'seasonal') return <SeasonalBackground appearance="autumn-day" paused={paused} />;
+    const Component = staticScenes[kind];
+    return <Component settings={{}} paused={paused} />;
+  };
 
   it('pauses and resumes the same scene when reduced motion changes', () => {
     const { container } = render(scene());
@@ -127,6 +252,7 @@ describe.each(['seasonal', 'liquid-light'] as const)('%s static scenes', (kind) 
   it('keeps a static scene when explicitly paused', () => {
     const { container } = render(scene(true));
     expect(container.firstElementChild?.classList.contains('scene-paused')).toBe(true);
+    expect(container.firstElementChild?.getAttribute('data-paused')).toBe('true');
     expect(container.querySelector('[data-particle], .scene-blob')).not.toBeNull();
   });
 

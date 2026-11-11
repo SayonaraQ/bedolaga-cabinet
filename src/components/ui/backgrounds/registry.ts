@@ -24,6 +24,8 @@ const backgroundImports: Record<Exclude<BackgroundType, 'none'>, () => Promise<u
   'matrix-rain': () => import('./matrix-rain'),
   'liquid-gradient': () => import('./liquid-gradient'),
   'liquid-light': () => import('./liquid-light'),
+  halo: () => import('./halo'),
+  stardust: () => import('./stardust'),
   constellation: () => import('./constellation'),
 };
 
@@ -60,6 +62,8 @@ export const backgroundComponents: Record<
   'matrix-rain': lazy(() => import('./matrix-rain')),
   'liquid-gradient': lazy(() => import('./liquid-gradient')),
   'liquid-light': lazy(() => import('./liquid-light')),
+  halo: lazy(() => import('./halo')),
+  stardust: lazy(() => import('./stardust')),
   constellation: lazy(() => import('./constellation')),
 };
 
@@ -745,6 +749,49 @@ export const backgroundRegistry: BackgroundDefinition[] = [
       { key: 'color1', label: 'admin.backgrounds.color1', type: 'color', default: '#9333EA' },
       { key: 'color2', label: 'admin.backgrounds.color2', type: 'color', default: '#D68CFF' },
       { key: 'color3', label: 'admin.backgrounds.color3', type: 'color', default: '#7E22CE' },
+      {
+        key: 'speed',
+        label: 'admin.backgrounds.speed',
+        type: 'select',
+        default: 'normal',
+        options: [
+          { label: 'admin.backgrounds.slow', value: 'slow' },
+          { label: 'admin.backgrounds.normal', value: 'normal' },
+          { label: 'admin.backgrounds.fast', value: 'fast' },
+        ],
+      },
+    ],
+  },
+  {
+    type: 'halo',
+    labelKey: 'admin.backgrounds.halo',
+    descriptionKey: 'admin.backgrounds.haloDesc',
+    category: 'css',
+    settings: [
+      { key: 'color1', label: 'admin.backgrounds.color1', type: 'color', default: '#9333EA' },
+      { key: 'color2', label: 'admin.backgrounds.color2', type: 'color', default: '#D68CFF' },
+      { key: 'color3', label: 'admin.backgrounds.color3', type: 'color', default: '#7E22CE' },
+      {
+        key: 'speed',
+        label: 'admin.backgrounds.speed',
+        type: 'select',
+        default: 'normal',
+        options: [
+          { label: 'admin.backgrounds.slow', value: 'slow' },
+          { label: 'admin.backgrounds.normal', value: 'normal' },
+          { label: 'admin.backgrounds.fast', value: 'fast' },
+        ],
+      },
+    ],
+  },
+  {
+    type: 'stardust',
+    labelKey: 'admin.backgrounds.stardust',
+    descriptionKey: 'admin.backgrounds.stardustDesc',
+    category: 'css',
+    settings: [
+      { key: 'color1', label: 'admin.backgrounds.color1', type: 'color', default: '#9333EA' },
+      { key: 'color2', label: 'admin.backgrounds.color2', type: 'color', default: '#D68CFF' },
       {
         key: 'speed',
         label: 'admin.backgrounds.speed',

@@ -1,4 +1,8 @@
-import type { AnimationConfig, BackgroundType } from '@/components/ui/backgrounds/types';
+import type {
+  AnimationConfig,
+  BackgroundType,
+  LightAnimationOverride,
+} from '@/components/ui/backgrounds/types';
 
 const ANIMATION_CACHE_KEY = 'cabinet_animation_config';
 const MAX_CONFIG_JSON_LENGTH = 10_000;
@@ -31,6 +35,51 @@ const VALID_TYPES: ReadonlySet<string> = new Set<BackgroundType>([
   'none',
 ]);
 
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Фон светлой темы. Ошибка в нём не должна выбрасывать весь конфиг (тогда
+ * пропал бы и основной фон), поэтому мусор превращается в «как в тёмной».
+ */
+function validateLight(value: unknown): LightAnimationOverride | undefined {
+  if (value == null) return undefined;
+  if (!isPlainObject(value)) return undefined;
+  if (value.inherit !== false) return { ...INHERIT_LIGHT, ...pickLightFields(value) };
+  if (typeof value.type !== 'string' || !VALID_TYPES.has(value.type)) return undefined;
+  return {
+    inherit: false,
+    type: value.type as BackgroundType,
+    settings: isPlainObject(value.settings) ? value.settings : {},
+    opacity: typeof value.opacity === 'number' ? clamp(value.opacity, 0, 1) : 1,
+    blur: typeof value.blur === 'number' ? clamp(value.blur, 0, 50) : 0,
+  };
+}
+
+const INHERIT_LIGHT: LightAnimationOverride = {
+  inherit: true,
+  type: 'aurora',
+  settings: {},
+  opacity: 1,
+  blur: 0,
+};
+
+// Поля светлого фона сохраняются и при inherit: админка показывает последний
+// выбранный эффект, когда наследование снова выключают.
+function pickLightFields(value: Record<string, unknown>): Partial<LightAnimationOverride> {
+  const out: Partial<LightAnimationOverride> = {};
+  if (typeof value.type === 'string' && VALID_TYPES.has(value.type)) {
+    out.type = value.type as BackgroundType;
+  }
+  if (isPlainObject(value.settings)) out.settings = value.settings;
+  if (typeof value.opacity === 'number') out.opacity = clamp(value.opacity, 0, 1);
+  if (typeof value.blur === 'number') out.blur = clamp(value.blur, 0, 50);
+  return out;
+}
+
 export function validateConfig(parsed: unknown): AnimationConfig | null {
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
   const obj = parsed as Record<string, unknown>;
@@ -40,6 +89,7 @@ export function validateConfig(parsed: unknown): AnimationConfig | null {
   if (typeof obj.blur !== 'number') return null;
   if (obj.settings != null && (typeof obj.settings !== 'object' || Array.isArray(obj.settings)))
     return null;
+  const light = validateLight(obj.light);
   return {
     enabled: obj.enabled,
     type: obj.type as BackgroundType,
@@ -47,6 +97,7 @@ export function validateConfig(parsed: unknown): AnimationConfig | null {
     blur: Math.max(0, Math.min(50, obj.blur)),
     settings: (obj.settings as Record<string, unknown>) ?? {},
     reducedOnMobile: typeof obj.reducedOnMobile === 'boolean' ? obj.reducedOnMobile : true,
+    ...(light ? { light } : {}),
   };
 }
 

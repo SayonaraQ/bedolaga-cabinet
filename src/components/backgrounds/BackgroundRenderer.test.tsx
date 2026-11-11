@@ -174,3 +174,32 @@ it('keeps one seasonal scene mounted across navigation between background consum
   expect(document.querySelector('[data-scene]')).toBe(scene);
   expect(scene?.querySelector('[data-particle]')).toBe(particle);
 });
+
+describe('separate light-theme background', () => {
+  const light = { inherit: false, type: 'halo' as const, settings: {}, opacity: 1, blur: 0 };
+
+  it('shows the main scene in the dark theme', async () => {
+    renderBackground({ type: 'stardust', light });
+    await waitFor(() =>
+      expect(document.querySelector('[data-scene="stardust-night"]')).not.toBeNull(),
+    );
+    expect(document.querySelector('[data-scene^="halo"]')).toBeNull();
+  });
+
+  it('shows the light override in the light theme', async () => {
+    theme.isLight = true;
+    theme.appearanceId = 'light';
+    renderBackground({ type: 'stardust', light });
+    await waitFor(() => expect(document.querySelector('[data-scene="halo-day"]')).not.toBeNull());
+    expect(document.querySelector('[data-scene^="stardust"]')).toBeNull();
+  });
+
+  it('keeps the main scene in the light theme while the override inherits', async () => {
+    theme.isLight = true;
+    theme.appearanceId = 'light';
+    renderBackground({ type: 'stardust', light: { ...light, inherit: true } });
+    await waitFor(() =>
+      expect(document.querySelector('[data-scene="stardust-day"]')).not.toBeNull(),
+    );
+  });
+});

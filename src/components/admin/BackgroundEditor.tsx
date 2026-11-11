@@ -57,7 +57,7 @@ export function BackgroundEditor() {
 
   return (
     <div className="space-y-6">
-      <BackgroundConfigEditor value={config} onChange={handleChange} />
+      <BackgroundConfigEditor value={config} onChange={handleChange} withLightTheme />
 
       {/* Save button */}
       {showSaveButton && (

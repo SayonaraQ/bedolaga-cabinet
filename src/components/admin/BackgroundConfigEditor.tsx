@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { backgroundRegistry } from '@/components/ui/backgrounds/registry';
 import { BackgroundPreview } from '@/components/backgrounds/BackgroundPreview';
 import type {
   AnimationConfig,
   BackgroundType,
+  LightAnimationOverride,
   SettingDefinition,
 } from '@/components/ui/backgrounds/types';
+import { useTheme } from '@/hooks/useTheme';
 import { Toggle } from './Toggle';
 import { cn } from '@/lib/utils';
 
@@ -95,36 +97,39 @@ function SettingField({
   return null;
 }
 
-interface BackgroundConfigEditorProps {
-  value: AnimationConfig;
-  onChange: (config: AnimationConfig) => void;
+/** Поля одного эффекта: то, что у тёмной и светлой темы задаётся отдельно. */
+interface EffectValue {
+  type: BackgroundType;
+  settings: Record<string, unknown>;
+  opacity: number;
+  blur: number;
 }
 
-export function BackgroundConfigEditor({ value: config, onChange }: BackgroundConfigEditorProps) {
+function defaultSettings(type: BackgroundType): Record<string, unknown> {
+  const def = backgroundRegistry.find((d) => d.type === type);
+  const defaults: Record<string, unknown> = {};
+  if (def) {
+    for (const s of def.settings) {
+      defaults[s.key] = s.default;
+    }
+  }
+  return defaults;
+}
+
+function EffectFields({
+  value,
+  onChange,
+  previewTheme,
+}: {
+  value: EffectValue;
+  onChange: (patch: Partial<EffectValue>) => void;
+  previewTheme?: 'light' | 'dark';
+}) {
   const { t } = useTranslation();
 
-  const updateConfig = (patch: Partial<AnimationConfig>) => {
-    onChange({ ...config, ...patch });
-  };
-
-  const updateSetting = (key: string, val: unknown) => {
-    onChange({ ...config, settings: { ...config.settings, [key]: val } });
-  };
-
-  const handleTypeChange = (type: BackgroundType) => {
-    const def = backgroundRegistry.find((d) => d.type === type);
-    const defaults: Record<string, unknown> = {};
-    if (def) {
-      for (const s of def.settings) {
-        defaults[s.key] = s.default;
-      }
-    }
-    onChange({ ...config, type, settings: defaults });
-  };
-
   const currentDef = useMemo(
-    () => backgroundRegistry.find((d) => d.type === config.type),
-    [config.type],
+    () => backgroundRegistry.find((d) => d.type === value.type),
+    [value.type],
   );
 
   const categories = useMemo(() => {
@@ -136,6 +141,193 @@ export function BackgroundConfigEditor({ value: config, onChange }: BackgroundCo
     }
     return cats;
   }, []);
+
+  const handleTypeChange = (type: BackgroundType) => {
+    onChange({ type, settings: defaultSettings(type) });
+  };
+
+  return (
+    <>
+      {/* Preview */}
+      <div>
+        <label className="mb-2 block text-sm font-medium text-dark-300">
+          {t('admin.backgrounds.preview')}
+        </label>
+        <BackgroundPreview
+          type={value.type}
+          settings={value.settings}
+          opacity={value.opacity}
+          blur={value.blur}
+          theme={previewTheme}
+          className="h-48"
+        />
+      </div>
+
+      {/* Type selector gallery */}
+      <div>
+        <label className="mb-2 block text-sm font-medium text-dark-300">
+          {t('admin.backgrounds.selectType')}
+        </label>
+
+        {/* None option */}
+        <button
+          onClick={() => handleTypeChange('none')}
+          className={cn(
+            'mb-3 w-full rounded-xl border p-3 text-left transition-colors',
+            value.type === 'none'
+              ? 'border-accent-500 bg-accent-500/10'
+              : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600',
+          )}
+        >
+          <span className="text-sm font-medium text-dark-200">{t('admin.backgrounds.none')}</span>
+          <span className="ml-2 text-xs text-dark-400">{t('admin.backgrounds.noneDesc')}</span>
+        </button>
+
+        {/* Background types by category */}
+        <div className="space-y-4">
+          {Array.from(categories.entries()).map(([category, defs]) => (
+            <div key={category}>
+              <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-dark-500">
+                {t(`admin.backgrounds.category${category.toUpperCase()}`)}
+              </span>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {defs.map((def) => (
+                  <button
+                    key={def.type}
+                    onClick={() => handleTypeChange(def.type)}
+                    className={cn(
+                      'rounded-xl border p-3 text-left transition-colors',
+                      value.type === def.type
+                        ? 'border-accent-500 bg-accent-500/10'
+                        : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600',
+                    )}
+                  >
+                    <span className="block text-sm font-medium text-dark-200">
+                      {t(def.labelKey)}
+                    </span>
+                    <span className="block text-xs text-dark-400">{t(def.descriptionKey)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-type settings */}
+      {currentDef && currentDef.settings.length > 0 && (
+        <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
+          <h4 className="mb-3 text-sm font-medium text-dark-200">
+            {t('admin.backgrounds.settings')}
+          </h4>
+          <div className="space-y-3">
+            {currentDef.settings.map((def) => (
+              <SettingField
+                key={def.key}
+                def={def}
+                value={value.settings[def.key]}
+                onChange={(val) => onChange({ settings: { ...value.settings, [def.key]: val } })}
+                t={t}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Opacity and blur */}
+      <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <label className="min-w-0 text-sm text-dark-300">
+              {t('admin.backgrounds.globalOpacity')}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={0.1}
+                max={1}
+                step={0.05}
+                value={value.opacity}
+                onChange={(e) => onChange({ opacity: parseFloat(e.target.value) })}
+                className="w-24 accent-accent-500"
+              />
+              <span className="w-14 text-right text-xs tabular-nums text-dark-400">
+                {value.opacity}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <label className="min-w-0 text-sm text-dark-300">
+              {t('admin.backgrounds.globalBlur')}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={0}
+                max={20}
+                step={1}
+                value={value.blur}
+                onChange={(e) => onChange({ blur: Number(e.target.value) })}
+                className="w-24 accent-accent-500"
+              />
+              <span className="w-14 text-right text-xs tabular-nums text-dark-400">
+                {value.blur}px
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+interface BackgroundConfigEditorProps {
+  value: AnimationConfig;
+  onChange: (config: AnimationConfig) => void;
+  /**
+   * Вкладки «Тёмная / Светлая»: свой фон у светлой темы. Только для фона
+   * кабинета — у лендингов один фон, и сервер лендингов поле `light` не знает.
+   */
+  withLightTheme?: boolean;
+}
+
+export function BackgroundConfigEditor({
+  value: config,
+  onChange,
+  withLightTheme = false,
+}: BackgroundConfigEditorProps) {
+  const { t } = useTranslation();
+  const { isLight } = useTheme();
+  const [tab, setTab] = useState<'dark' | 'light'>(withLightTheme && isLight ? 'light' : 'dark');
+  const showLight = withLightTheme && tab === 'light';
+  const light = config.light;
+  const lightInherits = !light || light.inherit;
+
+  const updateConfig = (patch: Partial<AnimationConfig>) => {
+    onChange({ ...config, ...patch });
+  };
+
+  const darkEffect: EffectValue = {
+    type: config.type,
+    settings: config.settings,
+    opacity: config.opacity,
+    blur: config.blur,
+  };
+
+  const setLightInherit = (inherit: boolean) => {
+    // Свой фон светлой темы стартует с текущего фона: админ видит в предпросмотре
+    // то, что уже есть, и меняет только эффект.
+    const next: LightAnimationOverride = inherit
+      ? { ...(light ?? { ...darkEffect }), inherit: true }
+      : { ...darkEffect, inherit: false };
+    updateConfig({ light: next });
+  };
+
+  const updateLight = (patch: Partial<EffectValue>) => {
+    const base = light && !light.inherit ? light : { ...darkEffect, inherit: false };
+    updateConfig({ light: { ...base, ...patch, inherit: false } });
+  };
 
   return (
     <div className="space-y-6">
@@ -153,150 +345,90 @@ export function BackgroundConfigEditor({ value: config, onChange }: BackgroundCo
 
       {config.enabled && (
         <>
-          {/* Preview */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
-              {t('admin.backgrounds.preview')}
-            </label>
-            <BackgroundPreview
-              type={config.type}
-              settings={config.settings}
-              opacity={config.opacity}
-              blur={config.blur}
-              className="h-48"
-            />
-          </div>
-
-          {/* Type selector gallery */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
-              {t('admin.backgrounds.selectType')}
-            </label>
-
-            {/* None option */}
-            <button
-              onClick={() => handleTypeChange('none')}
-              className={cn(
-                'mb-3 w-full rounded-xl border p-3 text-left transition-colors',
-                config.type === 'none'
-                  ? 'border-accent-500 bg-accent-500/10'
-                  : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600',
-              )}
+          {withLightTheme && (
+            <div
+              role="tablist"
+              aria-label={t('admin.backgrounds.title')}
+              className="grid grid-cols-2 gap-1 rounded-xl border border-dark-700/50 bg-dark-800/30 p-1"
             >
-              <span className="text-sm font-medium text-dark-200">
-                {t('admin.backgrounds.none')}
-              </span>
-              <span className="ml-2 text-xs text-dark-400">{t('admin.backgrounds.noneDesc')}</span>
-            </button>
-
-            {/* Background types by category */}
-            <div className="space-y-4">
-              {Array.from(categories.entries()).map(([category, defs]) => (
-                <div key={category}>
-                  <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-dark-500">
-                    {t(`admin.backgrounds.category${category.toUpperCase()}`)}
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {defs.map((def) => (
-                      <button
-                        key={def.type}
-                        onClick={() => handleTypeChange(def.type)}
-                        className={cn(
-                          'rounded-xl border p-3 text-left transition-colors',
-                          config.type === def.type
-                            ? 'border-accent-500 bg-accent-500/10'
-                            : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600',
-                        )}
-                      >
-                        <span className="block text-sm font-medium text-dark-200">
-                          {t(def.labelKey)}
-                        </span>
-                        <span className="block text-xs text-dark-400">{t(def.descriptionKey)}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {(['dark', 'light'] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === key}
+                  onClick={() => setTab(key)}
+                  className={cn(
+                    'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    tab === key
+                      ? 'bg-accent-500 text-on-accent'
+                      : 'text-dark-300 hover:text-dark-100',
+                  )}
+                >
+                  {t(
+                    key === 'dark' ? 'admin.backgrounds.darkTheme' : 'admin.backgrounds.lightTheme',
+                  )}
+                </button>
               ))}
             </div>
-          </div>
+          )}
 
-          {/* Per-type settings */}
-          {currentDef && currentDef.settings.length > 0 && (
-            <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
-              <h4 className="mb-3 text-sm font-medium text-dark-200">
-                {t('admin.backgrounds.settings')}
-              </h4>
-              <div className="space-y-3">
-                {currentDef.settings.map((def) => (
-                  <SettingField
-                    key={def.key}
-                    def={def}
-                    value={config.settings[def.key]}
-                    onChange={(val) => updateSetting(def.key, val)}
-                    t={t}
-                  />
-                ))}
+          {showLight ? (
+            <>
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
+                <div>
+                  <label className="text-sm text-dark-300">
+                    {t('admin.backgrounds.sameAsDark')}
+                  </label>
+                  <p className="text-xs text-dark-500">{t('admin.backgrounds.sameAsDarkHint')}</p>
+                </div>
+                <Toggle checked={lightInherits} onChange={() => setLightInherit(!lightInherits)} />
               </div>
-            </div>
+              {lightInherits ? (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark-300">
+                    {t('admin.backgrounds.preview')}
+                  </label>
+                  <BackgroundPreview
+                    type={config.type}
+                    settings={config.settings}
+                    opacity={config.opacity}
+                    blur={config.blur}
+                    theme="light"
+                    className="h-48"
+                  />
+                </div>
+              ) : (
+                <EffectFields
+                  value={light as EffectValue}
+                  onChange={updateLight}
+                  previewTheme="light"
+                />
+              )}
+            </>
+          ) : (
+            <EffectFields
+              value={darkEffect}
+              onChange={(patch) => updateConfig(patch)}
+              previewTheme={withLightTheme ? 'dark' : undefined}
+            />
           )}
 
           {/* Global settings */}
           <div className="rounded-xl border border-dark-700/50 bg-dark-800/30 p-4">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <label className="min-w-0 text-sm text-dark-300">
-                  {t('admin.backgrounds.globalOpacity')}
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <label className="text-sm text-dark-300">
+                  {t('admin.backgrounds.reducedOnMobile')}
                 </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min={0.1}
-                    max={1}
-                    step={0.05}
-                    value={config.opacity}
-                    onChange={(e) => updateConfig({ opacity: parseFloat(e.target.value) })}
-                    className="w-24 accent-accent-500"
-                  />
-                  <span className="w-14 text-right text-xs tabular-nums text-dark-400">
-                    {config.opacity}
-                  </span>
-                </div>
+                <p className="text-xs text-dark-500">
+                  {t('admin.backgrounds.reducedOnMobileDesc')}
+                </p>
               </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <label className="min-w-0 text-sm text-dark-300">
-                  {t('admin.backgrounds.globalBlur')}
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={20}
-                    step={1}
-                    value={config.blur}
-                    onChange={(e) => updateConfig({ blur: Number(e.target.value) })}
-                    className="w-24 accent-accent-500"
-                  />
-                  <span className="w-14 text-right text-xs tabular-nums text-dark-400">
-                    {config.blur}px
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <label className="text-sm text-dark-300">
-                    {t('admin.backgrounds.reducedOnMobile')}
-                  </label>
-                  <p className="text-xs text-dark-500">
-                    {t('admin.backgrounds.reducedOnMobileDesc')}
-                  </p>
-                </div>
-                <Toggle
-                  checked={config.reducedOnMobile}
-                  onChange={() => updateConfig({ reducedOnMobile: !config.reducedOnMobile })}
-                />
-              </div>
+              <Toggle
+                checked={config.reducedOnMobile}
+                onChange={() => updateConfig({ reducedOnMobile: !config.reducedOnMobile })}
+              />
             </div>
           </div>
         </>

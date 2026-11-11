@@ -2,12 +2,15 @@ import { Suspense } from 'react';
 import { backgroundComponents } from '@/components/ui/backgrounds/registry';
 import type { BackgroundType } from '@/components/ui/backgrounds/types';
 import { cn } from '@/lib/utils';
+import { SceneThemeContext } from '@/components/ui/backgrounds/scene-theme';
 
 interface BackgroundPreviewProps {
   type: BackgroundType;
   settings: Record<string, unknown>;
   opacity?: number;
   blur?: number;
+  /** Показать сцену в этой теме, а не в теме админа (вкладки фона по темам). */
+  theme?: 'light' | 'dark';
   className?: string;
 }
 
@@ -16,8 +19,13 @@ export function BackgroundPreview({
   settings,
   opacity,
   blur,
+  theme,
   className,
 }: BackgroundPreviewProps) {
+  // Светлая сцена прозрачна и лежит на фоне страницы; в предпросмотре этот фон
+  // даёт сама коробка, иначе под ней был бы тёмный bg-dark-900 админки.
+  const groundStyle =
+    theme === 'light' ? { background: 'rgb(var(--color-champagne-200))' } : undefined;
   if (type === 'none') {
     return (
       <div
@@ -40,6 +48,7 @@ export function BackgroundPreview({
         'relative overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-900',
         className,
       )}
+      style={groundStyle}
     >
       <Suspense
         fallback={
@@ -55,7 +64,9 @@ export function BackgroundPreview({
           }}
           className="absolute inset-0"
         >
-          <Component settings={settings} />
+          <SceneThemeContext.Provider value={theme ?? null}>
+            <Component settings={settings} />
+          </SceneThemeContext.Provider>
         </div>
       </Suspense>
     </div>

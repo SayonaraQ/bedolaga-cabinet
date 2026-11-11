@@ -31,6 +31,20 @@ export function isStaticSceneType(type: BackgroundType): boolean {
   return STATIC_SCENE_TYPES.some((scene) => scene === type);
 }
 
+/**
+ * Фон светлой темы. Один эффект не обязан подходить обеим темам: «Звёздная
+ * пыль» хороша на тёмном и почти не видна на светлом. `inherit` (и отсутствие
+ * поля у старых конфигов) — светлая тема показывает основной фон.
+ * `enabled` и `reducedOnMobile` общие для обеих тем.
+ */
+export interface LightAnimationOverride {
+  inherit: boolean;
+  type: BackgroundType;
+  settings: Record<string, unknown>;
+  opacity: number;
+  blur: number;
+}
+
 export interface AnimationConfig {
   enabled: boolean;
   type: BackgroundType;
@@ -38,6 +52,20 @@ export interface AnimationConfig {
   opacity: number;
   blur: number;
   reducedOnMobile: boolean;
+  light?: LightAnimationOverride;
+}
+
+/** Конфиг, который показывается в теме `isLight`: основной или фон светлой темы. */
+export function resolveAnimationConfig(config: AnimationConfig, isLight: boolean): AnimationConfig {
+  const light = config.light;
+  if (!isLight || !light || light.inherit) return config;
+  return {
+    ...config,
+    type: light.type,
+    settings: light.settings,
+    opacity: light.opacity,
+    blur: light.blur,
+  };
 }
 
 export const DEFAULT_ANIMATION_CONFIG: AnimationConfig = {

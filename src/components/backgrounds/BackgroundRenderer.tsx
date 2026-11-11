@@ -6,7 +6,11 @@ import { themeColorsApi } from '@/api/themeColors';
 import { DEFAULT_THEME_COLORS } from '@/types/theme';
 import { useTheme } from '@/hooks/useTheme';
 import type { AnimationConfig } from '@/components/ui/backgrounds/types';
-import { DEFAULT_ANIMATION_CONFIG, isStaticSceneType } from '@/components/ui/backgrounds/types';
+import {
+  DEFAULT_ANIMATION_CONFIG,
+  isStaticSceneType,
+  resolveAnimationConfig,
+} from '@/components/ui/backgrounds/types';
 import {
   backgroundComponents,
   prefetchBackground,
@@ -20,15 +24,20 @@ import { validateConfig, getCachedConfig, setCachedConfig } from '@/utils/backgr
 // The first-paint script resolves cached appearance flags/preferences before app JS runs.
 const cachedAppearance =
   typeof document !== 'undefined' ? document.documentElement.dataset.appearance : undefined;
+// Тему первый кадр тоже уже поставил классом на <html>: качаем фон той темы,
+// которую покажем (у светлой может быть свой).
+const cachedIsLight =
+  typeof document !== 'undefined' && document.documentElement.classList.contains('light');
 const cachedConfig = getCachedConfig();
+const cachedShown = cachedConfig ? resolveAnimationConfig(cachedConfig, cachedIsLight) : null;
 if (cachedAppearance && isSeasonalAppearance(cachedAppearance)) {
   prefetchSeasonalBackground();
 } else if (
-  cachedConfig &&
-  (cachedConfig.enabled || isStaticSceneType(cachedConfig.type)) &&
-  cachedConfig.type !== 'none'
+  cachedShown &&
+  (cachedShown.enabled || isStaticSceneType(cachedShown.type)) &&
+  cachedShown.type !== 'none'
 ) {
-  prefetchBackground(cachedConfig.type);
+  prefetchBackground(cachedShown.type);
 }
 
 function reduceMobileSettings(settings: Record<string, unknown>): Record<string, unknown> {
@@ -56,7 +65,8 @@ function reduceMobileSettings(settings: Record<string, unknown>): Record<string,
 }
 
 /**
- * Фон анимации — ОДНА настройка на обе темы, и оператор задаёт её под тёмную.
+ * Фон анимации задаётся под тёмную тему; у светлой может быть свой (config.light),
+ * но по умолчанию она показывает тот же.
  * Слой лежит на весь вьюпорт под контентом, а холст заливает его непрозрачным
  * цветом каждый кадр (без этого не выходит след частиц). В светлой теме это
  * давало чёрную страницу со светлыми карточками поверх.
@@ -79,10 +89,12 @@ export function applyThemeGround(
   return { ...settings, backgroundColor: lightBackground };
 }
 
-function RenderBackground({ config }: { config: AnimationConfig }) {
+function RenderBackground({ config: rawConfig }: { config: AnimationConfig }) {
   const prefersReducedMotion = useReducedSceneMotion();
 
   const { isLight, appearanceId } = useTheme();
+  // У светлой темы может быть свой фон; дальше всё работает с показываемым.
+  const config = resolveAnimationConfig(rawConfig, isLight);
   const seasonal = isSeasonalAppearance(appearanceId);
   const supportsStaticScene = seasonal || isStaticSceneType(config.type);
 

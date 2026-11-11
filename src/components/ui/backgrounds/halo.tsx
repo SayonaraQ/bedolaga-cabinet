@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/hooks/useTheme';
 import { sanitizeColor, safeSelect } from './types';
+import { useSceneIsLight } from './scene-theme';
 import { useScenePaused } from './use-scene-motion';
 import './scene-backgrounds.css';
 
@@ -13,7 +13,7 @@ const SPEED: Record<string, number> = { slow: 1.6, normal: 1, fast: 0.5 };
 const MASK = 'radial-gradient(closest-side, #000, rgba(0,0,0,.45) 45%, transparent 80%)';
 
 export default function HaloBackground({ settings, paused = false }: Props) {
-  const { isLight } = useTheme();
+  const isLight = useSceneIsLight();
   const still = useScenePaused(paused);
   const violet = sanitizeColor(settings.color1, '#9333EA');
   const color1 = isLight && violet.toUpperCase() === '#9333EA' ? '#A855F7' : violet;

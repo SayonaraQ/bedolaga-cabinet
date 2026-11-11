@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/hooks/useTheme';
 import { sanitizeColor, safeSelect } from './types';
+import { useSceneIsLight } from './scene-theme';
 import { useSceneMedia, useScenePaused } from './use-scene-motion';
 import './scene-backgrounds.css';
 
@@ -72,7 +72,7 @@ const NEBULAE = [
 ];
 
 export default function StardustBackground({ settings, paused = false }: Props) {
-  const { isLight } = useTheme();
+  const isLight = useSceneIsLight();
   const still = useScenePaused(paused);
   const desktop = useSceneMedia('(min-width: 1024px)');
   const violet = sanitizeColor(settings.color1, '#9333EA');

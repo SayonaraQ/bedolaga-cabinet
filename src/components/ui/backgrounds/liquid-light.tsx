@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/hooks/useTheme';
 import { sanitizeColor, safeSelect } from './types';
+import { useSceneIsLight } from './scene-theme';
 import { useScenePaused } from './use-scene-motion';
 import './scene-backgrounds.css';
 
@@ -24,7 +24,7 @@ const SPEED: Record<string, number> = { slow: 1.6, normal: 1, fast: 0.5 };
 const MASK = 'radial-gradient(circle, #000 0%, rgba(0,0,0,.32) 38%, transparent 70%)';
 
 export default function LiquidLightBackground({ settings, paused = false }: Props) {
-  const { isLight } = useTheme();
+  const isLight = useSceneIsLight();
   const still = useScenePaused(paused);
   const violet = sanitizeColor(settings.color1, '#9333EA');
   const colors = [

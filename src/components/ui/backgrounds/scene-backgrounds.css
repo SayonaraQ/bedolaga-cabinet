@@ -71,6 +71,11 @@
   }
 }
 
+.scene-glow {
+  position: absolute;
+  inset: 0;
+}
+
 .scene-aurora {
   position: absolute;
   inset: -10% -10% 30%;

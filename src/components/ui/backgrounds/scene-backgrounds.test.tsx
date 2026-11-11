@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockSceneMedia } from '@/test/sceneMedia';
 import { SEASONAL_PALETTES, type SeasonalAppearanceId } from '@/theme/appearance';
 import HaloBackground from './halo';
 import LiquidLightBackground from './liquid-light';
-import SeasonalBackground from './seasonal';
+import SeasonalBackground, { SCENES } from './seasonal';
 import StardustBackground from './stardust';
 import { STATIC_SCENE_TYPES } from './types';
 
@@ -39,6 +41,41 @@ afterEach(() => {
 
 const appearances = Object.keys(SEASONAL_PALETTES) as SeasonalAppearanceId[];
 describe('SeasonalBackground', () => {
+  it.each(appearances)('renders separate glow and aurora layers for %s', (appearance) => {
+    const { container } = render(<SeasonalBackground appearance={appearance} />);
+    const aurora = appearance === 'winter-night' || appearance === 'winter-day';
+    const glow =
+      appearance === 'winter-night' ||
+      appearance.startsWith('spring-') ||
+      appearance.startsWith('autumn-');
+    expect(container.querySelectorAll('.scene-aurora')).toHaveLength(aurora ? 1 : 0);
+    expect(container.querySelectorAll('.scene-glow')).toHaveLength(glow ? 1 : 0);
+    const layers = [...container.querySelectorAll('[data-scene] > *')];
+    const expected = [...(glow ? ['scene-glow'] : []), ...(aurora ? ['scene-aurora'] : [])];
+    expect(layers.slice(0, expected.length).map((layer) => layer.className)).toEqual(expected);
+  });
+
+  it.each(appearances)('keeps any aurora gradients in the top band for %s', (appearance) => {
+    const { container } = render(<SeasonalBackground appearance={appearance} />);
+    const aurora = container.querySelector<HTMLElement>('.scene-aurora');
+    if (!aurora) return;
+    // jsdom can drop ellipse gradients, so check the original background string.
+    const positions = [...(SCENES[appearance].aurora ?? '').matchAll(/at\s+[\d.]+%\s+([\d.]+)%/g)];
+    expect(positions.length).toBeGreaterThan(0);
+    for (const position of positions) {
+      expect(Number(position[1])).toBeLessThanOrEqual(30);
+    }
+  });
+
+  it('keeps corner glows static across the full viewport', () => {
+    const css = readFileSync(join(__dirname, 'scene-backgrounds.css'), 'utf8');
+    const glowRule = css.match(/\.scene-glow\s*\{([^}]*)\}/)?.[1];
+    expect(glowRule).toBeDefined();
+    expect(glowRule).toMatch(/\bposition:\s*absolute\s*;/);
+    expect(glowRule).toMatch(/\binset:\s*0\s*;/);
+    expect(glowRule).not.toMatch(/\b(?:animation(?:-[\w-]+)?|transform|translate|scale)\s*:/);
+  });
+
   it.each(appearances)('renders the reference scene and desktop count for %s', (appearance) => {
     const { container } = render(<SeasonalBackground appearance={appearance} />);
     expect(container.querySelector('[data-scene]')?.getAttribute('data-scene')).toBe(appearance);

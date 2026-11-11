@@ -11,21 +11,25 @@ interface Props {
 
 interface Scene {
   ground: string;
+  aurora?: string;
   glow?: string;
   kind: 'snow' | 'mote' | 'sea' | 'leaf';
   seed: number;
 }
 
-const SCENES: Record<SeasonalAppearanceId, Scene> = {
+export const SCENES: Record<SeasonalAppearanceId, Scene> = {
   'winter-night': {
     ground: '#020914',
-    glow: 'radial-gradient(ellipse 70% 22% at 35% 14%,rgba(34,211,238,0.30),transparent 70%),radial-gradient(ellipse 60% 20% at 72% 8%,rgba(184,90,255,0.36),transparent 70%),radial-gradient(circle at 20% 92%,rgba(34,211,238,0.12),transparent 50%)',
+    aurora:
+      'radial-gradient(ellipse 70% 22% at 35% 14%,rgba(34,211,238,0.30),transparent 70%),radial-gradient(ellipse 60% 20% at 72% 8%,rgba(184,90,255,0.36),transparent 70%)',
+    glow: 'radial-gradient(circle at 20% 92%,rgba(34,211,238,0.12),transparent 50%)',
     kind: 'snow',
     seed: 1000,
   },
   'winter-day': {
     ground: 'linear-gradient(180deg,#DCEAF4,#E7F0F7 40%,#EEF4F9)',
-    glow: 'radial-gradient(ellipse 70% 20% at 32% 12%,rgba(56,189,248,0.20),transparent 70%),radial-gradient(ellipse 55% 18% at 74% 7%,rgba(167,139,250,0.16),transparent 70%)',
+    aurora:
+      'radial-gradient(ellipse 70% 20% at 32% 12%,rgba(56,189,248,0.20),transparent 70%),radial-gradient(ellipse 55% 18% at 74% 7%,rgba(167,139,250,0.16),transparent 70%)',
     kind: 'snow',
     seed: 1500,
   },
@@ -186,7 +190,8 @@ export default function SeasonalBackground({ appearance, paused = false }: Props
       className={cn('scene-background', still && 'scene-paused')}
       style={{ background: scene.ground }}
     >
-      {scene.glow && <div className="scene-aurora" style={{ background: scene.glow }} />}
+      {scene.glow && <div className="scene-glow" style={{ background: scene.glow }} />}
+      {scene.aurora && <div className="scene-aurora" style={{ background: scene.aurora }} />}
       {scene.kind === 'sea' && (
         <>
           <div

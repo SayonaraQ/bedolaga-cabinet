@@ -1245,6 +1245,32 @@
     "selectPaymentOption": "选择付款方式"
   },
   "referral": {
+    "hero": {
+      "earned": "邀请收益",
+      "summary": "已邀请 {{total}} · 已付费 {{paid}}"
+    },
+    "invite": {
+      "title": "邀请好友",
+      "friend": "好友获得 +{{amount}}",
+      "friendHint": "首次充值时",
+      "friendHintMin": "首次充值满 {{min}} 时",
+      "youBoth": "您获得 +{{amount}} 和 {{percent}}%",
+      "youBothHint": "好友首次付款奖励及每次充值提成",
+      "youBonus": "您获得 +{{amount}}",
+      "youBonusHint": "好友首次付款时",
+      "youPercent": "您获得 {{percent}}%",
+      "youPercentHint": "好友每次充值",
+      "linkBot": "Telegram 机器人",
+      "linkCabinet": "面板",
+      "share": "分享链接"
+    },
+    "lists": {
+      "referrals": "已邀请",
+      "earnings": "收益",
+      "showAll": "显示全部",
+      "allHistory": "全部记录",
+      "collapse": "收起"
+    },
     "title": "推荐计划",
     "yourLink": "您的推荐链接",
     "botLink": "机器人链接",
@@ -1295,6 +1321,7 @@
     "earningsHistory": "收益记录",
     "reason": "原因",
     "status": {
+      "awaiting": "等待付款",
       "pending": "待定",
       "paid": "已支付"
     },

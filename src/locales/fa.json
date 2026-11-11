@@ -1297,6 +1297,32 @@
     "selectPaymentOption": "روش پرداخت را انتخاب کنید"
   },
   "referral": {
+    "hero": {
+      "earned": "درآمد از دعوت‌ها",
+      "summary": "دعوت‌شده {{total}} · پرداخت‌کرده {{paid}}"
+    },
+    "invite": {
+      "title": "دعوت از دوست",
+      "friend": "دوست شما +{{amount}}",
+      "friendHint": "در اولین شارژ",
+      "friendHintMin": "در اولین شارژ از {{min}}",
+      "youBoth": "شما +{{amount}} و {{percent}}%",
+      "youBothHint": "برای اولین پرداخت او و از هر شارژ",
+      "youBonus": "شما +{{amount}}",
+      "youBonusHint": "برای اولین پرداخت او",
+      "youPercent": "شما {{percent}}%",
+      "youPercentHint": "از هر شارژ او",
+      "linkBot": "ربات تلگرام",
+      "linkCabinet": "کابینت",
+      "share": "اشتراک‌گذاری لینک"
+    },
+    "lists": {
+      "referrals": "دعوت‌شدگان",
+      "earnings": "پاداش‌ها",
+      "showAll": "نمایش همه",
+      "allHistory": "همه تاریخچه",
+      "collapse": "بستن"
+    },
     "title": "برنامه معرفی",
     "yourLink": "لینک‌های معرفی شما",
     "botLink": "لینک ربات",
@@ -1347,6 +1373,7 @@
     "earningsHistory": "تاریخچه درآمد",
     "reason": "دلیل",
     "status": {
+      "awaiting": "در انتظار پرداخت",
       "pending": "در انتظار",
       "paid": "پرداخت شده"
     },

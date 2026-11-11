@@ -1350,6 +1350,32 @@
     "scanQrToPay": "Отсканируйте QR-код в приложении банка или откройте оплату"
   },
   "referral": {
+    "hero": {
+      "earned": "Заработано на приглашениях",
+      "summary": "Приглашено {{total}} · оплатили {{paid}}"
+    },
+    "invite": {
+      "title": "Пригласить друга",
+      "friend": "Другу +{{amount}}",
+      "friendHint": "к первому пополнению",
+      "friendHintMin": "к первому пополнению от {{min}}",
+      "youBoth": "Вам +{{amount}} и {{percent}}%",
+      "youBothHint": "за его первую оплату и с каждого пополнения",
+      "youBonus": "Вам +{{amount}}",
+      "youBonusHint": "за его первую оплату",
+      "youPercent": "Вам {{percent}}%",
+      "youPercentHint": "с каждого его пополнения",
+      "linkBot": "Telegram-бот",
+      "linkCabinet": "Кабинет",
+      "share": "Поделиться ссылкой"
+    },
+    "lists": {
+      "referrals": "Приглашённые",
+      "earnings": "Начисления",
+      "showAll": "Показать всех",
+      "allHistory": "Вся история",
+      "collapse": "Свернуть"
+    },
     "title": "Реферальная программа",
     "yourLink": "Ваши реферальные ссылки",
     "botLink": "Ссылка на бота",
@@ -1398,6 +1424,7 @@
     "joined": "Присоединился",
     "hasPaid": "Оплатил",
     "status": {
+      "awaiting": "Ждём оплату",
       "pending": "Ожидание",
       "paid": "Оплачено"
     },

@@ -1304,6 +1304,32 @@
     "scanQrToPay": "Scan the QR code in your banking app or open the payment page"
   },
   "referral": {
+    "hero": {
+      "earned": "Earned from invites",
+      "summary": "Invited {{total}} · paid {{paid}}"
+    },
+    "invite": {
+      "title": "Invite a friend",
+      "friend": "Your friend gets +{{amount}}",
+      "friendHint": "on their first top-up",
+      "friendHintMin": "on a first top-up of {{min}} or more",
+      "youBoth": "You get +{{amount}} and {{percent}}%",
+      "youBothHint": "for their first payment and from every top-up",
+      "youBonus": "You get +{{amount}}",
+      "youBonusHint": "for their first payment",
+      "youPercent": "You get {{percent}}%",
+      "youPercentHint": "from each of their top-ups",
+      "linkBot": "Telegram bot",
+      "linkCabinet": "Cabinet",
+      "share": "Share link"
+    },
+    "lists": {
+      "referrals": "Invited",
+      "earnings": "Rewards",
+      "showAll": "Show all",
+      "allHistory": "Full history",
+      "collapse": "Collapse"
+    },
     "title": "Referral Program",
     "yourLink": "Your Referral Links",
     "botLink": "Bot link",
@@ -1352,6 +1378,7 @@
     "joined": "Joined",
     "hasPaid": "Has Paid",
     "status": {
+      "awaiting": "Awaiting payment",
       "pending": "Pending",
       "paid": "Paid"
     },

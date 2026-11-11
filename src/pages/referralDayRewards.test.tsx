@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -28,6 +28,7 @@ vi.mock('react-i18next', () => ({
         'referral.terms.noLevels': 'Уровни наград ещё не настроены',
         'referral.shareHint': 'Получите {{percent}}% комиссии!',
         'referral.shareHintLevels': 'Награда начисляется по уровням программы.',
+        'referral.invite.youPercent': 'Вам {{percent}}%',
       };
       const template = templates[key];
       if (!template) return key;
@@ -142,6 +143,11 @@ afterEach(() => {
   state.info = {};
 });
 
+// Начисления — вторая вкладка карточки «Приглашённые / Начисления» (11.11.2026).
+async function openEarnings() {
+  fireEvent.click(await screen.findByRole('button', { name: 'referral.lists.earnings' }));
+}
+
 async function renderReferral() {
   const Referral = (await import('./Referral')).default;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -160,6 +166,7 @@ describe('награды днями в истории начислений', () 
   it('называются днями, а не нулём рублей', async () => {
     state.earnings = [earning({ days_granted: 7, reward_type: 'days' })];
     await renderReferral();
+    await openEarnings();
 
     // Проверяется именно строка истории: денежная карточка сверху имеет полное
     // право показывать нулевую сумму — дни в неё и не должны попадать.
@@ -171,6 +178,7 @@ describe('награды днями в истории начислений', () 
   it('называют тариф, в который легли дни', async () => {
     state.earnings = [earning({ days_granted: 7, reward_type: 'days', tariff_name: 'Про' })];
     await renderReferral();
+    await openEarnings();
 
     expect(await screen.findByText(/«Про»/)).toBeTruthy();
   });
@@ -180,6 +188,7 @@ describe('награды днями в истории начислений', () 
       earning({ amount_kopeks: 25000, amount_rubles: 250, days_granted: 3, reward_type: 'days' }),
     ];
     await renderReferral();
+    await openEarnings();
 
     const row = await screen.findByText(/3 дн\./);
     expect(row.textContent).toMatch(/250/);
@@ -190,6 +199,7 @@ describe('уровень цепочки', () => {
   it('помечается на строках глубже первой', async () => {
     state.earnings = [earning({ days_granted: 5, level: 2 })];
     await renderReferral();
+    await openEarnings();
 
     expect(await screen.findByText(/уровень 2/)).toBeTruthy();
   });
@@ -197,6 +207,7 @@ describe('уровень цепочки', () => {
   it('не засоряет строки первого уровня', async () => {
     state.earnings = [earning({ days_granted: 5, level: 1 })];
     await renderReferral();
+    await openEarnings();
 
     await screen.findByText(/5 дн\./);
     expect(screen.queryByText(/уровень 1/)).toBeNull();
@@ -230,7 +241,7 @@ describe('обещание процента под многоуровневой 
     await renderReferral();
 
     await screen.findByText(/Уровень 1: 10%/);
-    expect(screen.queryByText(/25% комиссии/)).toBeNull();
+    expect(screen.queryByText(/25%/)).toBeNull();
     expect(screen.getByText(/по уровням программы/)).toBeTruthy();
   });
 
@@ -239,6 +250,7 @@ describe('обещание процента под многоуровневой 
     state.info = { commission_percent: 25 };
     await renderReferral();
 
-    expect(await screen.findByText(/25% комиссии/)).toBeTruthy();
+    // Личный процент из info — он и платится, у партнёра он выше общего.
+    expect(await screen.findByText('Вам 25%')).toBeTruthy();
   });
 });

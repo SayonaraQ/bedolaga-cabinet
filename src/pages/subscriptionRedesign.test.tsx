@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PlatformProvider } from '@/platform/PlatformProvider';
 import { ToastProvider } from '@/components/Toast';
 import type { Season } from '@/theme/appearance';
@@ -417,4 +417,60 @@ it('does not put renewal decor on the trial choose-tariff action', async () => {
   await screen.findByTestId('countdown-card');
   expect(container.querySelector('[data-seasonal-slot="corner"]')).toBeTruthy();
   expect(container.querySelector('[data-seasonal-slot="renew"]')).toBeNull();
+});
+
+// Владелец 11.11.2026, вариант «Табло»: срок прижимался влево, а кнопка «Продлить»
+// растягивалась на всю ширину (на компьютере — на 1330 px). Теперь таймер разложен
+// на ячейки во всю ширину, дата — в шапке карточки, на компьютере ячейки и кнопка
+// стоят в одну строку.
+describe('countdown board', () => {
+  const inDays = (days: number, hours = 5) =>
+    new Date(Date.now() + days * 86_400_000 + hours * 3_600_000).toISOString();
+
+  it('active: four cells with captions and the end date in the card header', async () => {
+    Object.assign(state.subscription, { end_date: inDays(78), days_left: 78 });
+    renderPage();
+
+    const card = await screen.findByTestId('countdown-card');
+    const cells = within(card).getAllByTestId('countdown-cell');
+    expect(cells).toHaveLength(4);
+    expect(cells[0].textContent).toContain('78');
+    expect(cells.map((c) => c.lastElementChild?.textContent)).toEqual([
+      'subscription.daysShort',
+      'subscription.countdownCell.hours',
+      'subscription.countdownCell.minutes',
+      'subscription.countdownCell.seconds',
+    ]);
+    expect(within(card).getByTestId('countdown-date').textContent).toContain(
+      'dashboard.validUntil',
+    );
+    // Ячейки и кнопка делят строку на компьютере; на телефоне кнопка под ячейками.
+    const grid = within(card).getByTestId('countdown-cells');
+    expect(grid.className).toContain('sm:flex-1');
+    const action = within(card).getByRole('link', { name: 'subscription.extend' });
+    expect(action.closest('[data-testid="countdown-action"]')?.className).toContain('sm:w-[280px]');
+  });
+
+  it('less than a day left: no days cell', async () => {
+    Object.assign(state.subscription, { end_date: inDays(0, 5), days_left: 0 });
+    renderPage();
+
+    const card = await screen.findByTestId('countdown-card');
+    expect(within(card).getAllByTestId('countdown-cell')).toHaveLength(3);
+  });
+
+  it('expired: a plate instead of the cells, no end date', async () => {
+    Object.assign(state.subscription, {
+      status: 'expired',
+      is_active: false,
+      is_expired: true,
+      days_left: 0,
+    });
+    renderPage();
+
+    const card = await screen.findByTestId('countdown-card');
+    expect(within(card).queryAllByTestId('countdown-cell')).toHaveLength(0);
+    expect(within(card).getByText('subscription.expired')).toBeTruthy();
+    expect(within(card).queryByTestId('countdown-date')).toBeNull();
+  });
 });

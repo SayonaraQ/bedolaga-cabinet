@@ -475,6 +475,11 @@
     "renewalOptions": "Renewal Options",
     "days": "days",
     "daysShort": "d.",
+    "countdownCell": {
+      "hours": "h",
+      "minutes": "min",
+      "seconds": "sec"
+    },
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
     "hours": "h",

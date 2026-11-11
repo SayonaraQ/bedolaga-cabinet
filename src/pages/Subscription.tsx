@@ -103,10 +103,29 @@ const CountdownTimer = memo(function CountdownTimer({
     year: 'numeric',
   });
 
+  // Цвет срока: красный — истекла/отключена, янтарный — осталось ≤ 3 дней.
+  const tone = isExpired
+    ? 'rgb(var(--color-critical-500))'
+    : isUrgent
+      ? 'rgb(var(--color-urgent-400))'
+      : g.text;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  // «Табло» (решение владельца 11.11.2026): срок прижимался влево, а кнопка
+  // растягивалась на всю ширину, на компьютере — на 1330 px. Ячейки идут во всю
+  // ширину, как кнопка под ними; меньше суток — без ячейки дней.
+  const cells: Array<[string, string]> = [
+    ...(countdown.days > 0
+      ? [[String(countdown.days), t('subscription.daysShort')] as [string, string]]
+      : []),
+    [pad(countdown.hours), t('subscription.countdownCell.hours')],
+    [pad(countdown.minutes), t('subscription.countdownCell.minutes')],
+    [pad(countdown.seconds), t('subscription.countdownCell.seconds')],
+  ];
+
   return (
     <div
       data-testid="countdown-card"
-      className="min-w-0 overflow-hidden rounded-[14px] p-3.5"
+      className="min-w-0 overflow-hidden rounded-[14px] p-3.5 sm:p-4"
       style={{
         background: isExpired
           ? 'rgba(255,59,92,0.06)'
@@ -120,92 +139,80 @@ const CountdownTimer = memo(function CountdownTimer({
             : `1px solid ${g.innerBorder}`,
       }}
     >
-      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-400">
-        <div
-          className="flex h-6 w-6 items-center justify-center rounded-[7px]"
-          style={{
-            background: isExpired
-              ? 'rgba(255,59,92,0.1)'
-              : isUrgent
-                ? 'rgba(255,184,0,0.1)'
-                : g.hoverBg,
-          }}
-        >
-          <span
+      {/* Шапка: подпись слева, дата окончания справа. */}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-400">
+          <div
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px]"
             style={{
+              background: isExpired
+                ? 'rgba(255,59,92,0.1)'
+                : isUrgent
+                  ? 'rgba(255,184,0,0.1)'
+                  : g.hoverBg,
               color: isExpired
                 ? 'rgb(var(--color-critical-500))'
                 : isUrgent
                   ? 'rgb(var(--color-urgent-400))'
                   : g.textSecondary,
             }}
+            aria-hidden="true"
           >
             <CalendarIcon className="h-[13px] w-[13px]" />
-          </span>
+          </div>
+          <span className="truncate">{t('dashboard.remaining')}</span>
         </div>
-        {t('dashboard.remaining')}
+        {!isExpired && (
+          <div
+            data-testid="countdown-date"
+            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-dark-400"
+          >
+            {t('dashboard.validUntil', { date: formattedDate })}
+          </div>
+        )}
       </div>
-      {isExpired ? (
-        <div
-          className="text-[18px] font-bold tracking-tight"
-          style={{ color: 'rgb(var(--color-critical-500))' }}
-        >
-          {inactiveLabel ?? t('subscription.expired')}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-          {/* На телефоне дата уходит на свою строку: рядом с таймером ей не хватало места, и она ломалась посреди «23 сент. / 2026 г.» */}
-          <div className="flex items-baseline gap-1 font-mono tabular-nums">
-            {countdown.days > 0 && (
-              <>
+
+      <div className="sm:flex sm:items-stretch sm:gap-3">
+        {isExpired ? (
+          <div
+            className="flex min-h-[60px] items-center justify-center rounded-[12px] px-3 text-center text-[18px] font-bold tracking-tight sm:flex-1"
+            style={{ color: tone, background: 'rgba(255,59,92,0.06)' }}
+          >
+            {inactiveLabel ?? t('subscription.expired')}
+          </div>
+        ) : (
+          <div
+            data-testid="countdown-cells"
+            className="grid gap-2 sm:min-w-0 sm:flex-1"
+            style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
+          >
+            {cells.map(([value, caption]) => (
+              <div
+                key={caption}
+                data-testid="countdown-cell"
+                className="flex min-w-0 flex-col items-center justify-center rounded-[12px] py-2"
+                style={{ background: g.hoverBg }}
+              >
                 <span
-                  className="text-[20px] font-bold tracking-tight"
-                  style={{ color: isUrgent ? 'rgb(var(--color-urgent-400))' : g.text }}
+                  className="font-mono text-[22px] font-bold leading-tight tracking-tight tabular-nums transition-colors duration-300"
+                  style={{ color: tone }}
                 >
-                  {countdown.days}
+                  {value}
                 </span>
-                <span className="mr-1 text-[10px] font-medium text-dark-400">
-                  {t('subscription.daysShort')}
-                </span>
-              </>
-            )}
-            <span
-              className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? 'rgb(var(--color-urgent-400))' : g.text }}
-            >
-              {String(countdown.hours).padStart(2, '0')}
-            </span>
-            <span
-              className="mx-[-1px] text-[16px] font-bold opacity-30"
-              style={{ color: isUrgent ? 'rgb(var(--color-urgent-400))' : g.text }}
-            >
-              :
-            </span>
-            <span
-              className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? 'rgb(var(--color-urgent-400))' : g.text }}
-            >
-              {String(countdown.minutes).padStart(2, '0')}
-            </span>
-            <span
-              className="mx-[-1px] text-[16px] font-bold opacity-30"
-              style={{ color: isUrgent ? 'rgb(var(--color-urgent-400))' : g.text }}
-            >
-              :
-            </span>
-            <span
-              className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? 'rgb(var(--color-urgent-400))' : g.text }}
-            >
-              {String(countdown.seconds).padStart(2, '0')}
-            </span>
+                <span className="text-[10px] font-medium text-dark-400">{caption}</span>
+              </div>
+            ))}
           </div>
-          <div className="text-[10px] font-medium text-dark-400">
-            {t('subscription.expiresAt')}: {formattedDate}
+        )}
+        {footer && (
+          <div
+            data-testid="countdown-action"
+            className="mt-3 sm:mt-0 sm:flex sm:w-[280px] sm:shrink-0 sm:items-center"
+          >
+            <div className="w-full">{footer}</div>
           </div>
-        </div>
-      )}
-      {footer && <div className="mt-3.5">{footer}</div>}
+        )}
+      </div>
     </div>
   );
 });

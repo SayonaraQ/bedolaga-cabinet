@@ -818,6 +818,11 @@
     "statusLimited": "受限",
     "statusTrial": "试用",
     "daysShort": "天",
+    "countdownCell": {
+      "hours": "时",
+      "minutes": "分",
+      "seconds": "秒"
+    },
     "expiredBanner": {
       "selectTariff": "您的订阅已到期。请在下方选择套餐，以恢复 VPN 访问。",
       "title": "订阅已过期"

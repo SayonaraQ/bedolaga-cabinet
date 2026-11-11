@@ -490,6 +490,11 @@
     "renewalOptions": "Варианты продления",
     "days": "дней",
     "daysShort": "дн.",
+    "countdownCell": {
+      "hours": "ч",
+      "minutes": "мин",
+      "seconds": "сек"
+    },
     "days_one": "{{count}} день",
     "days_few": "{{count}} дня",
     "days_many": "{{count}} дней",

@@ -853,6 +853,11 @@
     "statusLimited": "محدود",
     "statusTrial": "آزمایشی",
     "daysShort": "روز",
+    "countdownCell": {
+      "hours": "ساعت",
+      "minutes": "دقیقه",
+      "seconds": "ثانیه"
+    },
     "expiredBanner": {
       "selectTariff": "اشتراک شما منقضی شده است. برای بازیابی دسترسی به VPN، یک تعرفه را از پایین انتخاب کنید.",
       "title": "اشتراک منقضی شده است"

@@ -131,7 +131,8 @@ describe.each([
     expect(root?.dataset.scene).toBe(`${kind}-${isLight ? 'day' : 'night'}`);
     expect(root?.getAttribute('aria-hidden')).toBe('true');
     expect(root?.classList.contains('scene-background')).toBe(true);
-    expect(root?.style.position).toBe('fixed');
+    // Stays inside its box: the admin preview is a 192 px card, fixed covered the whole page.
+    expect(root?.style.position).toBe('');
     expect(root?.style.background).toBe(isLight ? 'transparent' : 'rgb(var(--color-dark-950))');
     const layers = [...container.querySelectorAll<HTMLElement>('[data-scene] > div')];
     expect(

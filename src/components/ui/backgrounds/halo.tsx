@@ -32,10 +32,10 @@ export default function HaloBackground({ settings, paused = false }: Props) {
       data-scene={isLight ? 'halo-day' : 'halo-night'}
       data-paused={still}
       className={cn('scene-background', still && 'scene-paused')}
-      style={{
-        position: 'fixed',
-        background: isLight ? 'transparent' : 'rgb(var(--color-dark-950))',
-      }}
+      // Без position: fixed — сцену кладут и в маленький предпросмотр админки, а fixed
+      // вырывал её из коробки и закрывал всю страницу. Во весь экран её растягивает
+      // контейнер BackgroundRenderer.
+      style={{ background: isLight ? 'transparent' : 'rgb(var(--color-dark-950))' }}
     >
       <div
         className="scene-blob"

@@ -121,10 +121,10 @@ export default function StardustBackground({ settings, paused = false }: Props) 
       data-scene={isLight ? 'stardust-day' : 'stardust-night'}
       data-paused={still}
       className={cn('scene-background', still && 'scene-paused')}
-      style={{
-        position: 'fixed',
-        background: isLight ? 'transparent' : 'rgb(var(--color-dark-950))',
-      }}
+      // Без position: fixed — сцену кладут и в маленький предпросмотр админки, а fixed
+      // вырывал её из коробки и закрывал всю страницу. Во весь экран её растягивает
+      // контейнер BackgroundRenderer.
+      style={{ background: isLight ? 'transparent' : 'rgb(var(--color-dark-950))' }}
     >
       {NEBULAE.map((nebula, index) => (
         <div

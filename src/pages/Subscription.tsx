@@ -1,4 +1,5 @@
 import { SeasonalDecorSlot } from '@/components/seasonal/SeasonalDecorSlot';
+import { SeasonDeviceGlyphs } from '@/components/seasonal/SeasonDeviceGlyphs';
 import { hasUnknownManagedTraffic } from '@/utils/trafficAccounting';
 import ManagedTrafficSummary from '@/components/subscription/ManagedTrafficSummary';
 import { uiLocale } from '@/utils/uiLocale';
@@ -230,7 +231,7 @@ export default function Subscription() {
   const navigate = useNavigate();
   const { subscriptionId: subIdParam } = useParams<{ subscriptionId?: string }>();
   const subscriptionId = subIdParam ? parseInt(subIdParam, 10) : undefined;
-  const { isDark } = useTheme();
+  const { isDark, season, seasonalActive } = useTheme();
   const g = getGlassColors(isDark);
   const haptic = useHaptic();
   const [copied, setCopied] = useState(false);
@@ -545,6 +546,11 @@ export default function Subscription() {
           const connectedDevices = devicesData?.total ?? 0;
           const isAtDeviceLimit =
             subscription.device_limit > 0 && connectedDevices >= subscription.device_limit;
+          const showSeasonGlyphs =
+            seasonalActive &&
+            season !== null &&
+            subscription.device_limit >= 1 &&
+            subscription.device_limit <= 10;
 
           return (
             <SeasonalDecorSlot slot="corner">
@@ -853,7 +859,7 @@ export default function Subscription() {
                 {/* ─── Connect Device Button ─── */}
                 {subscription.subscription_url && (
                   <div className="mb-5">
-                    <SeasonalDecorSlot slot="connect">
+                    <SeasonalDecorSlot slot="connect" off={showSeasonGlyphs}>
                       <ConnectDeviceButton
                         loading={isConnectionLinkLoading || isDevicesLoading}
                         disabled={isAtDeviceLimit}
@@ -903,6 +909,15 @@ export default function Subscription() {
                           >
                             ∞
                           </div>
+                        ) : showSeasonGlyphs ? (
+                          <SeasonDeviceGlyphs
+                            season={season}
+                            isLight={!isDark}
+                            limit={subscription.device_limit}
+                            used={connectedDevices}
+                            zoneHex={zone.mainHex}
+                            ghost={g.textGhost}
+                          />
                         ) : subscription.device_limit <= 10 ? (
                           // Больше пяти точек — в два ряда по пять: десять в ряд занимали
                           // 124 px, и текст кнопки на телефоне шёл в 5–7 строк.

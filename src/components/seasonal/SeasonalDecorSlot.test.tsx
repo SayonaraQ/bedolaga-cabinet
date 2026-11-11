@@ -61,6 +61,17 @@ it.each(['dark', 'light'])('adds no markup for the %s base appearance', (base) =
   expect(container.querySelector('[aria-hidden]')).toBeNull();
 });
 
+it.each(slots)('off renders %s children unchanged even in a seasonal theme', (slot) => {
+  Object.assign(theme, { season: 'autumn', seasonalActive: true, isLight: false });
+  const { container } = render(
+    <SeasonalDecorSlot slot={slot} off>
+      <button type="button">Action</button>
+    </SeasonalDecorSlot>,
+  );
+  expect(container.innerHTML).toBe('<button type="button">Action</button>');
+  expect(container.querySelector('[data-seasonal-slot]')).toBeNull();
+});
+
 for (const season of seasons) {
   for (const slot of slots) {
     it.each([false, true])(

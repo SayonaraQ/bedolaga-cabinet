@@ -20,6 +20,8 @@ const state = vi.hoisted(() => ({
   subscription: {} as Record<string, unknown>,
   paused: false,
   season: null as Season | null,
+  seasonalActive: true,
+  deviceCount: 1,
   copy: vi.fn(async () => {}),
 }));
 vi.mock('@/hooks/useTheme', () => ({
@@ -27,7 +29,7 @@ vi.mock('@/hooks/useTheme', () => ({
     isDark: true,
     isLight: false,
     season: state.season,
-    seasonalActive: state.season !== null,
+    seasonalActive: state.seasonalActive && state.season !== null,
   }),
 }));
 vi.mock('@/hooks/useAnimationLoop', () => ({ useAnimationPause: () => state.paused }));
@@ -46,11 +48,15 @@ const api = vi.hoisted(() => ({
   }),
   getPurchaseOptions: async () => ({ sales_mode: 'tariffs', tariffs: [], balance_kopeks: 0 }),
   getDevices: async () => ({
-    devices: [
-      { hwid: 'HW-1', platform: 'iOS', device_model: 'iPhone 15', app: 'Happ', created_at: null },
-    ],
-    total: 1,
-    device_limit: 3,
+    devices: Array.from({ length: state.deviceCount }, (_, i) => ({
+      hwid: `HW-${i + 1}`,
+      platform: 'iOS',
+      device_model: 'iPhone 15',
+      app: 'Happ',
+      created_at: null,
+    })),
+    total: state.deviceCount,
+    device_limit: state.subscription.device_limit,
   }),
 }));
 
@@ -120,6 +126,8 @@ function renderPage() {
 beforeEach(() => {
   state.paused = false;
   state.season = null;
+  state.seasonalActive = true;
+  state.deviceCount = 1;
   state.copy.mockClear();
   state.subscription = {
     id: 42,
@@ -390,9 +398,10 @@ it('pauses and disables the subscription contour at the device limit', async () 
 });
 
 it.each(['winter', 'spring', 'summer', 'autumn'] as const)(
-  'places all three %s slots outside the subscription card and actions',
+  'places all three %s slots outside the subscription card and actions for more than ten devices',
   async (season) => {
     state.season = season;
+    state.subscription.device_limit = 12;
     const { container } = renderPage();
     const connect = await screen.findByRole('button', { name: /dashboard\.connectDevice/ });
     const renew = screen.getByRole('link', { name: 'subscription.extend' });
@@ -407,6 +416,73 @@ it.each(['winter', 'spring', 'summer', 'autumn'] as const)(
     expect(connect.className).not.toContain('mb-5');
     expect(connect.parentElement?.parentElement?.className).toBe('mb-5');
     expect(renew.parentElement?.getAttribute('data-seasonal-slot')).toBe('renew');
+  },
+);
+
+it('shows autumn glyphs for ten slots and five devices, replacing dots and connect decor', async () => {
+  state.season = 'autumn';
+  state.subscription.device_limit = 10;
+  state.deviceCount = 5;
+  const { container } = renderPage();
+  const connect = await screen.findByRole('button', { name: /dashboard\.connectDevice/ });
+  await waitFor(() => expect(connect.hasAttribute('disabled')).toBe(false));
+  const glyphs = connect.querySelector('[data-season-glyphs="autumn"]');
+  expect(glyphs).toBeTruthy();
+  expect(glyphs?.querySelectorAll('svg')).toHaveLength(10);
+  expect(glyphs?.querySelectorAll('[data-glyph-state="on"]')).toHaveLength(5);
+  expect(connect.querySelectorAll('[class~="h-[7px]"]')).toHaveLength(0);
+  expect(connect.closest('[data-seasonal-slot="connect"]')).toBeNull();
+  expect(connect.parentElement?.className).toBe('mb-5');
+  expect(container.querySelector('[data-seasonal-slot="connect"]')).toBeNull();
+  expect(container.querySelector('[data-seasonal-slot="corner"]')).toBeTruthy();
+  expect(container.querySelector('[data-seasonal-slot="renew"]')).toBeTruthy();
+});
+
+it.each([null, 'autumn'] as const)(
+  'keeps the original dots without an active seasonal theme, season=%s',
+  async (season) => {
+    state.season = season;
+    state.seasonalActive = false;
+    state.subscription.device_limit = 10;
+    state.deviceCount = 5;
+    renderPage();
+    const connect = await screen.findByRole('button', { name: /dashboard\.connectDevice/ });
+    await waitFor(() => expect(connect.hasAttribute('disabled')).toBe(false));
+    const dots = [...connect.querySelectorAll<HTMLDivElement>('[class~="h-[7px]"]')];
+    expect(dots).toHaveLength(10);
+    expect(dots.every((dot) => dot.classList.contains('w-[7px]'))).toBe(true);
+    expect(dots.map((dot) => dot.style.boxShadow)).toEqual([
+      ...Array(5).fill(dots[0].style.boxShadow),
+      ...Array(5).fill('none'),
+    ]);
+    expect(dots[0].style.boxShadow).not.toBe('none');
+    expect(dots[0].style.background).not.toBe(dots[5].style.background);
+    expect(connect.querySelector('[data-season-glyphs]')).toBeNull();
+  },
+);
+
+it.each([0, 12])(
+  'keeps the seasonal connect decoration and original indicator for device_limit=%i',
+  async (limit) => {
+    state.season = 'autumn';
+    state.subscription.device_limit = limit;
+    renderPage();
+    const connect = await screen.findByRole('button', { name: /dashboard\.connectDevice/ });
+    await waitFor(() => expect(connect.hasAttribute('disabled')).toBe(false));
+    expect(connect.parentElement?.getAttribute('data-seasonal-slot')).toBe('connect');
+    expect(connect.querySelector('[data-season-glyphs]')).toBeNull();
+    expect(connect.querySelector('[class~="h-[7px]"]')).toBeNull();
+    if (limit === 0) {
+      expect(within(connect).getByText('∞')).toBeTruthy();
+      expect(connect.querySelector('[class~="h-[6px]"]')).toBeNull();
+    } else {
+      const bar = connect.querySelector('[class~="h-[6px]"]');
+      expect(bar).toBeTruthy();
+      expect(bar?.querySelector<HTMLDivElement>('div')?.style.transform).toBe(
+        'scaleX(0.08333333333333333)',
+      );
+      expect(within(connect).queryByText('∞')).toBeNull();
+    }
   },
 );
 

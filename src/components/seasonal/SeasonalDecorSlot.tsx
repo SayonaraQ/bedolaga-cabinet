@@ -50,9 +50,17 @@ const DECOR: Record<Season, Record<Slot, DecorPiece[]>> = {
 };
 
 /** Keep this outside overflow-hidden cards/buttons. The layer never takes up space. */
-export function SeasonalDecorSlot({ slot, children }: { slot: Slot; children: ReactNode }) {
+export function SeasonalDecorSlot({
+  slot,
+  children,
+  off,
+}: {
+  slot: Slot;
+  children: ReactNode;
+  off?: boolean;
+}) {
   const { season, seasonalActive, isLight } = useTheme();
-  if (!seasonalActive || !season) return children;
+  if (off || !seasonalActive || !season) return children;
 
   return (
     <div className="seasonal-decor-slot" data-seasonal-slot={slot}>

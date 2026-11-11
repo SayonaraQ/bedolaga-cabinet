@@ -42,7 +42,8 @@ export function letterFaviconDataUri(
 /**
  * Render `src` (e.g. a square custom logo) into a rounded-corner PNG data URI
  * so the favicon gets the same rounded tile as the header logo, instead of
- * hard square corners.
+ * hard square corners. Trim transparent margins so the tab icon fills its
+ * 16 px cell like other sites.
  *
  * `radiusRatio` 0.3 mirrors the header tile (rounded-linear-lg = 12px on a 40px
  * tile). Returns null if canvas is unavailable, the image can't be loaded or
@@ -66,13 +67,80 @@ export async function roundedFaviconDataUri(
     traceRoundedRect(ctx, size, size * radiusRatio);
     ctx.clip();
 
-    // object-fit: cover — fill the rounded tile, center-cropping any overflow.
-    const scale = Math.max(size / img.width, size / img.height);
-    const dw = img.width * scale;
-    const dh = img.height * scale;
-    ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
+    const box = alphaBoundingBoxOfImage(img);
+    if (box && (box.w < img.width * 0.98 || box.h < img.height * 0.98)) {
+      const { dx, dy, dw, dh } = containRect(box.w, box.h, size);
+      ctx.drawImage(img, box.x, box.y, box.w, box.h, dx, dy, dw, dh);
+    } else {
+      // object-fit: cover — fill the rounded tile, center-cropping any overflow.
+      const scale = Math.max(size / img.width, size / img.height);
+      const dw = img.width * scale;
+      const dh = img.height * scale;
+      ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
+    }
 
     return canvas.toDataURL('image/png');
+  } catch {
+    return null;
+  }
+}
+
+/** Ignore near-transparent antialiasing when finding the visible logo. */
+export function alphaBoundingBox(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  threshold = 8,
+): { x: number; y: number; w: number; h: number } | null {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] > threshold) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  return maxX < 0 ? null : { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+}
+
+export function containRect(
+  srcW: number,
+  srcH: number,
+  size: number,
+): { dx: number; dy: number; dw: number; dh: number } {
+  const scale = Math.min(size / srcW, size / srcH);
+  const dw = srcW * scale;
+  const dh = srcH * scale;
+  return { dx: (size - dw) / 2, dy: (size - dh) / 2, dw, dh };
+}
+
+function alphaBoundingBoxOfImage(img: HTMLImageElement): ReturnType<typeof alphaBoundingBox> {
+  // Bound pixel reads for large branding uploads, then map back to the source image.
+  const scale = Math.min(1, 512 / Math.max(img.width, img.height));
+  const width = Math.max(1, Math.round(img.width * scale));
+  const height = Math.max(1, Math.round(img.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  try {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, width, height);
+    const box = alphaBoundingBox(ctx.getImageData(0, 0, width, height).data, width, height);
+    return box
+      ? {
+          x: (box.x * img.width) / width,
+          y: (box.y * img.height) / height,
+          w: (box.w * img.width) / width,
+          h: (box.h * img.height) / height,
+        }
+      : null;
   } catch {
     return null;
   }

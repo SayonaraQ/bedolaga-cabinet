@@ -90,7 +90,9 @@ for (const kind of ['renew', 'traffic']) {
             });
       mount(kind);
       const label =
-        kind === 'renew' ? 'subscription.extend' : 'subscription.additionalOptions.buyTrafficGb';
+        kind === 'renew'
+          ? 'subscription.renewPage.renewFor'
+          : 'subscription.additionalOptions.buyTrafficGb';
       fireEvent.click(await screen.findByRole('button', { name: label }));
       await screen.findByText('subscription.purchaseOutcomeUnknown');
       expect(state.commits).toBe(1);
@@ -104,7 +106,9 @@ for (const kind of ['renew', 'traffic']) {
     fireEvent.click(
       await screen.findByRole('button', {
         name:
-          kind === 'renew' ? 'subscription.extend' : 'subscription.additionalOptions.buyTrafficGb',
+          kind === 'renew'
+            ? 'subscription.renewPage.renewFor'
+            : 'subscription.additionalOptions.buyTrafficGb',
       }),
     );
     await screen.findByText('Validation rejected');

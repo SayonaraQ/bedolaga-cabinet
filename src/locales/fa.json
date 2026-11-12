@@ -412,6 +412,30 @@
     }
   },
   "subscription": {
+    "renewPage": {
+      "activeUntil": "فعال تا {{date}}",
+      "endedOn": "در {{date}} منقضی شد",
+      "periodHeading": "مدت تمدید را انتخاب کنید",
+      "months": "{{count}} ماه",
+      "days": "{{count}} روز",
+      "newEndLabel": "فعال خواهد بود تا",
+      "chargeLabel": "برداشت از موجودی",
+      "balanceLabel": "موجودی حساب",
+      "shortfallLabel": "مبلغ کسری",
+      "renewFor": "تمدید با {{price}}",
+      "renewFree": "تمدید رایگان",
+      "topUpHeading": "افزودن {{amount}}",
+      "payVia": "پرداخت {{amount}} از طریق {{name}}",
+      "payHint": "پس از واریز وجه به موجودی، اشتراک بلافاصله تمدید می‌شود",
+      "minTopUpHint": "حداقل مبلغ افزایش موجودی {{amount}} است؛ باقی‌مانده در موجودی حساب می‌ماند",
+      "autopayOn": "تمدید خودکار روشن است",
+      "autopayCovered": "در {{date}} مبلغ {{price}} از موجودی کسر می‌شود؛ نیازی به تمدید دستی نیست.",
+      "autopayCoveredSoon": "به‌زودی مبلغ {{price}} از موجودی کسر می‌شود.",
+      "autopayIfEnough": "در {{date}} در صورت کافی بودن موجودی، مبلغ {{price}} کسر می‌شود.",
+      "autopayWhenEnough": "به‌محض کافی بودن موجودی، مبلغ {{price}} کسر می‌شود.",
+      "autopayOffHint": "فعال کنید تا {{count}} روز پیش از پایان، مبلغ {{price}} به‌طور خودکار از موجودی کسر شود.",
+      "changeTariffHint": "دستگاه‌های بیشتر یا سرورهای ویژه"
+    },
     "accounting": {
       "label": "ترافیک در دسترس",
       "available": "مجموع باقی‌مانده",

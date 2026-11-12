@@ -421,6 +421,30 @@
     }
   },
   "subscription": {
+    "renewPage": {
+      "activeUntil": "Active until {{date}}",
+      "endedOn": "Expired on {{date}}",
+      "periodHeading": "Choose a renewal period",
+      "months": "{{count}} mo",
+      "days": "{{count}} d",
+      "newEndLabel": "Will be active until",
+      "chargeLabel": "Charge from balance",
+      "balanceLabel": "Available balance",
+      "shortfallLabel": "Amount missing",
+      "renewFor": "Renew for {{price}}",
+      "renewFree": "Renew for free",
+      "topUpHeading": "Add {{amount}}",
+      "payVia": "Pay {{amount}} via {{name}}",
+      "payHint": "The money will reach your balance and your subscription will renew immediately",
+      "minTopUpHint": "The minimum top-up is {{amount}}. The remainder will stay on your balance",
+      "autopayOn": "Auto-renewal is on",
+      "autopayCovered": "We will charge {{price}} from your balance on {{date}} — no manual renewal needed.",
+      "autopayCoveredSoon": "We will charge {{price}} from your balance soon.",
+      "autopayIfEnough": "We will charge {{price}} on {{date}} if your balance covers it.",
+      "autopayWhenEnough": "We will charge {{price}} as soon as your balance covers it.",
+      "autopayOffHint": "Turn it on to automatically charge {{price}} from your balance {{count}} days before expiry.",
+      "changeTariffHint": "More devices or premium servers"
+    },
     "accounting": {
       "label": "Available traffic",
       "available": "Total remaining",

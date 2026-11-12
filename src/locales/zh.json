@@ -398,6 +398,30 @@
     }
   },
   "subscription": {
+    "renewPage": {
+      "activeUntil": "有效期至 {{date}}",
+      "endedOn": "已于 {{date}} 到期",
+      "periodHeading": "选择续订时长",
+      "months": "{{count}} 个月",
+      "days": "{{count}} 天",
+      "newEndLabel": "续订后有效期至",
+      "chargeLabel": "从余额扣除",
+      "balanceLabel": "账户余额",
+      "shortfallLabel": "还差",
+      "renewFor": "支付 {{price}} 续订",
+      "renewFree": "免费续订",
+      "topUpHeading": "补充 {{amount}}",
+      "payVia": "通过 {{name}} 支付 {{amount}}",
+      "payHint": "款项到账后，订阅将立即续订",
+      "minTopUpHint": "最低充值金额为 {{amount}}，剩余款项将保留在余额中",
+      "autopayOn": "自动续订已开启",
+      "autopayCovered": "我们将于 {{date}} 从余额扣除 {{price}}，无需手动续订。",
+      "autopayCoveredSoon": "我们将很快从余额扣除 {{price}}。",
+      "autopayIfEnough": "若余额充足，我们将于 {{date}} 扣除 {{price}}。",
+      "autopayWhenEnough": "余额充足后，我们将立即扣除 {{price}}。",
+      "autopayOffHint": "开启后，将在到期前 {{count}} 天自动从余额扣除 {{price}}。",
+      "changeTariffHint": "更多设备或高级服务器"
+    },
     "accounting": {
       "label": "可用流量",
       "available": "剩余总流量",

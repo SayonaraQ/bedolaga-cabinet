@@ -98,7 +98,7 @@ async function renderRenew() {
 
 /** Карточка периода — ближайшая кнопка вокруг подписи с числом дней. */
 function cardFor(days: number): HTMLElement {
-  const label = screen.getByText(new RegExp(`^${days} `));
+  const label = screen.getByRole('radio', { name: new RegExp(`^${days / 30} мес`) });
   const card = label.closest('button');
   if (!card) throw new Error(`не нашёл карточку периода ${days}`);
   return card;
@@ -136,7 +136,7 @@ describe('выделенный период при продлении', () => {
   it('ничего не выделяет, когда оператор не выбрал период', async () => {
     state.options = [option({ period_days: 30 }), option({ period_days: 180 })];
     await renderRenew();
-    await screen.findByText(/^30 /);
+    await screen.findByRole('radio', { name: /^1 мес/ });
 
     expect(screen.queryByText(ru('subscription.bestValue'))).toBeNull();
   });

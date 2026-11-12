@@ -432,6 +432,30 @@
     }
   },
   "subscription": {
+    "renewPage": {
+      "activeUntil": "Активна до {{date}}",
+      "endedOn": "Закончилась {{date}}",
+      "periodHeading": "На сколько продлить",
+      "months": "{{count}} мес",
+      "days": "{{count}} дн.",
+      "newEndLabel": "Будет активна до",
+      "chargeLabel": "Спишем с баланса",
+      "balanceLabel": "На балансе",
+      "shortfallLabel": "Не хватает",
+      "renewFor": "Продлить за {{price}}",
+      "renewFree": "Продлить бесплатно",
+      "topUpHeading": "Доплатить {{amount}}",
+      "payVia": "Оплатить {{amount}} через {{name}}",
+      "payHint": "Деньги придут на баланс, и подписка сразу продлится",
+      "minTopUpHint": "Минимальное пополнение — {{amount}}, остаток останется на балансе",
+      "autopayOn": "Автопродление включено",
+      "autopayCovered": "{{date}} спишем {{price}} с баланса — продлевать вручную не обязательно.",
+      "autopayCoveredSoon": "Спишем {{price}} с баланса в ближайшее время.",
+      "autopayIfEnough": "{{date}} спишем {{price}}, если они будут на балансе.",
+      "autopayWhenEnough": "Спишем {{price}}, как только они будут на балансе.",
+      "autopayOffHint": "Включите — и {{price}} будут списываться с баланса сами за {{count}} дн. до конца.",
+      "changeTariffHint": "Больше устройств или премиум-серверы"
+    },
     "accounting": {
       "label": "Доступный трафик",
       "available": "Всего осталось",

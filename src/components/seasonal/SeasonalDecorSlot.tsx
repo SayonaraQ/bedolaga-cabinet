@@ -1,7 +1,7 @@
 import type { ComponentType, CSSProperties, ReactNode } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import type { Season } from '@/theme/appearance';
-import { LeafRow, MapleCluster, MapleSingle } from './art/autumn';
+import { LeafDrift, LeafRow, MapleCluster } from './art/autumn';
 import { GardenBed, GardenDaffodil, GardenTulip } from './art/spring';
 import { Beach, Palm, Shell, Wave } from './art/summer';
 import { SnowCap, SnowFull, Snowman, SnowRight } from './art/winter';
@@ -44,7 +44,9 @@ const DECOR: Record<Season, Record<Slot, DecorPiece[]>> = {
     corner: [
       { Art: MapleCluster, style: { right: -4, top: -44, width: 'min(84px,25cqw)', height: 64 } },
     ],
-    connect: [{ Art: MapleSingle, style: { right: 8, top: -15, width: 30, height: 30 } }],
+    connect: [
+      { Art: LeafDrift, style: { right: 6, top: -17, width: 'min(198px,56cqw)', height: 30 } },
+    ],
     renew: [{ Art: LeafRow, style: { left: 6, top: -13, width: 64, height: 24 } }],
   },
 };

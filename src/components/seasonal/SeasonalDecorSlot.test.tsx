@@ -37,7 +37,7 @@ const expected = {
   },
   autumn: {
     corner: [['MapleCluster', 'right:-4px;top:-44px;width:min(84px,25cqw);height:64px']],
-    connect: [['MapleSingle', 'right:8px;top:-15px;width:30px;height:30px']],
+    connect: [['LeafDrift', 'right:6px;top:-17px;width:min(198px,56cqw);height:30px']],
     renew: [['LeafRow', 'left:6px;top:-13px;width:64px;height:24px']],
   },
 };

@@ -24,8 +24,9 @@ const referenceHashes: Record<keyof typeof art, string> = {
   Palm: '33045322fb7c5dd390d205801078db7c640f5fb679bdea9a25cbc96e16f54e9b',
   Wave: 'fa25d492cb10af18fb24e0a5ec8be2493c0678e4786ee1b5dc359c2f3f52a5a9',
   MapleCluster: '0407f5309cfe3190416ece4fcae36944dfe397269d33a55d7d30b2469a29a4e9',
-  MapleSingle: '327f110f4d000cb1d6d8bf4dbd4c721673b684f119e83801de6737d748c585fd',
   LeafRow: 'c23341bbe02b9140c9570d400a6a44305819b48e45127dd9774c48aa9ab04566',
+  // 2026-11-13: ряд листьев на кромке «Подключить устройство» вместо одинокого клёна.
+  LeafDrift: '74393affd1a002e22fd3590a6d501416f48ba992b2858bb319066490a3b4d99d',
 };
 
 afterEach(cleanup);

@@ -15,6 +15,7 @@ const sub = (overrides: Record<string, unknown> = {}) => ({
   is_trial: false,
   is_daily: false,
   tariff_id: 7,
+  end_date: '2099-01-01T00:00:00+00:00',
   requires_tariff_selection: false,
   ...overrides,
 });
@@ -75,11 +76,18 @@ describe('subscriptionCardCta', () => {
   });
 });
 
-// «Сменить тариф» под названием тарифа. Бот меняет тариф только у активной
-// подписки; истёкшей он велит купить новый тариф — это витрина.
+// «Сменить тариф» под названием тарифа. Бот меняет тариф у активной подписки и,
+// с бота 5.2.1, у исчерпавшей трафик, пока срок не кончился; истёкшей он велит
+// купить новый тариф — это витрина.
 describe('tariffSwitchLink', () => {
   it('opens the switch for an active tariff subscription', () => {
     expect(tariffSwitchLink(sub())).toBe('/subscription/purchase?subscriptionId=42');
+  });
+
+  it('opens the switch when traffic ran out but the paid term is still running', () => {
+    expect(tariffSwitchLink(sub({ status: 'limited', is_active: false, is_limited: true }))).toBe(
+      '/subscription/purchase?subscriptionId=42',
+    );
   });
 
   it('opens the plan showcase for an expired one', () => {
@@ -90,8 +98,13 @@ describe('tariffSwitchLink', () => {
 
   it.each([
     [
-      'traffic ran out: the bot refuses to switch',
-      { status: 'limited', is_active: false, is_limited: true },
+      'traffic ran out and the term is over: the bot refuses to switch',
+      {
+        status: 'limited',
+        is_active: false,
+        is_limited: true,
+        end_date: '2000-01-01T00:00:00+00:00',
+      },
     ],
     ['disabled', { status: 'disabled', is_active: false }],
     ['trial', { status: 'trial', is_trial: true, tariff_id: null }],

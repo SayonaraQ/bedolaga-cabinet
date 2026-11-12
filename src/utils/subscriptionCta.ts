@@ -24,7 +24,7 @@ export interface CardCta {
 
 type CardCtaSubscription = Pick<
   Subscription,
-  'id' | 'status' | 'is_active' | 'is_limited' | 'is_trial' | 'is_daily' | 'tariff_id'
+  'id' | 'status' | 'is_active' | 'is_limited' | 'is_trial' | 'is_daily' | 'tariff_id' | 'end_date'
 > &
   Partial<Pick<Subscription, 'requires_tariff_selection'>>;
 
@@ -62,9 +62,10 @@ export function subscriptionCardCta(
 }
 
 /**
- * «Сменить тариф» под названием тарифа. Бот меняет тариф только у активной
- * подписки (tariff_switch.py), а истёкшей отвечает «купите новый тариф» — для неё
- * это витрина. У limited и disabled бот смену отклоняет, кнопки нет.
+ * «Сменить тариф» под названием тарифа. Бот меняет тариф у активной подписки и
+ * (с 5.2.1) у исчерпавшей трафик, пока не кончился срок (tariff_switch.py), а
+ * истёкшей отвечает «купите новый тариф» — для неё это витрина. У disabled бот
+ * смену отклоняет, кнопки нет.
  */
 export function tariffSwitchLink(
   subscription:

@@ -36,6 +36,7 @@ const ALLOWED = new Set([
   'components/seasonal/art/spring.tsx',
   'components/seasonal/art/summer.tsx',
   'components/seasonal/art/autumn.tsx',
+  'components/seasonal/SeasonDeviceGlyphs.tsx', // сезонные глифы на кнопке подключения, декор
 ]);
 
 function sourceFiles(dir: string): string[] {

@@ -7,7 +7,8 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useTopUpPayment } from '@/hooks/useTopUpPayment';
 import type { PaymentMethod, RenewalOption, Subscription } from '@/types';
 import { buildQuickTopUps, buildRenewalPlan, type RenewalPlan } from '@/utils/balance/renewalPlan';
-import { getPreferredOptionId, sortOptionsWithSbpFirst } from '@/utils/paymentOptions';
+import { getPreferredOptionId } from '@/utils/paymentOptions';
+import { methodDisplayName, PaymentChoice } from './PaymentChoice';
 import { PaymentReadyPanel } from './PaymentReadyPanel';
 import { RenewalStatus } from './RenewalStatus';
 
@@ -99,12 +100,6 @@ function WalletTopUp({
     amountKopeks <= method.max_amount_kopeks;
   const money = (kopeks: number) =>
     `${formatAmount(kopeks / 100, kopeks % 100 === 0 ? 0 : 2)}\u00A0${currencySymbol}`;
-  const methodName = (item: PaymentMethod) =>
-    item.name ||
-    t(`balance.paymentMethods.${item.id.toLowerCase().replace(/-/g, '_')}.name`, {
-      defaultValue: item.id,
-    });
-
   const handleTopUp = () => {
     if (!validAmount || isPending || submitting.current || amountKopeks === undefined) return;
     if (method.id === 'stars' || method.id === 'antilopay' || targetCurrency !== 'RUB') {
@@ -122,54 +117,14 @@ function WalletTopUp({
   return (
     <div className="mt-6 space-y-4 border-t border-dark-700/50 pt-5">
       <h2 className="font-semibold text-dark-100">{t('balance.wallet.topUpHeading')}</h2>
-      {methods.length > 1 && (
-        <div
-          className="flex flex-wrap gap-2"
-          role="group"
-          aria-label={t('balance.wallet.paymentMethod')}
-        >
-          {methods.map((item) => (
-            <Button
-              key={item.id}
-              size="sm"
-              variant="secondary"
-              aria-pressed={item.id === method.id}
-              disabled={!item.is_available || isPending}
-              className={
-                item.id === method.id ? 'border-accent-500 bg-accent-500/10 text-accent-400' : ''
-              }
-              onClick={() => onMethodChange(item.id)}
-            >
-              {methodName(item)}
-            </Button>
-          ))}
-        </div>
-      )}
-      {!!method.options?.length && (
-        <div
-          className="flex flex-wrap gap-2"
-          role="group"
-          aria-label={t('balance.wallet.paymentOption')}
-        >
-          {sortOptionsWithSbpFirst(method.options).map((option) => (
-            <Button
-              key={option.id}
-              size="sm"
-              variant="secondary"
-              aria-pressed={option.id === selectedOption}
-              disabled={isPending}
-              className={
-                option.id === selectedOption
-                  ? 'border-accent-500 bg-accent-500/10 text-accent-400'
-                  : ''
-              }
-              onClick={() => setSelectedOptionId(option.id)}
-            >
-              {option.name}
-            </Button>
-          ))}
-        </div>
-      )}
+      <PaymentChoice
+        methods={methods}
+        method={method}
+        onMethodChange={onMethodChange}
+        selectedOptionId={selectedOption ?? undefined}
+        onOptionChange={setSelectedOptionId}
+        disabled={isPending}
+      />
       <div
         className={`grid gap-2 ${quickTopUps.items.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}
         role="group"
@@ -248,7 +203,7 @@ function WalletTopUp({
       )}
       {paymentUrl && <PaymentReadyPanel paymentUrl={paymentUrl} qrPayload={qrPayload} />}
       <p className="text-center text-xs text-dark-400">
-        {t('balance.wallet.paymentThrough', { name: methodName(method) })}
+        {t('balance.wallet.paymentThrough', { name: methodDisplayName(method, t) })}
         {' · '}
         <span>
           {t('balance.wallet.paymentRange', {

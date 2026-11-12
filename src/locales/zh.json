@@ -420,7 +420,11 @@
       "autopayIfEnough": "若余额充足，我们将于 {{date}} 扣除 {{price}}。",
       "autopayWhenEnough": "余额充足后，我们将立即扣除 {{price}}。",
       "autopayOffHint": "开启后，将在到期前 {{count}} 天自动从余额扣除 {{price}}。",
-      "changeTariffHint": "更多设备或高级服务器"
+      "changeTariffHint": "更多设备或高级服务器",
+      "perMonthShort": "/月",
+      "perMonthLong": "每月",
+      "perDayShort": "/天",
+      "perDayLong": "每天"
     },
     "accounting": {
       "label": "可用流量",

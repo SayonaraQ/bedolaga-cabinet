@@ -236,6 +236,26 @@ describe('продление в одной карточке', () => {
       within(screen.getByRole('radio', { name: /^3 мес/ })).getByText(/^−50\s*₽$/),
     ).toBeTruthy();
   });
+  it('пишет цену за месяц на каждой плитке, и на первой тоже', async () => {
+    mount();
+    const monthly = await screen.findByRole('radio', { name: /^1 мес/ });
+    // У первой плитки цена за месяц повторяет её цену: строка не пустая.
+    expect(within(monthly).getAllByText(/^300\s*₽$/)).toHaveLength(2);
+    expect(
+      within(screen.getByRole('radio', { name: /^2 мес/ })).getByText(/^290\s*₽$/),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByRole('radio', { name: /^3 мес/ })).getByText(/^283\s*₽$/),
+    ).toBeTruthy();
+    expect(within(monthly).getByText('/мес')).toBeTruthy();
+  });
+  it('выгода — ярлыком на углу, а не строкой в плитке', async () => {
+    mount();
+    const chip = within(await screen.findByRole('radio', { name: /^3 мес/ })).getByText(
+      /^−50\s*₽$/,
+    );
+    expect(chip.className).toContain('absolute');
+  });
   it('показывает нехватку один раз, в итогах', async () => {
     state.balance = 15000;
     mount();

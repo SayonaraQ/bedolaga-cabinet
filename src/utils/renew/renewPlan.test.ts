@@ -4,6 +4,7 @@ import {
   paymentOptionLabel,
   periodLabel,
   periodSavingsKopeks,
+  periodUnitPrice,
   pickDefaultPeriod,
   renewedEndDate,
   renewalShortfallKopeks,
@@ -96,5 +97,13 @@ describe('renewPlan', () => {
     expect(paymentOptionLabel('🏦 СБП')).toBe('СБП');
     expect(paymentOptionLabel('Банковская карта')).toBe('Банковская карта');
     expect(paymentOptionLabel('💳 Карта')).toBe('Карта');
+  });
+  it('prices each period per month, or per day when shorter than a month', () => {
+    expect(periodUnitPrice(option(30, 120000))).toEqual({ kopeks: 120000, unit: 'month' });
+    expect(periodUnitPrice(option(60, 238000))).toEqual({ kopeks: 119000, unit: 'month' });
+    // 3 500 ₽ за 90 дней = 1 166,67 ₽ в месяц — показываем целыми рублями.
+    expect(periodUnitPrice(option(90, 350000))).toEqual({ kopeks: 116700, unit: 'month' });
+    expect(periodUnitPrice(option(7, 10000))).toEqual({ kopeks: 1400, unit: 'day' });
+    expect(periodUnitPrice(option(30, 0))).toBeNull();
   });
 });

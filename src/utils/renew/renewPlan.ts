@@ -53,3 +53,23 @@ export function renewTopUpAmount(
 export function paymentOptionLabel(name: string): string {
   return name.replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
+
+/**
+ * Цена срока в пересчёте на месяц (или на день для сроков короче месяца),
+ * целыми рублями. У бесплатного срока цены за единицу нет.
+ */
+export function periodUnitPrice(
+  option: RenewalOption,
+): { kopeks: number; unit: 'month' | 'day' } | null {
+  if (option.price_kopeks <= 0 || option.period_days <= 0) return null;
+  if (option.period_days < 30) {
+    return {
+      kopeks: Math.round(option.price_kopeks / option.period_days / 100) * 100,
+      unit: 'day',
+    };
+  }
+  return {
+    kopeks: Math.round((option.price_kopeks * 30) / option.period_days / 100) * 100,
+    unit: 'month',
+  };
+}

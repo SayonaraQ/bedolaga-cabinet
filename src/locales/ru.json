@@ -454,7 +454,11 @@
       "autopayIfEnough": "{{date}} спишем {{price}}, если они будут на балансе.",
       "autopayWhenEnough": "Спишем {{price}}, как только они будут на балансе.",
       "autopayOffHint": "Включите — и {{price}} будут списываться с баланса сами за {{count}} дн. до конца.",
-      "changeTariffHint": "Больше устройств или премиум-серверы"
+      "changeTariffHint": "Больше устройств или премиум-серверы",
+      "perMonthShort": "/мес",
+      "perMonthLong": "в месяц",
+      "perDayShort": "/день",
+      "perDayLong": "в день"
     },
     "accounting": {
       "label": "Доступный трафик",

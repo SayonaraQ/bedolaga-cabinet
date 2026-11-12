@@ -3,7 +3,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useTheme } from '@/hooks/useTheme';
 import type { RenewalOption } from '@/types';
 import { getGlassColors } from '@/utils/glassTheme';
-import { periodLabel, periodSavingsKopeks } from '@/utils/renew/renewPlan';
+import { periodLabel, periodSavingsKopeks, periodUnitPrice } from '@/utils/renew/renewPlan';
 import { BEST_VALUE_BORDER, BestValueBadge } from '../BestValueBadge';
 
 export function RenewPeriodTiles({
@@ -32,7 +32,7 @@ export function RenewPeriodTiles({
 
   return (
     <div
-      className={`grid gap-2 ${columns}`}
+      className={`grid gap-2 pt-2.5 ${columns}`}
       role="radiogroup"
       aria-label={t('subscription.renewPage.periodHeading')}
     >
@@ -42,6 +42,14 @@ export function RenewPeriodTiles({
         const label = periodLabel(option.period_days);
         const savings = periodSavingsKopeks(option, options);
         const promo = (option.original_price_kopeks ?? 0) > option.price_kopeks;
+        const unitPrice = periodUnitPrice(option);
+        const chip = promo
+          ? option.discount_percent > 0
+            ? `-${option.discount_percent}%`
+            : null
+          : savings > 0
+            ? `−${money(savings)}`
+            : null;
 
         return (
           <button
@@ -51,7 +59,7 @@ export function RenewPeriodTiles({
             aria-checked={selected}
             disabled={disabled}
             onClick={() => onSelect(option.period_days)}
-            className={`glass-card flex min-w-0 flex-col items-center justify-center rounded-linear-lg px-2 py-3 text-center transition-colors disabled:opacity-50 ${highlighted ? 'border-2' : 'border'}`}
+            className={`glass-card relative flex min-w-0 flex-col items-center justify-center rounded-linear-lg px-2 pb-3 pt-4 text-center transition-colors disabled:opacity-50 ${highlighted ? 'border-2' : 'border'}`}
             style={{
               background: selected ? 'rgba(var(--color-accent-400), 0.08)' : g.cardBg,
               borderColor: highlighted
@@ -71,27 +79,42 @@ export function RenewPeriodTiles({
             <span className="mt-0.5 text-sm text-dark-100">
               {option.price_kopeks === 0 ? t('subscription.free') : money(option.price_kopeks)}
             </span>
-            <div className="mt-1 flex min-h-5 w-full min-w-0 flex-wrap items-center justify-center gap-1 text-[11px]">
-              {highlighted && (
-                <BestValueBadge className="max-w-full flex-wrap justify-center px-1 tracking-normal" />
-              )}
-              {promo ? (
-                <>
-                  <span className="text-dark-400 line-through">
-                    {money(option.original_price_kopeks ?? 0)}
-                  </span>
-                  {option.discount_percent > 0 && (
-                    <span className="rounded-full bg-success-400/15 px-1.5 py-0.5 font-semibold text-success-400">
-                      -{option.discount_percent}%
-                    </span>
+            {promo && (
+              <span className="text-[11px] text-dark-400 line-through">
+                {money(option.original_price_kopeks ?? 0)}
+              </span>
+            )}
+            {/* Цена за месяц у каждого срока: по ней видно, что длинный срок дешевле,
+                и у первой плитки нет пустой строки. На узких экранах единица
+                уходит второй строкой, иначе «₽/мес» ломалось посередине. */}
+            {unitPrice && (
+              <span className={`mt-1.5 text-xs ${selected ? 'text-accent-300' : 'text-dark-400'}`}>
+                <span className="whitespace-nowrap">{money(unitPrice.kopeks)}</span>
+                <span className="hidden min-[360px]:inline">
+                  {t(
+                    `subscription.renewPage.${unitPrice.unit === 'month' ? 'perMonthShort' : 'perDayShort'}`,
                   )}
-                </>
-              ) : (
-                savings > 0 && (
-                  <span className="font-semibold text-success-400">−{money(savings)}</span>
-                )
-              )}
-            </div>
+                </span>
+                <span className="block text-[10px] min-[360px]:hidden">
+                  {t(
+                    `subscription.renewPage.${unitPrice.unit === 'month' ? 'perMonthLong' : 'perDayLong'}`,
+                  )}
+                </span>
+              </span>
+            )}
+            {/* Отметка оператора визуально первой строкой, но в DOM после срока:
+                имя кнопки для скринридера начинается со срока, а не с «Выгодно».
+                Уже 360 px слово в плитку не влезает — остаётся звезда, текст
+                для скринридера на месте (нулевой кегль, не display:none). */}
+            {highlighted && (
+              <BestValueBadge className="order-first mb-1.5 whitespace-nowrap px-1.5 tracking-normal max-[359px]:gap-0 max-[359px]:text-[0px]" />
+            )}
+            {/* Выгода — ярлыком на углу, как ценник со скидкой. */}
+            {chip && (
+              <span className="absolute -top-2.5 right-2 z-10 whitespace-nowrap rounded-full bg-success-500 px-2 py-0.5 text-[11px] font-bold text-white shadow-sm">
+                {chip}
+              </span>
+            )}
           </button>
         );
       })}

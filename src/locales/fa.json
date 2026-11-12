@@ -434,7 +434,11 @@
       "autopayIfEnough": "در {{date}} در صورت کافی بودن موجودی، مبلغ {{price}} کسر می‌شود.",
       "autopayWhenEnough": "به‌محض کافی بودن موجودی، مبلغ {{price}} کسر می‌شود.",
       "autopayOffHint": "فعال کنید تا {{count}} روز پیش از پایان، مبلغ {{price}} به‌طور خودکار از موجودی کسر شود.",
-      "changeTariffHint": "دستگاه‌های بیشتر یا سرورهای ویژه"
+      "changeTariffHint": "دستگاه‌های بیشتر یا سرورهای ویژه",
+      "perMonthShort": "/ماه",
+      "perMonthLong": "در ماه",
+      "perDayShort": "/روز",
+      "perDayLong": "در روز"
     },
     "accounting": {
       "label": "ترافیک در دسترس",

@@ -443,7 +443,11 @@
       "autopayIfEnough": "We will charge {{price}} on {{date}} if your balance covers it.",
       "autopayWhenEnough": "We will charge {{price}} as soon as your balance covers it.",
       "autopayOffHint": "Turn it on to automatically charge {{price}} from your balance {{count}} days before expiry.",
-      "changeTariffHint": "More devices or premium servers"
+      "changeTariffHint": "More devices or premium servers",
+      "perMonthShort": "/mo",
+      "perMonthLong": "per month",
+      "perDayShort": "/day",
+      "perDayLong": "per day"
     },
     "accounting": {
       "label": "Available traffic",

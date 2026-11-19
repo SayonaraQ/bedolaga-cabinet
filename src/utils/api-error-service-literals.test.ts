@@ -24,6 +24,7 @@ const codes = [
   ['empty_message', 'emptyMessage'],
   ['send_failed', 'messageSendFailed'],
   ['subscription_expired', 'expiredCannotSwitch'],
+  ['grace_switch_unavailable', 'graceSwitchUnavailable'],
   ['trial_cannot_switch', 'trialCannotSwitch'],
   ['free_tariff_cannot_switch', 'freeCannotSwitch'],
 ] as const;

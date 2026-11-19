@@ -9964,6 +9964,7 @@
     "emptyMessage": "消息文本为空",
     "messageSendFailed": "无法发送消息，请稍后重试",
     "expiredCannotSwitch": "订阅已过期，请购买新套餐。",
+    "graceSwitchUnavailable": "流量用尽期间无法更换套餐。请购买流量或等待流量重置后再更换。",
     "trialCannotSwitch": "试用订阅不支持更换套餐，请购买套餐。",
     "freeCannotSwitch": "免费套餐订阅不支持更换套餐，请购买套餐。",
     "template001": "文件过大，绝对上限为 {{param1}} MB",

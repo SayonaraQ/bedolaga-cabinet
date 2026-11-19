@@ -58,6 +58,7 @@ const codeKeys = new Map<string, string>([
   ['empty_message', 'emptyMessage'],
   ['send_failed', 'messageSendFailed'],
   ['subscription_expired', 'expiredCannotSwitch'],
+  ['grace_switch_unavailable', 'graceSwitchUnavailable'],
   ['trial_cannot_switch', 'trialCannotSwitch'],
   ['free_tariff_cannot_switch', 'freeCannotSwitch'],
   ['email_auth_disabled', 'emailAuthDisabled'],

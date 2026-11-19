@@ -10103,6 +10103,7 @@
     "emptyMessage": "Message text is empty",
     "messageSendFailed": "Failed to send the message, try again later",
     "expiredCannotSwitch": "Subscription is expired. Please purchase a new tariff instead of switching.",
+    "graceSwitchUnavailable": "You can't change the tariff while your traffic is used up. Top up traffic or wait for the reset, then switch.",
     "trialCannotSwitch": "Trial subscriptions cannot switch tariffs. Please purchase a tariff instead.",
     "freeCannotSwitch": "Free-tariff subscriptions cannot switch tariffs. Please purchase a tariff instead.",
     "template001": "File too large. Absolute maximum: {{param1}} MB",

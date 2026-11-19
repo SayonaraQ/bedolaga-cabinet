@@ -13,6 +13,10 @@ import type { RenewalOption } from '@/types';
  *
  * Держим и обратное: без отметки оператора поведение прежнее — сам за него
  * выгоду не выдумываем.
+ *
+ * Здесь только покупка тарифа. Экран продления с 13.11 — «вариант C» с другим
+ * контрактом (без отметки выбирается период автоплатежа или самый короткий);
+ * его выбор по умолчанию держат renewPage.test.tsx и utils/renew/renewPlan.test.ts.
  */
 
 function ru(key: string): string {
@@ -60,15 +64,6 @@ vi.mock('@/api/promo', () => ({
   promoApi: { getActiveDiscount: () => Promise.resolve(null) },
 }));
 
-const option = (overrides: Partial<RenewalOption>): RenewalOption => ({
-  period_days: 30,
-  price_kopeks: 39900,
-  price_rubles: 399,
-  discount_percent: 0,
-  original_price_kopeks: null,
-  ...overrides,
-});
-
 if (!window.matchMedia) {
   window.matchMedia = ((query: string) => ({
     matches: false,
@@ -91,8 +86,6 @@ afterEach(() => {
 // остаётся жёлтой, если оператор отметил его выгодным.
 const SELECTED = 'bg-accent-500/10';
 const BEST_VALUE_RING = 'border-urgent-400';
-// Продление красит рамку и заливку инлайновым стилем, а не классом.
-const SELECTED_BORDER = '--color-accent-400';
 
 // ==================== покупка тарифа ====================
 
@@ -145,35 +138,5 @@ describe('покупка: выбранный по умолчанию перио�
 
     expect(screen.getByText('Период: 12 месяцев')).toBeTruthy();
     expect(screen.queryByText('Период: 1 месяц')).toBeNull();
-  });
-});
-
-// ==================== продление ====================
-
-describe('продление: выбранный по умолчанию период', () => {
-  it('выгодный период выбран сразу', async () => {
-    state.options = [
-      option({ period_days: 30 }),
-      option({ period_days: 360, price_kopeks: 264000, is_highlighted: true }),
-    ];
-    const { renderRenew, cardFor } = await import('./renewHarness');
-    await renderRenew();
-    await screen.findByText(ru('subscription.bestValue'));
-
-    // Рамка выбранного выгодного остаётся жёлтой, выбор виден заливкой и
-    // внутренним контуром — обе метки сразу.
-    expect(cardFor(360).style.borderColor).toContain('--color-urgent-400');
-    expect(cardFor(360).style.background).toContain(SELECTED_BORDER);
-    expect(cardFor(30).style.background).not.toContain(SELECTED_BORDER);
-  });
-
-  it('без отметки оператора не выбирает ничего — как было', async () => {
-    state.options = [option({ period_days: 30 }), option({ period_days: 360 })];
-    const { renderRenew, cardFor } = await import('./renewHarness');
-    await renderRenew();
-    await screen.findByText(/^30 /);
-
-    expect(cardFor(30).style.background).not.toContain(SELECTED_BORDER);
-    expect(cardFor(360).style.background).not.toContain(SELECTED_BORDER);
   });
 });

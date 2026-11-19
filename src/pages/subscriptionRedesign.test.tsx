@@ -47,6 +47,7 @@ const api = vi.hoisted(() => ({
     instructions: { steps: [] },
   }),
   getPurchaseOptions: async () => ({ sales_mode: 'tariffs', tariffs: [], balance_kopeks: 0 }),
+  getTrafficPackages: async () => [],
   getDevices: async () => ({
     devices: Array.from({ length: state.deviceCount }, (_, i) => ({
       hwid: `HW-${i + 1}`,
@@ -103,14 +104,14 @@ function Destination() {
   return <div data-testid="destination">{location.pathname + location.search}</div>;
 }
 
-function renderPage() {
+function renderPage(entry = '/subscriptions/42') {
   return render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
       <PlatformProvider>
         <ToastProvider>
-          <MemoryRouter initialEntries={['/subscriptions/42']}>
+          <MemoryRouter initialEntries={[entry]}>
             <Routes>
               <Route path="/subscriptions/:subscriptionId" element={<Subscription />} />
               <Route path="/subscription/purchase" element={<Destination />} />
@@ -268,6 +269,23 @@ it('traffic ran out: «buy traffic» is in the warning that says so, once', asyn
 
   fireEvent.click(buy);
   expect(screen.getByText('subscription.additionalOptions.buyTrafficTitle')).toBeTruthy();
+});
+
+it('#traffic (from a grace-blocked tariff switch) opens the traffic top-up right away', async () => {
+  Object.assign(state.subscription, { status: 'limited', is_active: false, is_limited: true });
+  const { container } = renderPage('/subscriptions/42#traffic');
+
+  await screen.findByTestId('traffic-limited');
+  expect(await screen.findByText('subscription.additionalOptions.buyTrafficTitle')).toBeTruthy();
+  expect(container.querySelector('#traffic')).toBeTruthy();
+});
+
+it('without #traffic the top-up stays folded', async () => {
+  Object.assign(state.subscription, { status: 'limited', is_active: false, is_limited: true });
+  renderPage();
+
+  await screen.findByTestId('traffic-limited');
+  expect(screen.queryByText('subscription.additionalOptions.buyTrafficTitle')).toBeNull();
 });
 
 it('expired: «change tariff» under the plan name leads to the showcase', async () => {

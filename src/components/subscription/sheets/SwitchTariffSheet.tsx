@@ -57,6 +57,18 @@ function shouldUsePurchaseFlow(error: unknown): boolean {
   );
 }
 
+// Managed-подписка в открытом grace по трафику тариф не меняет (бот: код
+// grace_switch_unavailable). «Повторить» тут бесполезно — выход в докупке.
+function isGraceSwitchUnavailable(error: unknown): boolean {
+  if (!(error instanceof AxiosError)) return false;
+  const detail = error.response?.data?.detail as { code?: string } | undefined;
+  return !!detail && typeof detail === 'object' && detail.code === 'grace_switch_unavailable';
+}
+
+function trafficTopupPath(subscriptionId: number | undefined): string {
+  return subscriptionId ? `/subscriptions/${subscriptionId}#traffic` : '/subscription#traffic';
+}
+
 export interface SwitchTariffSheetProps {
   open: boolean;
   tariffId: number | null;
@@ -167,13 +179,27 @@ export function SwitchTariffSheet({
         </SkeletonGroup>
       ) : previewError ? (
         <div role="alert" className="space-y-3">
-          <p className="text-sm text-dark-100">{t('subscription.switchTariff.previewError')}</p>
+          <p className="text-sm text-dark-100">
+            {isGraceSwitchUnavailable(previewFailure)
+              ? t('subscription.switchTariff.graceUnavailableTitle')
+              : t('subscription.switchTariff.previewError')}
+          </p>
           {previewFailure instanceof AxiosError && previewFailure.response?.data?.detail && (
             <p className="text-sm text-dark-400">{getErrorMessage(previewFailure)}</p>
           )}
-          <button type="button" className="btn-secondary" onClick={() => void refetch()}>
-            {t('common.retry')}
-          </button>
+          {isGraceSwitchUnavailable(previewFailure) ? (
+            <button
+              type="button"
+              className="btn-primary w-full py-3"
+              onClick={() => navigate(trafficTopupPath(subscriptionId))}
+            >
+              {t('subscription.switchTariff.buyTraffic')}
+            </button>
+          ) : (
+            <button type="button" className="btn-secondary" onClick={() => void refetch()}>
+              {t('common.retry')}
+            </button>
+          )}
         </div>
       ) : switchPreview ? (
         <>

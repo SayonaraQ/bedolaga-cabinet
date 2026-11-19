@@ -661,6 +661,8 @@
       "reviewTitle": "确认变更内容",
       "chooseAnother": "选择其他套餐",
       "previewError": "无法计算更换费用",
+      "graceUnavailableTitle": "暂时无法更换套餐",
+      "buyTraffic": "购买流量",
       "newLimits": "新套餐限额",
       "endDate": "到期日期",
       "keepTerm": "已付费的到期日期保持不变。更换套餐不会延长订阅。",

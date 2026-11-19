@@ -712,6 +712,8 @@
       "reviewTitle": "Review changes",
       "chooseAnother": "Choose another plan",
       "previewError": "Unable to calculate the switch",
+      "graceUnavailableTitle": "Tariff change is unavailable right now",
+      "buyTraffic": "Buy traffic",
       "newLimits": "New plan limits",
       "endDate": "Expiry date",
       "keepTerm": "Your paid expiry date stays the same. Switching does not extend the subscription.",

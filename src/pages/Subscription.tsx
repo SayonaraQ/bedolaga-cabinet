@@ -9,7 +9,7 @@ import { uiLocale } from '@/utils/uiLocale';
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Link, Navigate, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
 import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
@@ -250,7 +250,9 @@ export default function Subscription() {
   const [devicesToAdd, setDevicesToAdd] = useState(1);
   const [showDeviceReduction, setShowDeviceReduction] = useState(false);
   const [targetDeviceLimit, setTargetDeviceLimit] = useState<number>(1);
-  const [showTrafficTopup, setShowTrafficTopup] = useState(false);
+  // #traffic — сюда ведёт «Докупить трафик» из смены тарифа в grace: докупка сразу раскрыта.
+  const { hash: locationHash } = useLocation();
+  const [showTrafficTopup, setShowTrafficTopup] = useState(() => locationHash === '#traffic');
   const [selectedTrafficPackage, setSelectedTrafficPackage] = useState<number | null>(null);
   const [showServerManagement, setShowServerManagement] = useState(false);
   const [selectedServersToUpdate, setSelectedServersToUpdate] = useState<string[]>([]);
@@ -374,6 +376,7 @@ export default function Subscription() {
   // Ждём подписку, устройства и ссылку подключения: иначе блок съедет вниз,
   // когда догрузится то, что над ним, и прокрутка промахнётся.
   useScrollToSection('devices', !!subscription && !!devicesData && !isConnectionLinkLoading);
+  useScrollToSection('traffic', !!subscription && !isConnectionLinkLoading);
 
   // Pause subscription mutation
   // Auto-close all modals/forms when success notification appears
@@ -846,7 +849,7 @@ export default function Subscription() {
                     </div>
                   )}
                   {canBuyTraffic && showTrafficTopup && (
-                    <div className="mt-3">
+                    <div id="traffic" className="mt-3 scroll-mt-24">
                       <TrafficTopupSheet
                         open
                         onOpen={() => setShowTrafficTopup(true)}

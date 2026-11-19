@@ -1,3 +1,7 @@
+import PaymentPhoneInput, {
+  requiresPaymentPhone,
+  isValidPaymentPhone,
+} from '@/components/PaymentPhoneInput';
 import { getLocalizedApiErrorMessage } from '../utils/api-error-display';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -106,6 +110,11 @@ export default function TopUpAmount() {
   const [selectedOption, setSelectedOption] = useState<string | null>(
     getPreferredOptionId(method?.options),
   );
+  const [paymentPhone, setPaymentPhone] = useState('');
+  const needsPaymentPhone = requiresPaymentPhone(method?.id, selectedOption);
+  useEffect(() => {
+    setPaymentPhone('');
+  }, [method?.id, selectedOption]);
   const [isInputFocused, setIsInputFocused] = useState(false);
   // Canonical RUB amount when the user picked a quick-amount chip. The input shows a
   // rounded display-currency value; validating/charging the canonical RUB avoids the FX
@@ -206,6 +215,10 @@ export default function TopUpAmount() {
   const handleSubmit = () => {
     reset();
     inputRef.current?.blur();
+    if (needsPaymentPhone && !isValidPaymentPhone(paymentPhone)) {
+      setError(t('balance.paymentPhoneInvalid'));
+      return;
+    }
     if (
       method.id === 'antilopay' &&
       (!customerEmail.trim() || !emailRef.current?.checkValidity())
@@ -273,7 +286,7 @@ export default function TopUpAmount() {
     if (isStarsMethod) {
       starsPaymentMutation.mutate(amountKopeks);
     } else {
-      pay(amountKopeks, selectedOption, { email: customerEmail });
+      pay(amountKopeks, selectedOption, { email: customerEmail, phone: paymentPhone });
     }
   };
 
@@ -344,6 +357,8 @@ export default function TopUpAmount() {
           </div>
         </motion.div>
       )}
+
+      {needsPaymentPhone && <PaymentPhoneInput value={paymentPhone} onChange={setPaymentPhone} />}
 
       {method.id === 'antilopay' && (
         <motion.div variants={staggerItem} className="space-y-2">
@@ -448,6 +463,10 @@ export default function TopUpAmount() {
                   setAmount(val);
                   setQuickRub(a);
                   inputRef.current?.blur();
+                  if (needsPaymentPhone && !isValidPaymentPhone(paymentPhone)) {
+                    setError(t('balance.paymentPhoneInvalid'));
+                    return;
+                  }
                   if (
                     method.id === 'antilopay' &&
                     (!customerEmail.trim() || !emailRef.current?.checkValidity())

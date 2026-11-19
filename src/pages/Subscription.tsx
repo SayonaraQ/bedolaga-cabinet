@@ -1,5 +1,8 @@
 import { SeasonalDecorSlot } from '@/components/seasonal/SeasonalDecorSlot';
 import { SeasonDeviceGlyphs } from '@/components/seasonal/SeasonDeviceGlyphs';
+import { useAuthStore } from '@/store/auth';
+import { useSubscriptionMirror } from '@/hooks/useSubscriptionMirror';
+import { MirrorSelector } from '@/components/connection/MirrorSelector';
 import { hasUnknownManagedTraffic } from '@/utils/trafficAccounting';
 import ManagedTrafficSummary from '@/components/subscription/ManagedTrafficSummary';
 import { uiLocale } from '@/utils/uiLocale';
@@ -226,6 +229,7 @@ function CardCtaIcon({ action, className }: { action: CardCtaAction; className: 
 }
 
 export default function Subscription() {
+  const userId = useAuthStore((state) => state.user?.id);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -274,14 +278,14 @@ export default function Subscription() {
   const isMultiTariff = multiSubData?.multi_tariff_enabled ?? false;
 
   const { data: subscriptionResponse, isLoading } = useQuery({
-    queryKey: ['subscription', subscriptionId],
+    queryKey: ['subscription', subscriptionId, userId],
     queryFn: () => subscriptionApi.getSubscription(subscriptionId),
     retry: false,
     staleTime: 0,
     refetchOnMount: 'always',
   });
   const { data: connectionLink, isLoading: isConnectionLinkLoading } = useQuery({
-    queryKey: ['connection-link', subscriptionId],
+    queryKey: ['connection-link', subscriptionId, userId],
     queryFn: () => subscriptionApi.getConnectionLink(subscriptionId),
     retry: false,
     staleTime: 0,
@@ -289,7 +293,7 @@ export default function Subscription() {
 
   // Extract subscription from response (null if no subscription)
   const subscription = subscriptionResponse?.subscription ?? null;
-  const displayedConnectionUrl = useMemo(
+  const canonicalConnectionUrl = useMemo(
     () =>
       resolveConnectionUrlForUi({
         mode: connectionLink?.connect_mode,
@@ -321,6 +325,13 @@ export default function Subscription() {
   const subscriptionRuns = !!subscription && (subscription.is_active || subscription.is_limited);
   const shouldHideConnectionLink =
     subscription?.hide_subscription_link || connectionLink?.hide_link;
+
+  const mirrorSelection = useSubscriptionMirror(
+    connectionLink,
+    canonicalConnectionUrl,
+    Boolean(subscription?.hide_subscription_link),
+  );
+  const displayedConnectionUrl = mirrorSelection.url;
 
   // Traffic zone (theme-aware) — called unconditionally at top level
   const usedPercent = trafficData?.traffic_used_percent ?? subscription?.traffic_used_percent ?? 0;
@@ -971,7 +982,8 @@ export default function Subscription() {
 
                 {/* ─── Subscription URL ─── */}
                 {displayedConnectionUrl && !shouldHideConnectionLink && (
-                  <div className="mb-5 flex gap-2">
+                  <div className="mb-5 flex flex-wrap gap-2">
+                    <MirrorSelector selection={mirrorSelection} />
                     <code
                       className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] px-3 py-2 font-mono text-[11px] text-dark-400"
                       style={{

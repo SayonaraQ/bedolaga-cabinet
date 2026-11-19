@@ -10,6 +10,9 @@ import { getLocalizedApiErrorMessage } from '../utils/api-error-display';
 import { openPaymentUrl } from '../utils/openPaymentUrl';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
 import { saveTopUpPendingInfo } from '../utils/topUpStorage';
+import { isValidPaymentPhone, requiresPaymentPhone } from '@/components/PaymentPhoneInput';
+
+type TopUpExtra = { email?: string; phone?: string };
 
 // Shared with the Stars flow, which still creates invoices in TopUpAmount.
 export function getTopUpRateLimitError(t: TFunction): string | null {
@@ -22,7 +25,7 @@ export function getTopUpRateLimitError(t: TFunction): string | null {
 }
 
 export function useTopUpPayment(method: PaymentMethod | undefined): {
-  pay: (amountKopeks: number, option?: string | null, extra?: { email?: string }) => void;
+  pay: (amountKopeks: number, option?: string | null, extra?: TopUpExtra) => void;
   isPending: boolean;
   error: string | null;
   setError: (e: string | null) => void;
@@ -48,7 +51,7 @@ export function useTopUpPayment(method: PaymentMethod | undefined): {
       qr_payload?: string | null;
     },
     unknown,
-    { amountKopeks: number; option?: string | null; extra?: { email?: string } }
+    { amountKopeks: number; option?: string | null; extra?: TopUpExtra }
   >({
     mutationFn: ({ amountKopeks, option, extra }) => {
       if (!method) throw new Error('Method not loaded');
@@ -58,6 +61,16 @@ export function useTopUpPayment(method: PaymentMethod | undefined): {
           method.id,
           option || undefined,
           extra?.email?.trim(),
+        );
+      }
+      // HOT Pay SberPay (1.83.0): провайдер требует телефон плательщика.
+      if (requiresPaymentPhone(method.id, option)) {
+        return balanceApi.createTopUp(
+          amountKopeks,
+          method.id,
+          option || undefined,
+          undefined,
+          extra?.phone?.trim(),
         );
       }
       return balanceApi.createTopUp(amountKopeks, method.id, option || undefined);
@@ -131,8 +144,13 @@ export function useTopUpPayment(method: PaymentMethod | undefined): {
     setQrPayload(null);
   };
 
-  const pay = (amountKopeks: number, option?: string | null, extra?: { email?: string }) => {
+  const pay = (amountKopeks: number, option?: string | null, extra?: TopUpExtra) => {
     reset();
+    // Компактные панели (кошелёк, продление) поля телефона не показывают: без него счёт не создаём.
+    if (requiresPaymentPhone(method?.id, option) && !isValidPaymentPhone(extra?.phone ?? '')) {
+      setError(t('balance.paymentPhoneInvalid'));
+      return;
+    }
     const rateLimitError = getTopUpRateLimitError(t);
     if (rateLimitError) {
       setError(rateLimitError);
